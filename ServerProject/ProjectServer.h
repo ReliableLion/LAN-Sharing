@@ -27,7 +27,6 @@ public:
 	Server() {}
 	void WaitRequest();
 
-
 };
 
 
