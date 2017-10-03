@@ -1,5 +1,5 @@
 #pragma once
 
-Class Temp{
+Class Temp2{
 
 }
