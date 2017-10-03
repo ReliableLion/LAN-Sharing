@@ -1,5 +1,0 @@
-#pragma once
-
-Class Temp{
-
-}
