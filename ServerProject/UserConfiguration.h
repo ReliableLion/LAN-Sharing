@@ -18,8 +18,6 @@ private:
 	std::ofstream readConfigureFile;
 	std::string fileName;
 
-
-
 	//TODO: create  a link to communicate with the UI of the application
 public:
 	UserConfig();

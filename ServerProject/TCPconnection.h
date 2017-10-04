@@ -9,12 +9,12 @@ using namespace boost::asio;
 class TCPconnection {
 
 private:
-	mutable_buffer<void, BUFF_SIZE> read_buffer;
-	mutable_buffer<void, BUFF_SIZE>	write_buffer;
+	/*mutable_buffer<void, BUFF_SIZE> read_buffer;
+	mutable_buffer<void, BUFF_SIZE>	write_buffer;*/
 	std::shared_ptr<ip::tcp::socket> tcp_conn_socket;
 
 public:
-	TCPConnection();
+	TCPconnection();
 	void createConnction();
 	void closeConnection();
 };

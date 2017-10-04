@@ -15,15 +15,14 @@ void RequestQueue::insertRequest(size_t filesize, std::string fileName, std::sha
 }
 
 // return the reference of the request 
-request& RequestQueue::removeRequest() {
+void RequestQueue::removeRequest(request& value) {
 
 	if (!incomingRequest.empty()) {
 		throw std::exception();
 	}
 	
-	request req = incomingRequest.front();
+	value= incomingRequest.front();
 	incomingRequest.pop();
-	return req;
 }
 
 bool RequestQueue::isEmpty() {

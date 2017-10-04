@@ -26,7 +26,7 @@ private:
 public:
 	RequestQueue();
 	void insertRequest(size_t filesize, std::string fileName, std::shared_ptr<TCPconnection> new_connection);
-	request& removeRequest();
+	void removeRequest(request& value);
 	bool isEmpty();
 };
 
