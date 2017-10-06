@@ -9,7 +9,7 @@
 typedef struct {
 	std::string fileName;
 	size_t fileSize;
-	std::shared_ptr<TCPconnection> connection;
+	TCPconnection connection;
 } request;
 
 /*

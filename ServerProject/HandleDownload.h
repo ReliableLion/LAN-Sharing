@@ -4,7 +4,9 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <future>
 #include <condition_variable>
+#include <fstream>
 #include "RequestQueue.h"
 
 #define THREAD_NUM_BIG 2

@@ -1,6 +1,6 @@
 #include "HandleDownload.h"
 
-// when the costructor of this object is created then the thread begin to wait 
+// when the costructor of this object is invoked the threads are createsd and go into sleep mode
 HandleDownload::HandleDownload() {
 
 	terminate.store(false);
@@ -15,7 +15,7 @@ HandleDownload::HandleDownload() {
 }
 
 
-// define a methosd to exit 
+// define a method to exit 
 HandleDownload::~HandleDownload() {
 
 	terminate.store(true);
@@ -50,7 +50,7 @@ void HandleDownload::DownloadSmallFile() {
 
 		try {
 			// extract the request from the queue and release the mutex 
-			new_req = SmallFileRequest_q.removeRequest();
+			SmallFileRequest_q.removeRequest(new_req);
 			ul.unlock();
 		}
 		catch (std::exception &e) {
@@ -58,6 +58,13 @@ void HandleDownload::DownloadSmallFile() {
 		}
 
 		// do stuff here 
+	
+		// decide if the opening of the file will be in asynchronous manner or sequential
+
+		std::ofstream new_file(new_req.fileName);
+		new_file.open();
+
+		if ()
 
 
 	}
@@ -66,7 +73,7 @@ void HandleDownload::DownloadSmallFile() {
 	std::unique_lock<std::mutex> ul(SmallFileMtx_2);
 	while (SmallFileRequest_q.isEmpty()) {
 		
-		new_req = SmallFileRequest_q.removeRequest();
+		SmallFileRequest_q.removeRequest(new_req);
 		ul.unlock();
 
 		// do stuff here
@@ -96,7 +103,7 @@ void HandleDownload::DownloadBigFile() {
 			break;
 		}
 
-		new_req = BigFileRequest_q.removeRequest();
+		BigFileRequest_q.removeRequest(new_req);
 		ul.unlock();
 
 		// do stuff here
@@ -107,7 +114,7 @@ void HandleDownload::DownloadBigFile() {
 	std::unique_lock<std::mutex> ul(BigFileMtx_2);
 	while (BigFileRequest_q.isEmpty()) {
 
-		new_req = BigFileRequest_q.removeRequest();
+		BigFileRequest_q.removeRequest(new_req);
 		ul.unlock();
 
 		// do stuff here 

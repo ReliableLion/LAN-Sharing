@@ -16,12 +16,16 @@ void Server::WaitRequest() {
 			//  the end point is specified as an IPv4 address on port 1500; 
 			ip::tcp::acceptor accept(io_service, ip::tcp::endpoint(ip::tcp::v4(), ServerPort));
 
+			// creation of new connection 
+
 		}
 
 	}
 	catch (std::exception &e) {
 		std::cerr << e.what() << std::endl;
 	}
+
+
 
 
 }
