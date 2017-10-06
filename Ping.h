@@ -16,9 +16,10 @@ namespace posix_time = boost::posix_time;
 class Pinger {
 
 public:
-	Pinger(boost::asio::io_service& io_service, const char* destination)
+	Pinger(boost::asio::io_service& io_service, const char* destination, std::size_t packets)
 		: resolver_(io_service), socket_(io_service, icmp::v4()),
-		timer_(io_service), sequence_number_(0), num_replies_(0) {
+		timer_(io_service), sequence_number_(0), num_replies_(0),
+		packets_to_send(packets), packets_sent(0) {
 
 		icmp::resolver::query query(icmp::v4(), destination, "");
 		destination_ = *resolver_.resolve(query);
@@ -36,6 +37,8 @@ private:
 	posix_time::ptime time_sent_;
 	boost::asio::streambuf reply_buffer_;
 	std::size_t num_replies_;
+	std::size_t packets_to_send;
+	std::size_t packets_sent;
 
 	void start_send();
 	void handle_timeout();

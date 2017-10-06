@@ -2,6 +2,13 @@
 // Ping.cpp
 // ~~~~~~~~
 //	Based on Christopher M. Kohlhoff (chris at kohlhoff dot com) version
+
+//	This class has a timer. When a ICMP message is sent, the timer is set to 5 seconds. This is class is also asynchronously waiting for an ICMP reply.
+//	When the reply is received, the timer is canceled and the start_send() is called again and so on.
+//	If the start_receive() doesn't receive any reply within 5 seconds, the timer expire and call handle_timeout() which checks if it's a timeout or not and
+//	after a second it calls start_send().
+//
+//	This class support now the possibility to set the number of ICMP packet to send.
 //
 
 #include "Ping.h"
@@ -26,10 +33,13 @@ void Pinger::start_send() {
 	// Send the request.
 	time_sent_ = posix_time::microsec_clock::universal_time();
 	socket_.send_to(request_buffer.data(), destination_);
+	packets_sent++;
 
-	// Wait up to two seconds for a reply.
+	if (packets_to_send == packets_sent)
+		return;
+	// Wait up to five seconds for a reply.
 	num_replies_ = 0;
-	timer_.expires_at(time_sent_ + posix_time::seconds(2));
+	timer_.expires_at(time_sent_ + posix_time::seconds(5));
 	timer_.async_wait(boost::bind(&Pinger::handle_timeout, this));
 }
 
@@ -86,6 +96,9 @@ void Pinger::handle_receive(std::size_t length)
 			<< std::endl;
 	}
 
+	if (packets_to_send == packets_sent)
+		return;
+
 	start_receive();
 }
 
@@ -103,7 +116,7 @@ int main(int argc, char* argv[])
 		}
 
 		boost::asio::io_service io_service;
-		Pinger p(io_service, argv[1]);
+		Pinger p(io_service, argv[1], 3);
 		io_service.run();
 	}
 	catch (std::exception& e)
