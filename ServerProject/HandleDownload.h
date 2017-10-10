@@ -8,6 +8,7 @@
 #include <condition_variable>
 #include <fstream>
 #include "RequestQueue.h"
+#include "FileHandler.h"
 
 #define THREAD_NUM_BIG 2
 #define THREAD_NUM_SMALL 3 
@@ -36,6 +37,8 @@ private:
 
 	RequestQueue BigFileRequest_q;
 	RequestQueue SmallFileRequest_q;
+
+	FileHandler _openFile();
 
 public:
 	HandleDownload();

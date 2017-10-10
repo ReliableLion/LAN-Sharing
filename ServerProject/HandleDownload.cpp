@@ -60,9 +60,13 @@ void HandleDownload::DownloadSmallFile() {
 		// do stuff here 
 	
 		// decide if the opening of the file will be in asynchronous manner or sequential
+		try {
+			std::future<FileHandler> openFile = std::async(&HandleDownload::_openFile, this, new_req.fileName);
+		} catch(FileOpenException &e) {
 
-		std::ofstream new_file;
-		new_file.open(new_req.fileName);
+		}
+
+
 
 
 
@@ -106,6 +110,16 @@ void HandleDownload::DownloadBigFile() {
 		ul.unlock();
 
 		// do stuff here
+
+		// open asynchronously the file
+		try {
+			std::future<FileHandler> async_open = std::async(&HandleDownload::_openFile, this, new_req.fileName);
+		}
+		catch (FileOpenException &e) {
+
+		}
+
+
 
 	}
 
@@ -157,4 +171,15 @@ void HandleDownload::InsertBigFileRequest(size_t fileSize, std::string filename,
 		// is not possible to insert new data
 	}
 
+}
+
+FileHandler _openFile(std::string filename) {
+
+	// if the filename is empty then throw an exception
+	if (filename.empty()) {
+		throw FileOpenException();
+	}
+
+	FileHandler file(filename);
+	file.openFile();
 }
