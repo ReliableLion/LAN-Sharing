@@ -55,12 +55,17 @@ class DiscoveryMessage: public Message {
 
 public:
 	DiscoveryMessage(std::string username) {
-		messageBody.append(discoveryMsg);
+		messageBody.append(helloMsg);
 		messageBody.append(username);
 		messageBody.append(endMessage);
 	}
 
-private:
-	const std::string discoveryMsg = "MYUSERNAME ";
+	DiscoveryMessage() {
+		messageBody.append(discoveryMsg);
+		messageBody.append(endMessage);
+	}
+
+	const std::string helloMsg = "MYUSERNAME ";
+	const std::string discoveryMsg = "LAN-SHARING LOOKINGFOR";
 
 };
