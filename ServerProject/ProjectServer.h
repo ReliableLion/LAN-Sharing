@@ -1,13 +1,11 @@
-#pragma once
-
 #ifndef SERVER_H
 #define SERVER_H 
 
+#include <iostream>
 #include <thread>
 #include "ProjectServer.h"
 #include "HandleDownload.h"
 #include "UserConfiguration.h"
-
 
 #include <boost/asio.hpp>
 
@@ -19,13 +17,18 @@ using namespace boost::asio;
 class Server {
 private:
 	io_service io;
-	const int ServerPort = 1500;
+	const std::string ServerPort = 1500;
+	const std::string ServerAddr = "";
 	UserConfig AppConfiguration;
+
+	void _waitRequest();
+	void _handleAccept();
 
 public:
 	// definire il construttore dopo perchè bisonga tenere conto dell'indirizzo del server e della porta
-	Server() {}
-	void WaitRequest();
+	Server();
+	Server(const std::string ServerAddr, const std::string ServerPort);
+	
 
 };
 
