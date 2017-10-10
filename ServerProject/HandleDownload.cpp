@@ -61,10 +61,9 @@ void HandleDownload::DownloadSmallFile() {
 	
 		// decide if the opening of the file will be in asynchronous manner or sequential
 
-		std::ofstream new_file(new_req.fileName);
-		new_file.open();
+		std::ofstream new_file;
+		new_file.open(new_req.fileName);
 
-		if ()
 
 
 	}
