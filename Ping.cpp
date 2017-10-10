@@ -101,26 +101,3 @@ void Pinger::handle_receive(std::size_t length)
 
 	start_receive();
 }
-
-int main(int argc, char* argv[])
-{
-	try
-	{
-		if (argc != 2)
-		{
-			std::cerr << "Usage: ping <host>" << std::endl;
-#if !defined(BOOST_WINDOWS)
-			std::cerr << "(You may need to run this program as root.)" << std::endl;
-#endif
-			return 1;
-		}
-
-		boost::asio::io_service io_service;
-		Pinger p(io_service, argv[1], 3);
-		io_service.run();
-	}
-	catch (std::exception& e)
-	{
-		std::cerr << "Exception: " << e.what() << std::endl;
-	}
-}

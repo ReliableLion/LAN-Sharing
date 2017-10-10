@@ -11,7 +11,7 @@ using boost::asio::ip::udp;
 using namespace std;
 
 enum { max_length = 1024 };
-int udpPort = 1234;
+const int udpPort = 1234;
 
 class UDPServer {
 
@@ -20,13 +20,6 @@ public:
 		: io_service_(io_service),
 		socket_(io_service, udp::endpoint(udp::v4(), udpPort)) {
 		response = resp;
-	}
-
-	void setResponse(string resp) {
-		response = resp;
-	}
-
-	void startServer() {
 		socket_.async_receive_from(
 			boost::asio::buffer(data_, max_length), sender_endpoint_,
 			boost::bind(&UDPServer::handle_receive_from, this,
@@ -34,17 +27,27 @@ public:
 				boost::asio::placeholders::bytes_transferred));
 	}
 
+	void setResponse(string resp) {
+		response = resp;
+	}
+
+	void startServer() {
+		io_service_.run();
+	}
+
 	void handle_receive_from(const boost::system::error_code& error,
 		size_t bytes_recvd) {
 
 		if (!error && bytes_recvd > 0) {
 
-			if (strcmp(data_, "LAN-SHARING LOOKINGFOR\r\n"))
+			if (strcmp(data_, "LAN-SHARING LOOKINGFOR\r\n") == 0) {
+
 				socket_.async_send_to(
 					boost::asio::buffer(response), sender_endpoint_,
 					boost::bind(&UDPServer::handle_send_to, this,
 						boost::asio::placeholders::error,
 						boost::asio::placeholders::bytes_transferred));
+			}
 		}
 		else {
 
@@ -66,10 +69,6 @@ public:
 				boost::asio::placeholders::bytes_transferred));
 	}
 
-	void setUdpPort(int port) {
-		udpPort = port;
-	}
-
 private:
 	boost::asio::io_service& io_service_;
 	udp::socket socket_;
@@ -83,7 +82,9 @@ class UDPClient {
 
 public:
 	UDPClient(): 
-		sock(io_service, udp::endpoint(udp::v4(), 0)) {}
+		sock(io_service, udp::endpoint(udp::v4(), 0)) {
+		reply[0] = '\0';
+	}
 
 	void sendMessage(std::string host, std::string port, std::string request) {
 
@@ -112,19 +113,18 @@ public:
 	std::pair<std::string, std::string> receiveMessage() {
 
 		udp::endpoint sender_endpoint;
+		cout << "Receiveing" << endl;
+
 		size_t reply_length = sock.receive_from(
 			boost::asio::buffer(reply, max_length), sender_endpoint);
+		cout << "Received" << endl;
 
-		string temp(reply);
+		string response(reply, reply_length);
 
 		if (reply_length == 0)
 			return make_pair("","");
 		else
-			return make_pair(temp, sender_endpoint.address().to_string());
-	}
-
-	void setUdpPort(int port) {
-		udpPort = port;
+			return make_pair(response, sender_endpoint.address().to_string());
 	}
 
 private:
