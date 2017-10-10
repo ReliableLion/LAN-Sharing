@@ -15,7 +15,7 @@ public:
 	}
 
 protected:
-	std::string messageBody;
+	std::string messageBody = "";
 	std::stringstream stream;
 	const std::string endMessage = "\r\n";
 	ULARGE_INTEGER timeStamp;
@@ -48,5 +48,19 @@ public:
 
 private:
 	const std::string sendMessage = "SEND ";
+
+};
+
+class DiscoveryMessage: public Message {
+
+public:
+	DiscoveryMessage(std::string username) {
+		messageBody.append(discoveryMsg);
+		messageBody.append(username);
+		messageBody.append(endMessage);
+	}
+
+private:
+	const std::string discoveryMsg = "MYUSERNAME ";
 
 };

@@ -11,7 +11,7 @@
 //	This class support now the possibility to set the number of ICMP packet to send.
 //
 
-#include "Ping.h"
+#include "Ping.hpp"
 
 void Pinger::start_send() {
 

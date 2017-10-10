@@ -6,8 +6,8 @@
 #include <iostream>
 #include <ostream>
 
-#include "ICMPHeader.h"
-#include "IPv4Header.h"
+#include "ICMPHeader.hpp"
+#include "IPv4Header.hpp"
 
 using boost::asio::ip::icmp;
 using boost::asio::deadline_timer;

@@ -10,13 +10,18 @@
 using boost::asio::ip::udp;
 
 enum { max_length = 1024 };
+int udpPort = 1234;
+
+void setUdpPort(int port) {
+	udpPort = port;
+}
 
 class UDPServer {
 
 public:
-	UDPServer(boost::asio::io_service& io_service, short port)
+	UDPServer(boost::asio::io_service& io_service)
 		: io_service_(io_service),
-		socket_(io_service, udp::endpoint(udp::v4(), port))
+		socket_(io_service, udp::endpoint(udp::v4(), udpPort))
 	{
 		socket_.async_receive_from(
 			boost::asio::buffer(data_, max_length), sender_endpoint_,
@@ -66,14 +71,12 @@ private:
 class UDPClient {
 
 public:
-
-	UDPClient(boost::asio::io_service& io_service, std::string host, std::string port): 
-		io_service_(io_service),
-		sock(io_service_, udp::endpoint(udp::v4(), 0)) {}
+	UDPClient(): 
+		sock(io_service, udp::endpoint(udp::v4(), 0)) {}
 
 	void sendMessage(std::string host, std::string port, std::string request) {
 
-		udp::resolver resolver(io_service_);
+		udp::resolver resolver(io_service);
 		udp::resolver::query query(udp::v4(), host, port);
 		udp::resolver::iterator iterator = resolver.resolve(query);
 
@@ -81,6 +84,18 @@ public:
 
 		size_t request_length = request.length();
 		sock.send_to(boost::asio::buffer(request, request_length), *iterator);
+	}
+
+	void sendBroadcastMessage(std::string request) {
+
+		using namespace std; // For strlen.
+
+		sock.set_option(boost::asio::socket_base::broadcast(true));
+
+		boost::asio::ip::udp::endpoint broadcastEndpoint(boost::asio::ip::address_v4::broadcast(), udpPort);
+
+		size_t request_length = request.length();
+		sock.send_to(boost::asio::buffer(request, request_length), broadcastEndpoint);
 	}
 
 	std::string receiveMessage() {
@@ -96,7 +111,7 @@ public:
 	}
 
 private:
-	boost::asio::io_service& io_service_;
+	boost::asio::io_service io_service;
 	char reply[max_length];
 
 	udp::socket sock;
