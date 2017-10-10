@@ -17,10 +17,7 @@ protected:
 	const std::string end_message = "/r/n";
 
 public:
-
 	std::string getMessageBody() { return this->message; }
-
-
 };
 
 
@@ -30,17 +27,16 @@ private:
 public:
 	ResponseMsg() = default;
 	std::string sendResponse();
-
 };
 
 class ErrorMsg : public Message {
 private: 
 	error_codes err;
+	const std::string error_msg = "error ";
 
 public: 
 	ErrorMsg() = default;
-	std::string getErrorCode();
-
+	std::string getErrorCode(error_codes err);
 };
 
 #endif // !MESSAGE_H 
