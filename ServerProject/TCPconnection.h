@@ -2,6 +2,8 @@
 #define TCP_CONNECTION_H
 
 #include <boost\asio.hpp>
+#include <set>
+#include <memory>
 #define BUFF_SIZE 1024
 
 using namespace boost::asio;
@@ -27,6 +29,20 @@ public:
 	void createConnection(io_service& io_serv);
 	void closeConnection();
 	ip::tcp::socket& getSocket();
+};
+
+/*
+  this class contain all the connection instantiated
+*/
+class ConnectionManager {
+private:
+	std::set<std::shared_ptr<TCPconnection>> connSet;
+public:
+	ConnectionManager() = default;
+	void start(std::shared_ptr<TCPconnection> conn);
+	void stop(std::shared_ptr<TCPconnection> conn);
+	void stop_all();
+
 };
 
 #endif	//TCP_CONNECTION_H

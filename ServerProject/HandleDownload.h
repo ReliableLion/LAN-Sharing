@@ -41,8 +41,9 @@ private:
 	FileHandler _openFile();
 
 public:
-	HandleDownload();
+	HandleDownload() = default;
 	~HandleDownload();
+	void setupDownloader();
 	void DownloadBigFile();
 	void DownloadSmallFile();
 	void InsertSmallFileRequest(size_t fileSize, std::string fileName, std::shared_ptr<TCPconnection> new_connection);

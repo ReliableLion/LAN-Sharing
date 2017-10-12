@@ -1,7 +1,7 @@
 #include "HandleDownload.h"
 
 // when the costructor of this object is invoked the threads are createsd and go into sleep mode
-HandleDownload::HandleDownload() {
+void HandleDownload::setupDownloader() {
 
 	terminate.store(false);
 
@@ -65,10 +65,6 @@ void HandleDownload::DownloadSmallFile() {
 		} catch(FileOpenException &e) {
 
 		}
-
-
-
-
 
 	}
 
@@ -173,6 +169,12 @@ void HandleDownload::InsertBigFileRequest(size_t fileSize, std::string filename,
 
 }
 
+
+HandleDownload& HandleDownload::operator=(const HandleDownload& obj) {
+	
+
+}
+
 FileHandler _openFile(std::string filename) {
 
 	// if the filename is empty then throw an exception
@@ -183,3 +185,5 @@ FileHandler _openFile(std::string filename) {
 	FileHandler file(filename);
 	file.openFile();
 }
+
+

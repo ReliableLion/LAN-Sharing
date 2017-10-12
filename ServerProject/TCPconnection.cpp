@@ -43,3 +43,17 @@ TCPconnection::~TCPconnection() {
 	closeConnection();
 }
 
+
+void ConnectionManager::start(std::shared_ptr<TCPconnection> conn) {
+
+}
+
+void ConnectionManager::stop(std::shared_ptr<TCPconnection> conn) {
+
+}
+
+void ConnectionManager::stop_all() {
+
+
+
+}
