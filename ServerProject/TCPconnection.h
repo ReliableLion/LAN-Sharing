@@ -4,11 +4,28 @@
 #include <boost\asio.hpp>
 #include <set>
 #include <memory>
+#include "Request.h"
+
 #define BUFF_SIZE 1024
 
 using namespace boost::asio;
 
-class TCPconnection {
+/* 
+	the class session is the super class of the TCP connection class 
+*/
+class Session {
+protected:
+	ip::tcp::endpoint clientAddr;
+	Request clientRequest;
+
+public:
+	Session() {}
+
+
+
+};
+
+class TCPconnection: public Session {
 
 /*
 	the class TCPconnection contain a pointer  to a socekt, 
@@ -24,8 +41,9 @@ private:
 	boost::system::error_code err;
 
 public:
-	TCPconnection() = default;
+	TCPconnection();
 	~TCPconnection();
+	TCPconnection(const TCPconnection& TCPconn);
 	void createConnection(io_service& io_serv);
 	void closeConnection();
 	ip::tcp::socket& getSocket();
@@ -34,11 +52,11 @@ public:
 /*
   this class contain all the connection instantiated
 */
-class ConnectionManager {
+class ConnectionPool {
 private:
 	std::set<std::shared_ptr<TCPconnection>> connSet;
 public:
-	ConnectionManager() = default;
+	ConnectionPool() = default;
 	void start(std::shared_ptr<TCPconnection> conn);
 	void stop(std::shared_ptr<TCPconnection> conn);
 	void stop_all();

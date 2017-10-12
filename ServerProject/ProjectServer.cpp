@@ -4,7 +4,7 @@
 /*
 	create a new server instance and resolve the endpoint name 
 */
-Server::Server(const std::string ServerAddr, const std::string ServerPort) : io(), Acceptor(io) {
+Server::Server(const std::string ServerAddr, const std::string ServerPort) : io(), Acceptor(io), connMan() {
 
 	ip::tcp::resolver resolver(io);
 	ip::tcp::resolver::query query(ServerAddr, ServerPort);
@@ -26,7 +26,7 @@ Server::Server(const std::string ServerAddr, const std::string ServerPort) : io(
 /*
 	create a new server instance using default configurations
 */
-Server::Server() : io(), Acceptor(io) {
+Server::Server() : io(), Acceptor(io), connMan() {
 
 	ip::tcp::resolver resolver(io);
 	ip::tcp::resolver::query query(this->ServerAddr, this->ServerPort);
@@ -75,15 +75,15 @@ void Server::_waitRequest() {
 }
 
 
-void Server::_handleAccept(const boost::system::error_code& e) {
+void Server::_handleAccept(const boost::system::error_code& e, std::shared_ptr<TCPconnection> conn) {
 
 	if (!Acceptor.is_open()) {
 		return;
 	}
 
-
+	
 	if (!e) {
-
+		connMan.start(conn);
 	}
 	else {
 		// error

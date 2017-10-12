@@ -1,5 +1,11 @@
 #include "TCPconnection.h"
 
+TCPconnection::TCPconnection() {
+
+
+}
+
+
 void TCPconnection::createConnection(io_service& io_serv) {
 
 	// declaration of the socket
@@ -44,16 +50,25 @@ TCPconnection::~TCPconnection() {
 }
 
 
-void ConnectionManager::start(std::shared_ptr<TCPconnection> conn) {
-
+void ConnectionPool::start(std::shared_ptr<TCPconnection> conn) {
+	connSet.insert(conn);
 }
 
-void ConnectionManager::stop(std::shared_ptr<TCPconnection> conn) {
-
+void ConnectionPool::stop(std::shared_ptr<TCPconnection> conn) {
+	// stop the connectiona and delete it from the set
+	conn->closeConnection();
+	connSet.erase(conn);
 }
 
-void ConnectionManager::stop_all() {
+void ConnectionPool::stop_all() {
 
+	// close all the connection in the set
+	for (auto i = std::begin(connSet); i != std::end(connSet); i++) {
+		std::shared_ptr<TCPconnection> conn = *i;
+		conn->closeConnection();
+	}
 
+	// delete all the element in the set
+	connSet.clear();
 
 }

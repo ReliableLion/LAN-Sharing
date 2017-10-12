@@ -22,9 +22,10 @@ private:
 	UserConfig AppConfiguration;
 	HandleDownload d_handler;
 	ip::tcp::acceptor Acceptor;
+	ConnectionManager connMan;
 
 	void _waitRequest();
-	void _handleAccept(const boost::system::error_code& e);
+	void _handleAccept(const boost::system::error_code& e, std::shared_ptr<TCPconnection> conn);
 
 public:
 	// definire il construttore dopo perchè bisonga tenere conto dell'indirizzo del server e della porta
