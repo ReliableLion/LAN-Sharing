@@ -1,8 +1,6 @@
 #include "Request.h"
 
-Request::Request(std::shared_ptr<TCPconnection> conn) {
-
-}
+Request::Request() {}
 
 void Request::readRequest() {
 

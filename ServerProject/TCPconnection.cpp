@@ -1,10 +1,6 @@
 #include "TCPconnection.h"
 
-TCPconnection::TCPconnection() {
-
-
-}
-
+TCPconnection::TCPconnection() {}
 
 void TCPconnection::createConnection(io_service& io_serv) {
 
@@ -23,6 +19,9 @@ void TCPconnection::createConnection(io_service& io_serv) {
 	// incaplusate the data into the mutable buffer
 	write_buff = mutable_buffer(write_data, BUFF_SIZE);
 	read_buff = mutable_buffer(read_data, BUFF_SIZE);
+
+	// save the remote endpoint
+	Session::clientAddr = tcp_conn_socket->remote_endpoint();
 }
 
 void TCPconnection::closeConnection() {
@@ -70,5 +69,19 @@ void ConnectionPool::stop_all() {
 
 	// delete all the element in the set
 	connSet.clear();
+
+}
+
+Session::Session() {
+
+}
+
+// this method can read an upcoming request
+void Session::readRequest() {
+	// call the methos inseide the readRequest 
+	clientRequest.readRequest();
+}
+
+void Session::readDataChunks() {
 
 }

@@ -13,7 +13,7 @@ private:
 	std::string msg;
 
 public:
-	Request(std::shared_ptr<TCPconnection> conn);
+	Request();
 	void readRequest();
 };
 

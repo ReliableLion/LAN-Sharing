@@ -22,7 +22,7 @@ private:
 	UserConfig AppConfiguration;
 	HandleDownload d_handler;
 	ip::tcp::acceptor Acceptor;
-	ConnectionManager connMan;
+	ConnectionPool connMan;
 
 	void _waitRequest();
 	void _handleAccept(const boost::system::error_code& e, std::shared_ptr<TCPconnection> conn);

@@ -61,12 +61,12 @@ void Server::_waitRequest() {
 			newConnection->createConnection(io);
 
 			//async accept 
-			Acceptor.async_accept(newConnection->getSocket(), boost::bind(&Server::_handleAccept, this, boost::asio::placeholders::error));
-
+			Acceptor.async_accept(newConnection->getSocket(), boost::bind(&Server::_handleAccept, this,
+				boost::asio::placeholders::error, newConnection));
 		}
 
-		// TODO close all the connection
-
+		// TODO close all the connections
+		connMan.stop_all();
 
 	}
 	catch (std::exception &e) {

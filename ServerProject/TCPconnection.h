@@ -19,10 +19,9 @@ protected:
 	Request clientRequest;
 
 public:
-	Session() {}
-
-
-
+	Session();
+	void readRequest();
+	void readDataChunks();
 };
 
 class TCPconnection: public Session {
@@ -40,10 +39,14 @@ private:
 	std::shared_ptr<ip::tcp::socket> tcp_conn_socket;
 	boost::system::error_code err;
 
+	// isn't possible to copy an TCP connection instance
+	TCPconnection(const TCPconnection& TCPconn) {}
+	TCPconnection& operator=(const TCPconnection& TCPconn) {}
+
 public:
 	TCPconnection();
 	~TCPconnection();
-	TCPconnection(const TCPconnection& TCPconn);
+	
 	void createConnection(io_service& io_serv);
 	void closeConnection();
 	ip::tcp::socket& getSocket();
