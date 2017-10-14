@@ -1,17 +1,17 @@
 #include "TCPconnection.h"
 
-TCPconnection::TCPconnection() {}
+TCPconnection::TCPconnection(io_service& io_serv) : io(io_serv), TCP_session(io_serv) {}
 
-void TCPconnection::createConnection(io_service& io_serv) {
+void TCPconnection::createConnection() {
 
 	// declaration of the socket
-	tcp_conn_socket = std::shared_ptr<ip::tcp::socket>(new ip::tcp::socket(io_serv));
+	tcp_conn_socket = std::shared_ptr<ip::tcp::socket>(new ip::tcp::socket(io));
 
 	if (!tcp_conn_socket->is_open()) {
 		// the socket is close launch an exception
 		throw std::exception();
 	}
-
+	/*
 	// declaration of the buffer
 	write_data = new char[BUFF_SIZE];
 	read_data = new char[BUFF_SIZE];
@@ -19,9 +19,10 @@ void TCPconnection::createConnection(io_service& io_serv) {
 	// incaplusate the data into the mutable buffer
 	write_buff = mutable_buffer(write_data, BUFF_SIZE);
 	read_buff = mutable_buffer(read_data, BUFF_SIZE);
+	*/
 
 	// save the remote endpoint
-	Session::clientAddr = tcp_conn_socket->remote_endpoint();
+	TCP_session::clientAddr = tcp_conn_socket->remote_endpoint();
 }
 
 void TCPconnection::closeConnection() {
@@ -32,9 +33,10 @@ void TCPconnection::closeConnection() {
 		// is not possible to close the socket throw an exception
 	}
 	else {
-		// delete all the buffer allocated
+		/*
 		delete[] write_data;
 		delete[] read_data;
+		*/
 	}
 
 }
@@ -72,16 +74,14 @@ void ConnectionPool::stop_all() {
 
 }
 
-Session::Session() {
-
-}
+TCP_session::TCP_session(io_service& io) : input_deadline(io), output_deadline(io) {}
 
 // this method can read an upcoming request
-void Session::readRequest() {
+void TCPconnection::readRequest() {
 	// call the methos inseide the readRequest 
 	clientRequest.readRequest();
 }
 
-void Session::readDataChunks() {
+void TCPconnection::readDataChunks() {}
 
-}
+void TCPconnection::writeReply() {}

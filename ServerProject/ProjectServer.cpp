@@ -49,7 +49,6 @@ Server::Server() : io(), Acceptor(io), connMan() {
 void Server::_waitRequest() {
 
 	try {
-		
 		// iterate if the configuration of the app is setted to PUBLIC
 		while (AppConfiguration.get_isPublic()) {
 
@@ -57,8 +56,8 @@ void Server::_waitRequest() {
 			// ip::tcp::acceptor accept(io_service, ip::tcp::endpoint(ip::tcp::v4(), ServerPort);
 			// creation of new connection 
 
-			std::shared_ptr<TCPconnection> newConnection = std::shared_ptr<TCPconnection>(new TCPconnection());
-			newConnection->createConnection(io);
+			std::shared_ptr<TCPconnection> newConnection = std::shared_ptr<TCPconnection>(new TCPconnection(io));
+			newConnection->createConnection();
 
 			//async accept 
 			Acceptor.async_accept(newConnection->getSocket(), boost::bind(&Server::_handleAccept, this,
@@ -86,8 +85,7 @@ void Server::_handleAccept(const boost::system::error_code& e, std::shared_ptr<T
 		connMan.start(conn);
 	}
 	else {
-		// error
-		std::cerr << "" << std::endl;
+		std::cerr << "error, isn't possible to accept a new requset: " << e << std::endl;
 	}
 }
 
