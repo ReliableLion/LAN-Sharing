@@ -27,6 +27,11 @@ void TCPconnection::createConnection() {
 
 void TCPconnection::closeConnection() {
 
+	// check if the connection is already close
+	if (!tcp_conn_socket->is_open()) {
+		//throw a new exception
+	}
+
 	tcp_conn_socket->close(err);
 
 	if (err) {
@@ -71,17 +76,35 @@ void ConnectionPool::stop_all() {
 
 	// delete all the element in the set
 	connSet.clear();
-
 }
 
 TCP_session::TCP_session(io_service& io) : input_deadline(io), output_deadline(io) {}
 
 // this method can read an upcoming request
 void TCPconnection::readRequest() {
+	// setup a wait timer 
+	input_deadline.expires_from_now(boost::posix_time::seconds(30));
+
 	// call the methos inseide the readRequest 
 	clientRequest.readRequest();
+
+	input_deadline.async_wait(&TCPconnection::_check_deadline);
 }
 
 void TCPconnection::readDataChunks() {}
 
 void TCPconnection::writeReply() {}
+
+void TCPconnection::_check_deadline(deadline_timer timer) {
+
+	// check if the socket si connected or not
+	if (!tcp_conn_socket->is_open()) {
+		//launch an exception
+	}
+
+	// checke if the connection reached the deadline, then close the connection 
+	if (timer.expires_at() <= deadline_timer::traits_type::now()) {
+		closeConnection();
+	}
+
+}

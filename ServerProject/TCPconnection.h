@@ -58,6 +58,8 @@ private:
 	TCPconnection(const TCPconnection& TCPconn) {}
 	TCPconnection& operator=(const TCPconnection& TCPconn) {}
 
+	void _check_deadline(deadline_timer timer);
+
 public:
 	TCPconnection(io_service& io_serv);
 	~TCPconnection();
