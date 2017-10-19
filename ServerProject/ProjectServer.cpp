@@ -10,7 +10,7 @@ Server::Server(const std::string ServerAddr, const std::string ServerPort) : io(
 	ip::tcp::resolver::query query(ServerAddr, ServerPort);
 	ip::tcp::endpoint server_endpoint = *resolver.resolve(query);
 
-	Acceptor.open(server_endpoint.protocol);
+	Acceptor.open(server_endpoint.protocol());
 	Acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
 	Acceptor.bind(server_endpoint);
 	Acceptor.listen();

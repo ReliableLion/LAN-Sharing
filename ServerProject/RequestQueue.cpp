@@ -5,7 +5,7 @@ RequestQueue::RequestQueue() {}
 // this method should be protected from concurrent access
 void RequestQueue::insertRequest(size_t filesize, std::string fileName, std::shared_ptr<TCPconnection> new_connection) {
 	 
-	request new_request;
+	dwld_request new_request;
 
 	new_request.connection = new_connection;
 	new_request.fileName = fileName;
@@ -15,7 +15,7 @@ void RequestQueue::insertRequest(size_t filesize, std::string fileName, std::sha
 }
 
 // return the reference of the request 
-void RequestQueue::removeRequest(request& value) {
+void RequestQueue::removeRequest(dwld_request& value) {
 
 	if (!incomingRequest.empty()) {
 		throw std::exception();

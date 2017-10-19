@@ -31,7 +31,7 @@ HandleDownload::~HandleDownload() {
 
 void HandleDownload::DownloadSmallFile() {
 
-	request new_req;
+	dwld_request new_req;
 
 	while (1) {
 		std::unique_lock<std::mutex> ul(SmallFileMtx);
@@ -61,7 +61,7 @@ void HandleDownload::DownloadSmallFile() {
 	
 		// decide if the opening of the file will be in asynchronous manner or sequential
 		try {
-			std::future<FileHandler> openFile = std::async(&HandleDownload::_openFile, this, new_req.fileName);
+			std::future<FileHandler> openFile = std::async(std::launch::async, &HandleDownload::_openFile, this, new_req.fileName);
 		} catch(FileOpenException &e) {
 
 		}
@@ -86,7 +86,7 @@ void HandleDownload::DownloadSmallFile() {
 
 void HandleDownload::DownloadBigFile() {
 
-	request new_req;
+	dwld_request new_req;
 
 	while (1) {
 		std::unique_lock<std::mutex> ul(BigFileMtx);
@@ -169,13 +169,7 @@ void HandleDownload::InsertBigFileRequest(size_t fileSize, std::string filename,
 
 }
 
-
-HandleDownload& HandleDownload::operator=(const HandleDownload& obj) {
-	
-
-}
-
-FileHandler _openFile(std::string filename) {
+FileHandler HandleDownload::_openFile(std::string filename) {
 
 	// if the filename is empty then throw an exception
 	if (filename.empty()) {

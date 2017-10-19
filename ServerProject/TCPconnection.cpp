@@ -1,11 +1,11 @@
 #include "TCPconnection.h"
 
-TCPconnection::TCPconnection(io_service& io_serv) : io(io_serv), TCP_session(io_serv) {}
+TCPconnection::TCPconnection(io_service& io_serv) : sock(io_serv), TCP_session(io_serv) {}
 
 void TCPconnection::createConnection() {
 
 	// declaration of the socket
-	tcp_conn_socket = std::shared_ptr<ip::tcp::socket>(new ip::tcp::socket(io));
+	tcp_conn_socket = std::make_shared<ip::tcp::socket>(sock);
 
 	if (!tcp_conn_socket->is_open()) {
 		// the socket is close launch an exception
@@ -95,7 +95,7 @@ void TCPconnection::readDataChunks() {}
 
 void TCPconnection::writeReply() {}
 
-void TCPconnection::_check_deadline(deadline_timer timer) {
+void TCP_session::_check_deadline(deadline_timer timer) {
 
 	// check if the socket si connected or not
 	if (!tcp_conn_socket->is_open()) {

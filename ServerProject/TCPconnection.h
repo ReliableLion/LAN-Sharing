@@ -1,3 +1,15 @@
+/*
+	THIS FILE IS CREATED USING AS EXAMPLE: 
+
+	connection:
+	http://www.boost.org/doc/libs/1_65_1/doc/html/boost_asio/example/cpp03/http/server3/connection.cpp
+
+	timeout:
+
+
+*/
+
+
 #ifndef TCP_CONNECTION_H
 #define TCP_CONNECTION_H
 
@@ -6,37 +18,42 @@
 #include <boost\asio\deadline_timer.hpp>
 #include <set>
 #include <memory>
-#include "Request.h"
 
 #define BUFF_SIZE 1024
 
 using namespace boost::asio;
 
-
 /* 
-	the class session is the super class of the TCP connection class 
-	Manange the TCP connection, implemnt a  mechanism to wait until a deadline is reached
+	this is the parent class of TCPconnection. Is used as abstraction of multiple transaction between the server
+	and a remote end-point using  one or more TCP connections.
+	It defines a timeout mechanism usefull to close the connection if is no longer used. 
+
+	https://devcentral.f5.com/questions/connections-vs-sessions
+	Connection vs Session: multiple transaction between the client and the server are considered a session.
 */
 class TCP_session {
 protected:
 	ip::tcp::endpoint clientAddr;
-	Request clientRequest;
 	deadline_timer input_deadline;
 	deadline_timer output_deadline;
 
+	void _check_deadline(deadline_timer timer);
+
 public:
 	TCP_session(io_service& io);
-	virtual ~TCP_session();
-	virtual void readRequest() = 0;
-	virtual void readDataChunks() = 0;
-	virtual void writeReply() = 0;
+
 };
 
 
 /*
-the class TCPconnection contain a pointer  to a socekt,
-2 buffers, 1 to read  and one to write
-2 mutable buffer, used in the boost library
+	the class TCPconnection contain a socekt,
+	2 buffers, 1 to read  and one to write
+	2 mutable buffer, used in the boost library
+
+	This class model a connection that make use of the TCP protcol, inside there are the buffers for the I/O, 
+	a connected socket and various instance method. This functions allows read and write operations on the socket
+	and to modify the connection status
+
 */
 class TCPconnection: public TCP_session {
 private:
@@ -50,13 +67,13 @@ private:
 	boost::array<void, BUFF_SIZE> write_buff;
 	boost::array<void, BUFF_SIZE> read_buff;
 
-	io_service io;
+	ip::tcp::socket sock;
 	std::shared_ptr<ip::tcp::socket> tcp_conn_socket;
 	boost::system::error_code err;
 
-	// isn't possible to copy an TCP connection instance
+	/* isn't possible to copy an TCP connection instance
 	TCPconnection(const TCPconnection& TCPconn) {}
-	TCPconnection& operator=(const TCPconnection& TCPconn) {}
+	TCPconnection& operator=(const TCPconnection& TCPconn) {}*/
 
 	void _check_deadline(deadline_timer timer);
 
@@ -67,14 +84,11 @@ public:
 	void closeConnection();
 	ip::tcp::socket& getSocket();
 	
-	// inherted methods 
-	void readRequest();
-	void readDataChunks();
-	void writeReply();
+
 };
 
 /*
-  this class contain all the connection instantiated
+  connection pool class save all the connection that the server receives
 */
 class ConnectionPool {
 private:

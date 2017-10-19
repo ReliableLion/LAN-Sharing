@@ -6,11 +6,14 @@
 #include <memory>
 #include <queue>
 
+/*
+	definition of a new type called download request
+*/
 typedef struct {
 	std::string fileName;
 	size_t fileSize;
 	TCPconnection connection;
-} request;
+} dwld_request;
 
 /*
 	this class include the information about a request:
@@ -21,12 +24,12 @@ typedef struct {
 class RequestQueue {
 
 private:
-	std::queue<request> incomingRequest;
+	std::queue<dwld_request> incomingRequest;
 
 public:
 	RequestQueue();
 	void insertRequest(size_t filesize, std::string fileName, std::shared_ptr<TCPconnection> new_connection);
-	void removeRequest(request& value);
+	void removeRequest(dwld_request& value);
 	bool isEmpty();
 };
 
