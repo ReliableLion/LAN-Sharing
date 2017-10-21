@@ -42,7 +42,7 @@ and to modify the connection status
 class TCPConnection {
 protected:
 
-	boost::array<void, CHUNK_SIZE> chunk;
+	//boost::array<void, CHUNK_SIZE> chunk;
 
 	ip::tcp::endpoint clientAddr;
 	deadline_timer input_deadline;

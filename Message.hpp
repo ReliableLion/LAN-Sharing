@@ -8,7 +8,7 @@
 class Message {
 
 public:
-	std::vector<const_buffer> getMessageData() {
+	std::vector<boost::asio::const_buffer> getMessageData() {
 		return bufferContainer;
 	}
 
@@ -16,11 +16,11 @@ public:
 		return bufferContainer.size();
 	}
 
-	void setMessageData(std::vector<const_buffer> buffCont) {
+	void setMessageData(std::vector<boost::asio::const_buffer> buffCont) {
 		this->bufferContainer = buffCont;
 	}
 
-	std::vector<const_buffer> bufferContainer;
+	std::vector<boost::asio::const_buffer> bufferContainer;
 
 protected:
 	std::string messageBody = "";
@@ -40,16 +40,16 @@ public:
 		this->fileTimestamp = fileTimestamp;
 		this->fileName = fileName;
 
-		bufferContainer.push_back(buffer(reinterpret_cast<void*>(this->fileSize), sizeof(__int64)));
+		bufferContainer.push_back(boost::asio::buffer(reinterpret_cast<void*>(this->fileSize), sizeof(__int64)));
 
 		timeStamp.LowPart = this->fileTimestamp.dwLowDateTime;
 		timeStamp.HighPart = this->fileTimestamp.dwHighDateTime;
-		bufferContainer.push_back(buffer(reinterpret_cast<void*>(this->timeStamp.QuadPart), sizeof(FILETIME)));
+		bufferContainer.push_back(boost::asio::buffer(reinterpret_cast<void*>(this->timeStamp.QuadPart), sizeof(FILETIME)));
 
 		messageBody.append(this->fileName);
 		messageBody.append(endMessage);
 
-		bufferContainer.push_back(buffer(messageBody, messageBody.size()));
+		bufferContainer.push_back(boost::asio::buffer(messageBody, messageBody.size()));
 
 	}
 
@@ -82,14 +82,14 @@ public:
 		messageBody.append(username);
 		messageBody.append(endMessage);
 
-		bufferContainer.push_back(buffer(messageBody, messageBody.size()));
+		bufferContainer.push_back(boost::asio::buffer(messageBody, messageBody.size()));
 	}
 
 	DiscoveryMessage() {
 		messageBody.append(discoveryMsg);
 		messageBody.append(endMessage);
 
-		bufferContainer.push_back(buffer(messageBody, messageBody.size()));
+		bufferContainer.push_back(boost::asio::buffer(messageBody, messageBody.size()));
 	}
 
 	const std::string helloMsg = "MYUSERNAME ";
