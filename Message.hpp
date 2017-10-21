@@ -1,5 +1,3 @@
-
-
 #pragma once
 
 #include <iostream>
@@ -10,16 +8,24 @@
 class Message {
 
 public:
-	std::string getMessageBody() {
-		return messageBody;
+	std::vector<const_buffer> getMessageData() {
+		return bufferContainer;
 	}
+
+	size_t getMessageSize() {
+		return bufferContainer.size();
+	}
+
+	void setMessageData(std::vector<const_buffer> buffCont) {
+		this->bufferContainer = buffCont;
+	}
+
+	std::vector<const_buffer> bufferContainer;
 
 protected:
 	std::string messageBody = "";
 	std::stringstream stream;
 	const std::string endMessage = "\r\n";
-	ULARGE_INTEGER timeStamp;
-	std::string string;
 
 };
 
@@ -34,19 +40,16 @@ public:
 		this->fileTimestamp = fileTimestamp;
 		this->fileName = fileName;
 
-		stream << this->fileSize;
-		messageBody.append(stream.str());
+		bufferContainer.push_back(buffer(reinterpret_cast<void*>(this->fileSize), sizeof(__int64)));
 
 		timeStamp.LowPart = this->fileTimestamp.dwLowDateTime;
 		timeStamp.HighPart = this->fileTimestamp.dwHighDateTime;
-		stream.clear();
-		stream << timeStamp.QuadPart;
-
-		messageBody.append(stream.str());
+		bufferContainer.push_back(buffer(reinterpret_cast<void*>(this->timeStamp.QuadPart), sizeof(FILETIME)));
 
 		messageBody.append(this->fileName);
-
 		messageBody.append(endMessage);
+
+		bufferContainer.push_back(buffer(messageBody, messageBody.size()));
 
 	}
 
@@ -67,6 +70,7 @@ private:
 	__int64 fileSize;
 	FILETIME fileTimestamp;
 	std::string fileName;
+	ULARGE_INTEGER timeStamp;
 
 };
 
@@ -77,11 +81,15 @@ public:
 		messageBody.append(helloMsg);
 		messageBody.append(username);
 		messageBody.append(endMessage);
+
+		bufferContainer.push_back(buffer(messageBody, messageBody.size()));
 	}
 
 	DiscoveryMessage() {
 		messageBody.append(discoveryMsg);
 		messageBody.append(endMessage);
+
+		bufferContainer.push_back(buffer(messageBody, messageBody.size()));
 	}
 
 	const std::string helloMsg = "MYUSERNAME ";
