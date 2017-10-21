@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <thread>
+#include <string>
 #include "RequestMananger.h"
 #include "UserConfiguration.h"
 
@@ -16,20 +17,20 @@ using namespace boost::asio;
 class Server {
 private:
 	io_service io;
-	const std::string ServerPort = "1500";
-	const std::string ServerAddr = "localhost";
+	std::string ServerPort = "1500";
+	std::string ServerAddr = "localhost";
 	ip::tcp::acceptor Acceptor;
 
 	UserConfig AppConfiguration;
 	RequestManager reqMan;
 
 	void _waitRequest();
-	void _handleAccept(const boost::system::error_code& e, std::shared_ptr<TCPconnection> conn);
 
 public:
 	// definire il construttore dopo perchè bisonga tenere conto dell'indirizzo del server e della porta
 	Server();
-	Server(const std::string ServerAddr, const std::string ServerPort);
+	Server(const std::string ServerAddr, const int ListenPort);
+	void closeServer();
 };
 
 #endif // !SERVER_H

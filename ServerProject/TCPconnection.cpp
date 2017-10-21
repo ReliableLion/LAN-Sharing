@@ -104,29 +104,3 @@ void TCPconnection_server::readDataChunks() {}
 void TCPconnection_server::readRequest() {}
 
 void TCPconnection_server::writeReply() {}
-
-//-------------Connection Pool Class
-
-
-// insert a new connection in the set of connection and wait for the client request
-void ConnectionPool::start(std::shared_ptr<TCPconnection> conn) {
-	connSet.insert(conn);
-}
-
-void ConnectionPool::stop(std::shared_ptr<TCPconnection> conn) {
-	// stop the connectiona and delete it from the set
-	conn->closeConnection();
-	connSet.erase(conn);
-}
-
-void ConnectionPool::stop_all() {
-
-	// close all the connection in the set
-	for (auto i = std::begin(connSet); i != std::end(connSet); i++) {
-		std::shared_ptr<TCPconnection> conn = *i;
-		conn->closeConnection();
-	}
-
-	// delete all the element in the set
-	connSet.clear();
-}

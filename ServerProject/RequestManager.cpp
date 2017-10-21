@@ -1,6 +1,75 @@
 #include "RequestMananger.h"
 
-RequestManager::RequestManager() {}
+RequestManager::RequestManager() {
 
-// return the termiantor string 
-char* getTermiantor() {}
+	for (int i = 0; i < MAX_THREADS; i++) {
+		t[i] = std::thread();
+	}
+
+	terminate.store(false);
+}
+
+RequestManager::~RequestManager() {
+	shutdown();
+}
+
+void RequestManager::shutdown() {
+	std::shared_ptr<TCPconnection_server> conn;
+
+	terminate.store(true);
+
+	for (int i = 0; i < MAX_THREADS; i++) {
+		t[i].join();
+	}
+
+	// if shutdown method is called then all the connections that are in connection_pool are closed
+	while (connection_pool.empty()) {
+		conn = connection_pool.front();
+		conn->closeConnection();
+		connection_pool.pop();
+	}
+
+}
+
+
+void RequestManager::addRequest(std::shared_ptr<TCPconnection_server> conn) {
+
+	// check if the server has turned off
+	if (terminate.load()) {
+		throw std::exception();
+	}
+
+	// add the request into the queue
+	std::lock_guard <std::mutex> l(mtx1);
+	connection_pool.push(conn);
+	cv.notify_all();
+}
+
+void RequestManager::processRequest() {
+
+	std::shared_ptr<TCPconnection_server> conn;
+
+	while (1) {
+
+		bool t = terminate.load();
+		if (!t) { break; }
+
+		std::unique_lock<std::mutex> l(mtx1);
+		cv.wait(l, [this, t] () {
+			return (!connection_pool.empty() || t);
+		});
+
+		if (t) { break; }
+
+		conn = connection_pool.front();
+		connection_pool.pop();
+
+		l.unlock();
+
+		// here receive the client request and decode it in order to begin the file download
+
+	}
+
+}
+
+

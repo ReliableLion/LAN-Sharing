@@ -1,5 +1,5 @@
-#ifndef HANDLE_DOWNLOAD
-#define HANDLE_DOWNLOAD
+#ifndef DOWNLOAD_MANAGER_H
+#define DOWNLOAD_MANAGER_H
 
 #include <thread>
 #include <mutex>
@@ -16,8 +16,7 @@
 // is the threshold value for the file 
 #define FILE_THRESHOLD 4 * 1024 * 1024  // 4 MB 
 
-
-class HandleDownload {
+class DownloadManager {
 private:
 	std::thread bigFileThread[THREAD_NUM_BIG];
 	std::thread smallFileThread[THREAD_NUM_SMALL];
@@ -41,8 +40,8 @@ private:
 	FileHandler _openFile(std::string filename);
 
 public:
-	HandleDownload() = default;
-	~HandleDownload();
+	DownloadManager() = default;
+	~DownloadManager();
 	void setupDownloader();
 	void DownloadBigFile();
 	void DownloadSmallFile();
@@ -50,4 +49,4 @@ public:
 	void InsertBigFileRequest(size_t fileSize, std::string fileName, std::shared_ptr<TCPconnection> new_connection);
 };
 
-#endif // HANDLE_DOWNLOAD
+#endif // DONWLOAD_MANAGER_H

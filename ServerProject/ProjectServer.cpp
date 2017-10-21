@@ -4,7 +4,10 @@
 /*
 	create a new server instance and resolve the endpoint name 
 */
-Server::Server(const std::string ServerAddr, const std::string ServerPort) : io(), Acceptor(io), reqMan() {
+Server::Server(std::string ServerAddr, int  ListenPort) : io(), Acceptor(io), reqMan() {
+
+	this->ServerAddr = ServerAddr;
+	this->ServerPort = std::to_string(ListenPort);
 
 	ip::tcp::resolver resolver(io);
 	ip::tcp::resolver::query query(ServerAddr, ServerPort);
@@ -51,15 +54,10 @@ void Server::_waitRequest() {
 			// creation of new connection 
 
 			std::shared_ptr<TCPconnection> newConnection = std::shared_ptr<TCPconnection>(new TCPconnection(io));
-			//connMan.start(newConnection);
-
-			//async accept 
-			Acceptor.async_accept(newConnection->getSocket(), boost::bind(&Server::_handleAccept, this,
-				boost::asio::placeholders::error, newConnection));
 		}
 
 		// TODO close all the connections
-		connMan.stop_all();
+		//connMan.stop_all();
 
 	}
 	catch (std::exception &e) {
@@ -67,23 +65,12 @@ void Server::_waitRequest() {
 	}
 }
 
-
-void Server::_handleAccept(const boost::system::error_code& error, std::shared_ptr<TCPconnection> conn) {
-
-	if (!Acceptor.is_open()) {
-		return;
-	}
-
-	if (!error) {
-		connMan.start(conn);
-
-		// wait for request 
-
-	}
-	else {
-		std::cerr << "error, isn't possible to accept a new requset: " << error << std::endl;
-	}
+void Server::closeServer() {
+	// close all possible instance declarated into server class
+	Acceptor.close();
+	reqMan.shutdown();
 }
+
 
 
 

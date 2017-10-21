@@ -1,22 +1,22 @@
-#include "HandleDownload.h"
+#include "DownloadManager.h"
 
 // when the costructor of this object is invoked the threads are createsd and go into sleep mode
-void HandleDownload::setupDownloader() {
+void DownloadManager::setupDownloader() {
 
 	terminate.store(false);
 
 	for (int i = 0; i < THREAD_NUM_BIG; i++) {
-		bigFileThread[i] = std::thread(&HandleDownload::DownloadBigFile, this);
+		bigFileThread[i] = std::thread(&DownloadManager::DownloadBigFile, this);
 	}
 
 	for (int i = 0; i < THREAD_NUM_SMALL; i++) {
-		smallFileThread[i] = std::thread(&HandleDownload::DownloadSmallFile, this);
+		smallFileThread[i] = std::thread(&DownloadManager::DownloadSmallFile, this);
 	}
 }
 
 
 // define a method to exit 
-HandleDownload::~HandleDownload() {
+DownloadManager::~DownloadManager() {
 
 	terminate.store(true);
 
@@ -29,7 +29,7 @@ HandleDownload::~HandleDownload() {
 	}
 }
 
-void HandleDownload::DownloadSmallFile() {
+void DownloadManager::DownloadSmallFile() {
 
 	dwld_request new_req;
 
@@ -61,7 +61,7 @@ void HandleDownload::DownloadSmallFile() {
 	
 		// decide if the opening of the file will be in asynchronous manner or sequential
 		try {
-			std::future<FileHandler> openFile = std::async(std::launch::async, &HandleDownload::_openFile, this, new_req.fileName);
+			std::future<FileHandler> openFile = std::async(std::launch::async, &DownloadManager::_openFile, this, new_req.fileName);
 		} catch(FileOpenException &e) {
 
 		}
@@ -84,7 +84,7 @@ void HandleDownload::DownloadSmallFile() {
 	ul.unlock();
 }
 
-void HandleDownload::DownloadBigFile() {
+void DownloadManager::DownloadBigFile() {
 
 	dwld_request new_req;
 
@@ -109,7 +109,7 @@ void HandleDownload::DownloadBigFile() {
 
 		// open asynchronously the file
 		try {
-			std::future<FileHandler> async_open = std::async(&HandleDownload::_openFile, this, new_req.fileName);
+			std::future<FileHandler> async_open = std::async(&DownloadManager::_openFile, this, new_req.fileName);
 		}
 		catch (FileOpenException &e) {
 
@@ -135,7 +135,7 @@ void HandleDownload::DownloadBigFile() {
 	ul.unlock();
 }
 
-void HandleDownload::InsertSmallFileRequest(size_t fileSize, std::string filename, std::shared_ptr<TCPconnection> new_connection) {
+void DownloadManager::InsertSmallFileRequest(size_t fileSize, std::string filename, std::shared_ptr<TCPconnection> new_connection) {
 	
 	if (terminate.load() == false) {
 		std::lock_guard<std::mutex> lg(SmallFileMtx);
@@ -152,7 +152,7 @@ void HandleDownload::InsertSmallFileRequest(size_t fileSize, std::string filenam
 
 }
 
-void HandleDownload::InsertBigFileRequest(size_t fileSize, std::string filename, std::shared_ptr<TCPconnection> new_connection) {
+void DownloadManager::InsertBigFileRequest(size_t fileSize, std::string filename, std::shared_ptr<TCPconnection> new_connection) {
 
 	if (terminate.load() == false) {
 		std::lock_guard<std::mutex> lg(BigFileMtx);
@@ -169,7 +169,7 @@ void HandleDownload::InsertBigFileRequest(size_t fileSize, std::string filename,
 
 }
 
-FileHandler HandleDownload::_openFile(std::string filename) {
+FileHandler DownloadManager::_openFile(std::string filename) {
 
 	// if the filename is empty then throw an exception
 	if (filename.empty()) {
