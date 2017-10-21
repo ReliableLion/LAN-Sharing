@@ -4,7 +4,7 @@
 /*
 	create a new server instance and resolve the endpoint name 
 */
-Server::Server(const std::string ServerAddr, const std::string ServerPort) : io(), Acceptor(io), connMan() {
+Server::Server(const std::string ServerAddr, const std::string ServerPort) : io(), Acceptor(io), reqMan() {
 
 	ip::tcp::resolver resolver(io);
 	ip::tcp::resolver::query query(ServerAddr, ServerPort);
@@ -15,9 +15,6 @@ Server::Server(const std::string ServerAddr, const std::string ServerPort) : io(
 	Acceptor.bind(server_endpoint);
 	Acceptor.listen();
 
-	// initialize the downloder
-	d_handler.setupDownloader();
-
 	// wait for new request
 	_waitRequest();
 }
@@ -26,7 +23,7 @@ Server::Server(const std::string ServerAddr, const std::string ServerPort) : io(
 /*
 	create a new server instance using default configurations
 */
-Server::Server() : io(), Acceptor(io), connMan() {
+Server::Server() : io(), Acceptor(io), reqMan() {
 
 	ip::tcp::resolver resolver(io);
 	ip::tcp::resolver::query query(this->ServerAddr, this->ServerPort);
@@ -36,9 +33,6 @@ Server::Server() : io(), Acceptor(io), connMan() {
 	Acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
 	Acceptor.bind(server_endpoint);
 	Acceptor.listen();
-
-	// initialize the download handler
-	d_handler.setupDownloader();
 
 	// begin to wait for request
 	_waitRequest();
@@ -57,7 +51,7 @@ void Server::_waitRequest() {
 			// creation of new connection 
 
 			std::shared_ptr<TCPconnection> newConnection = std::shared_ptr<TCPconnection>(new TCPconnection(io));
-			newConnection->createConnection();
+			//connMan.start(newConnection);
 
 			//async accept 
 			Acceptor.async_accept(newConnection->getSocket(), boost::bind(&Server::_handleAccept, this,
@@ -74,18 +68,20 @@ void Server::_waitRequest() {
 }
 
 
-void Server::_handleAccept(const boost::system::error_code& e, std::shared_ptr<TCPconnection> conn) {
+void Server::_handleAccept(const boost::system::error_code& error, std::shared_ptr<TCPconnection> conn) {
 
 	if (!Acceptor.is_open()) {
 		return;
 	}
 
-	
-	if (!e) {
+	if (!error) {
 		connMan.start(conn);
+
+		// wait for request 
+
 	}
 	else {
-		std::cerr << "error, isn't possible to accept a new requset: " << e << std::endl;
+		std::cerr << "error, isn't possible to accept a new requset: " << error << std::endl;
 	}
 }
 

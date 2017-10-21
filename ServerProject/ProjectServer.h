@@ -3,8 +3,7 @@
 
 #include <iostream>
 #include <thread>
-#include "ProjectServer.h"
-#include "HandleDownload.h"
+#include "RequestMananger.h"
 #include "UserConfiguration.h"
 
 #include <boost/asio.hpp>
@@ -18,11 +17,11 @@ class Server {
 private:
 	io_service io;
 	const std::string ServerPort = "1500";
-	const std::string ServerAddr = "";
-	UserConfig AppConfiguration;
-	HandleDownload d_handler;
+	const std::string ServerAddr = "localhost";
 	ip::tcp::acceptor Acceptor;
-	ConnectionPool connMan;
+
+	UserConfig AppConfiguration;
+	RequestManager reqMan;
 
 	void _waitRequest();
 	void _handleAccept(const boost::system::error_code& e, std::shared_ptr<TCPconnection> conn);
