@@ -20,6 +20,7 @@ using namespace boost::asio;
 class Server {
 private:
 	io_service io;
+	ip::tcp::endpoint local_endpoint;
 	std::string ServerPort = "1500";
 	int int_ServerPort = 1500;
 	std::string ServerAddr = "localhost";

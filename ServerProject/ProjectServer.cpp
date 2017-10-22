@@ -8,18 +8,6 @@ Server::Server(std::string ServerAddr, int  ListenPort) : io(), Acceptor(io), re
 	this->ServerAddr = ServerAddr;
 	this->int_ServerPort = ListenPort;
 	this->ServerPort = std::to_string(ListenPort);
-}
-
-
-/*
-	create a new server instance using default configurations
-*/
-Server::Server() : io(), Acceptor(io), reqMan() {}
-
-/*
-	throw an exception if the Server receive as actual parameter a not valid port number
-*/
-void Server::createServer() {
 
 	if (_portChecking(int_ServerPort)) {
 		std::cout << "the port specified is not correct" << std::endl;
@@ -28,15 +16,34 @@ void Server::createServer() {
 
 	ip::tcp::resolver resolver(io);
 	ip::tcp::resolver::query query(this->ServerAddr, this->ServerPort);
-	ip::tcp::endpoint server_endpoint = *resolver.resolve(query);
+	local_endpoint = *resolver.resolve(query);
+}
 
-	Acceptor.open(server_endpoint.protocol());
+/*
+	create a new server instance using default configurations
+*/
+Server::Server() : io(), Acceptor(io), reqMan() {
+	ip::tcp::resolver resolver(io);
+	local_endpoint = ip::tcp::endpoint(ip::tcp::v4(), int_ServerPort);
+}
+
+/*
+	throw an exception if the Server receive as actual parameter a not valid port number
+*/
+void Server::createServer() {
+	Acceptor.open(local_endpoint.protocol());
 	Acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
-	Acceptor.bind(server_endpoint);
+	Acceptor.bind(local_endpoint);
 	Acceptor.listen();
 
 	// begin to wait for request
 	_waitRequest();
+}
+
+void Server::closeServer() {
+	// close all possible instance declarated into server class
+	Acceptor.close();
+	reqMan.shutdown();
 }
 
 // this function wait an inbound request from the applcation client
@@ -50,22 +57,19 @@ void Server::_waitRequest() {
 			// ip::tcp::acceptor accept(io_service, ip::tcp::endpoint(ip::tcp::v4(), ServerPort);
 			// creation of new connection 
 
-			std::shared_ptr<TCPconnection> newConnection = std::shared_ptr<TCPconnection>(new TCPconnection(io));
+			std::shared_ptr<TCPconnection_server> newConnection = std::shared_ptr<TCPconnection_server>(new TCPconnection_server(io));
+
+			// accept  request
+			Acceptor.accept(newConnection->getSocket());
+			reqMan.addRequest(newConnection);
 		}
 
-		// TODO close all the connections
-		//connMan.stop_all();
-
+		// close all the connection 
+		reqMan.shutdown();
 	}
 	catch (std::exception &e) {
 		std::cerr << e.what() << std::endl;
 	}
-}
-
-void Server::closeServer() {
-	// close all possible instance declarated into server class
-	Acceptor.close();
-	reqMan.shutdown();
 }
 
 
@@ -83,7 +87,3 @@ bool Server::_portChecking(int port_number) {
 	}
 
 }
-
-
-
-

@@ -87,6 +87,9 @@ void DownloadManager::DownloadSmallFile() {
 void DownloadManager::DownloadBigFile() {
 
 	dwld_request new_req;
+	std::string fileName;
+	size_t fileSize;
+	std::shared_ptr<TCPconnection_server> conn;
 
 	while (1) {
 		std::unique_lock<std::mutex> ul(BigFileMtx);
@@ -107,13 +110,20 @@ void DownloadManager::DownloadBigFile() {
 
 		// do stuff here
 
+		fileName = new_req.fileName;
+		fileSize = new_req.fileSize;
+		conn = new_req.connection;
+
 		// open asynchronously the file
 		try {
-			std::future<FileHandler> async_open = std::async(&DownloadManager::_openFile, this, new_req.fileName);
+			std::future<FileHandler> async_open = std::async(&DownloadManager::_openFile, this, fileName);
 		}
 		catch (FileOpenException &e) {
-
+			//std::cerr << e.what() << std::endl;
 		}
+
+
+		
 
 
 
