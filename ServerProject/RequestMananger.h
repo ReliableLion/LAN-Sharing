@@ -3,7 +3,7 @@
 
 #include "TCPconnection.h"
 #include "DownloadManager.h"
-#include "Message.h"
+#include "Message.hpp"
 #include <memory>
 #include <condition_variable>
 #include <mutex>

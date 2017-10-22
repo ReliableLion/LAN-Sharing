@@ -15,6 +15,8 @@ typedef struct {
 	std::shared_ptr<TCPconnection_server> connection;
 } dwld_request;
 
+#define MAX_QUEUE_ELEMENTS 1000
+
 /*
 	this class include the information about a request:
 	- filename (name of the file + path on the filesystem)
@@ -25,6 +27,7 @@ class RequestQueue {
 
 private:
 	std::queue<dwld_request> incomingRequest;
+	int entries_n;
 
 public:
 	RequestQueue();
