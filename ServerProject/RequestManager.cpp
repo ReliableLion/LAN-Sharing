@@ -31,7 +31,6 @@ void RequestManager::shutdown() {
 
 }
 
-
 void RequestManager::addRequest(std::shared_ptr<TCPconnection_server> conn) {
 
 	// check if the server has turned off
@@ -70,6 +69,29 @@ void RequestManager::processRequest() {
 
 	}
 
+}
+
+// wiht handshake i mean the time window between the request and the reply
+void RequestManager::requestHandShake(std::shared_ptr<TCPconnection_server> conn) {
+
+	RequestMessage r_msg;
+
+	// check if the connection is alive
+	if (!conn->checkConnection()) {
+
+	}
+
+	try {
+		// use the reveive method of connection to read the client incoming request
+		conn->readRequest(r_msg);
+
+
+	}
+	catch (std::exception &e) {
+		e.what();
+	}
+
+		 
 }
 
 

@@ -20,6 +20,8 @@
 #include <memory>
 #include <iostream>
 
+#include "Message.hpp"
+
 #define BUFF_SIZE 1024
 
 using namespace boost::asio;
@@ -49,6 +51,9 @@ protected:
 	
 	boost::array<void, BUFF_SIZE> write_buff;
 	boost::array<void, BUFF_SIZE> read_buff;
+
+	streambuf readbuff;
+	streambuf writebuff;
 
 	ip::tcp::endpoint clientAddr;
 	deadline_timer input_deadline;
@@ -80,7 +85,7 @@ public:
 	// handshake 
 	void startExchange();
 	void readDataChunks();
-	void readRequest();
+	std::string readRequest(RequestMessage &msg);
 	void writeReply();
 };
 

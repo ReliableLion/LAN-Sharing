@@ -3,7 +3,8 @@
 //---------------TCPconnecton Class
 
 // in the constructor is declared the socket element 
-TCPconnection::TCPconnection(io_service& io_serv) : sock(io_serv), input_deadline(io_serv), output_deadline(io_serv) {
+TCPconnection::TCPconnection(io_service& io_serv) : sock(io_serv), input_deadline(io_serv), output_deadline(io_serv),
+													readbuff(BUFF_SIZE), writebuff(BUFF_SIZE) {
 
 	if (!sock.is_open()) {
 		// the socket is close launch an exception
@@ -97,10 +98,33 @@ void TCPconnection_server::_handle_write(boost::system::error_code& error) {
 
 }
 
-void TCPconnection_server::startExchange() {}
-
 void TCPconnection_server::readDataChunks() {}
 
-void TCPconnection_server::readRequest() {}
+// read the client request by using a read_until 
+std::string TCPconnection_server::readRequest(RequestMessage& msg) {
+	
+	// requestMessage instance
+	size_t read_byte;
+	std::string request;
 
-void TCPconnection_server::writeReply() {}
+	if ((read_byte = read_until(sock, readbuff, msg.getEndMessage, err)) == 0) {
+		//lauch a new exception 
+	}
+
+	if (!err) {
+		readbuff.commit(read_byte);
+		std::istream input_stream(&readbuff);
+
+		// store the request message into a string
+		input_stream >> request;
+	}
+	else {
+		// if there is an error launch a new excpetion
+	}
+
+	return request;
+}
+
+void TCPconnection_server::writeReply() {
+	
+}

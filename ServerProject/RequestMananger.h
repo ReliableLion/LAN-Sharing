@@ -25,7 +25,7 @@ private:
 	DownloadManager d_man;
 	
 	void processRequest();
-	void requestHandShake();
+	void requestHandShake(std::shared_ptr<TCPconnection_server> conn);
 
 public:
 	RequestManager();
