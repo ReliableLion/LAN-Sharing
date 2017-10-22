@@ -75,6 +75,9 @@ void RequestManager::processRequest() {
 void RequestManager::requestHandShake(std::shared_ptr<TCPconnection_server> conn) {
 
 	RequestMessage r_msg;
+	ReplyMsg reply_msg;
+
+	// TODO	implement a timeout mechanism in order to close connections that are open but unused
 
 	// check if the connection is alive
 	if (!conn->checkConnection()) {
@@ -85,7 +88,10 @@ void RequestManager::requestHandShake(std::shared_ptr<TCPconnection_server> conn
 		// use the reveive method of connection to read the client incoming request
 		conn->readRequest(r_msg);
 
+		//TODO	devo aspettare davide che finisca la class messagecontainer
+		
 
+		conn->writeReply(reply_msg);
 	}
 	catch (std::exception &e) {
 		e.what();

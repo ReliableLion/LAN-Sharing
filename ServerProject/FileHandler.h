@@ -22,6 +22,7 @@ private:
 	std::string filename;
 
 public:
+	FileHandler() {};
 	FileHandler(std::string filename): filename(filename) {}
 	FileHandler(char *filename) { this->filename = std::string(filename); }
 	void openFile();

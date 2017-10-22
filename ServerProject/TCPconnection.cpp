@@ -76,28 +76,7 @@ boost::system::error_code TCPconnection::getError() { return err; }
 
 //-------------TCPconnection_server
 
-// callback function called when the SO finish to read the data from the socket
-void TCPconnection_server::_handle_read_until(boost::system::error_code& error) {
-	
-	// first of all check the timeout, in case is expired the timeout
-	if (!checkConnection()) {
-		return;
-	}
-
-
-}
-
-// callbakc fucntion called whwn the SO finis to write the reply 
-void TCPconnection_server::_handle_write(boost::system::error_code& error) {
-
-	// check if the connection is open
-	if (!checkConnection()) {
-		return;
-	}
-	
-
-}
-
+// this method read the file's byte that are sended by the client 
 void TCPconnection_server::readDataChunks() {}
 
 // read the client request by using a read_until 
@@ -107,7 +86,7 @@ std::string TCPconnection_server::readRequest(RequestMessage& msg) {
 	size_t read_byte;
 	std::string request;
 
-	if ((read_byte = read_until(sock, readbuff, msg.getEndMessage, err)) == 0) {
+	if ((read_byte = read_until(sock, readbuff, msg.getEndMessage(), err)) == 0) {
 		//lauch a new exception 
 	}
 
@@ -125,6 +104,24 @@ std::string TCPconnection_server::readRequest(RequestMessage& msg) {
 	return request;
 }
 
-void TCPconnection_server::writeReply() {
+void TCPconnection_server::writeReply(ReplyMsg &msg) {
 	
+	std::ostream output_stream(&writebuff);
+	std::size_t write_byte;
+
+	if (!checkConnection()) {
+		// if the connection is closed lauch a new exception
+		throw std::exception();
+	}
+
+	output_stream << msg.createReply();
+
+	write_byte = write(sock, writebuff, err);
+	if (write_byte == 0 || err) {
+
+	}
+	else {
+
+	}
+
 }

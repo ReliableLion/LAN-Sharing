@@ -12,7 +12,7 @@
 typedef struct {
 	std::string fileName;
 	size_t fileSize;
-	TCPconnection connection;
+	std::shared_ptr<TCPconnection_server> connection;
 } dwld_request;
 
 /*
@@ -28,7 +28,7 @@ private:
 
 public:
 	RequestQueue();
-	void insertRequest(size_t filesize, std::string fileName, std::shared_ptr<TCPconnection> new_connection);
+	void insertRequest(size_t filesize, std::string fileName, std::shared_ptr<TCPconnection_server> new_connection);
 	void removeRequest(dwld_request& value);
 	bool isEmpty();
 };

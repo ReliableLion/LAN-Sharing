@@ -45,8 +45,8 @@ public:
 	void setupDownloader();
 	void DownloadBigFile();
 	void DownloadSmallFile();
-	void InsertSmallFileRequest(size_t fileSize, std::string fileName, std::shared_ptr<TCPconnection> new_connection);
-	void InsertBigFileRequest(size_t fileSize, std::string fileName, std::shared_ptr<TCPconnection> new_connection);
+	void InsertSmallFileRequest(size_t fileSize, std::string fileName, std::shared_ptr<TCPconnection_server> new_connection);
+	void InsertBigFileRequest(size_t fileSize, std::string fileName, std::shared_ptr<TCPconnection_server> new_connection);
 };
 
 #endif // DONWLOAD_MANAGER_H

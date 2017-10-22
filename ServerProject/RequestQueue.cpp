@@ -3,7 +3,7 @@
 RequestQueue::RequestQueue() {}
 
 // this method should be protected from concurrent access
-void RequestQueue::insertRequest(size_t filesize, std::string fileName, std::shared_ptr<TCPconnection> new_connection) {
+void RequestQueue::insertRequest(size_t filesize, std::string fileName, std::shared_ptr<TCPconnection_server> new_connection) {
 	 
 	dwld_request new_request;
 

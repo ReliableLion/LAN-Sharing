@@ -7,7 +7,7 @@
 #include <vector>
 #include <boost\asio.hpp>
 
-class Msg_container {
+class Message {
 
 public:
 	std::vector<boost::asio::const_buffer> getMessageData() {
@@ -22,6 +22,7 @@ public:
 		this->bufferContainer = buffCont;
 	}
 
+	const std::string getEndMessage() { return Message::endMessage; }
 	
 
 protected:
@@ -31,20 +32,20 @@ protected:
 	std::vector<boost::asio::const_buffer> bufferContainer;
 };
 
-class RequestMessage : public Msg_container {
+class RequestMessage : public Message {
 
 public:
 	RequestMessage() {};
 
 	RequestMessage(__int64 fileSize, FILETIME fileTimestamp, std::string fileName) {
 
-		Msg_container::messageBody.append(sendMessage);
+		Message::messageBody.append(sendMessage);
 
 		this->fileSize = fileSize;
 		this->fileTimestamp = fileTimestamp;
 		this->fileName = fileName;
 
-		Msg_container::bufferContainer.push_back(boost::asio::buffer(reinterpret_cast<void*>(this->fileSize), sizeof(__int64)));
+		Message::bufferContainer.push_back(boost::asio::buffer(reinterpret_cast<void*>(this->fileSize), sizeof(__int64)));
 
 		timeStamp.LowPart = this->fileTimestamp.dwLowDateTime;
 		timeStamp.HighPart = this->fileTimestamp.dwHighDateTime;
@@ -73,8 +74,6 @@ public:
 		return this->fileName;
 	}
 
-	const std::string getEndMessage() { return Msg_container::endMessage; }
-
 private:
 	const std::string sendMessage = "SEND ";
 	__int64 fileSize;
@@ -83,22 +82,22 @@ private:
 	ULARGE_INTEGER timeStamp;
 };
 
-class DiscoveryMessage : public Msg_container {
+class DiscoveryMessage : public Message {
 
 public:
 	DiscoveryMessage(std::string username) {
-		Msg_container::messageBody.append(helloMsg);
-		Msg_container::messageBody.append(username);
-		Msg_container::messageBody.append(endMessage);
+		Message::messageBody.append(helloMsg);
+		Message::messageBody.append(username);
+		Message::messageBody.append(endMessage);
 
-		bufferContainer.push_back(boost::asio::buffer(Msg_container::messageBody, Msg_container::messageBody.size()));
+		bufferContainer.push_back(boost::asio::buffer(Message::messageBody, Message::messageBody.size()));
 	}
 
 	DiscoveryMessage() {
-		Msg_container::messageBody.append(discoveryMsg);
-		Msg_container::messageBody.append(endMessage);
+		Message::messageBody.append(discoveryMsg);
+		Message::messageBody.append(endMessage);
 
-		bufferContainer.push_back(boost::asio::buffer(Msg_container::messageBody, Msg_container::messageBody.size()));
+		bufferContainer.push_back(boost::asio::buffer(Message::messageBody, Message::messageBody.size()));
 	}
 
 	const std::string helloMsg = "MYUSERNAME ";
@@ -106,6 +105,14 @@ public:
 
 };
 
-class ReplyMessage: public Msg_container {
+class ReplyMsg: public Message {
+private:
+	const std::string ok = "OK";
+public:
+	ReplyMsg() {};
+	const std::string createReply() {
+		Message::stream << ok << Message::endMessage;
+		return stream.str();
+	}
 
 };

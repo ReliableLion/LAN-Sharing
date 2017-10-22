@@ -14,7 +14,6 @@
 #define TCP_CONNECTION_H
 
 #include <boost\asio.hpp>
-#include <boost\array.hpp>
 #include <boost\asio\deadline_timer.hpp>
 #include <queue>
 #include <memory>
@@ -49,8 +48,8 @@ using namespace boost::asio;
 class TCPconnection {
 protected:
 	
-	boost::array<void, BUFF_SIZE> write_buff;
-	boost::array<void, BUFF_SIZE> read_buff;
+	/*boost::array<void, BUFF_SIZE> write_buff;
+	boost::array<void, BUFF_SIZE> read_buff;*/
 
 	streambuf readbuff;
 	streambuf writebuff;
@@ -73,20 +72,13 @@ public:
 
 
 class TCPconnection_server : public TCPconnection {
-private:
-	// these two methosds are used to read the request and to write the reply, to read the data for the file download is not used the 
-	// asynchronous mechanism
-	void _handle_read_until(boost::system::error_code& error);
-	void _handle_write(boost::system::error_code& error);
 
 public:
 	TCPconnection_server(io_service& io): TCPconnection(io) {}
 	~TCPconnection_server() {}
-	// handshake 
-	void startExchange();
 	void readDataChunks();
 	std::string readRequest(RequestMessage &msg);
-	void writeReply();
+	void writeReply(ReplyMsg &msg);
 };
 
 #endif	//TCP_CONNECTION_H

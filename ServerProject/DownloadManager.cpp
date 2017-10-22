@@ -135,7 +135,7 @@ void DownloadManager::DownloadBigFile() {
 	ul.unlock();
 }
 
-void DownloadManager::InsertSmallFileRequest(size_t fileSize, std::string filename, std::shared_ptr<TCPconnection> new_connection) {
+void DownloadManager::InsertSmallFileRequest(size_t fileSize, std::string filename, std::shared_ptr<TCPconnection_server> new_connection) {
 	
 	if (terminate.load() == false) {
 		std::lock_guard<std::mutex> lg(SmallFileMtx);
@@ -152,7 +152,7 @@ void DownloadManager::InsertSmallFileRequest(size_t fileSize, std::string filena
 
 }
 
-void DownloadManager::InsertBigFileRequest(size_t fileSize, std::string filename, std::shared_ptr<TCPconnection> new_connection) {
+void DownloadManager::InsertBigFileRequest(size_t fileSize, std::string filename, std::shared_ptr<TCPconnection_server> new_connection) {
 
 	if (terminate.load() == false) {
 		std::lock_guard<std::mutex> lg(BigFileMtx);
@@ -169,6 +169,7 @@ void DownloadManager::InsertBigFileRequest(size_t fileSize, std::string filename
 
 }
 
+// this method open the file to be written using a future
 FileHandler DownloadManager::_openFile(std::string filename) {
 
 	// if the filename is empty then throw an exception
@@ -178,6 +179,7 @@ FileHandler DownloadManager::_openFile(std::string filename) {
 
 	FileHandler file(filename);
 	file.openFile();
+	return file;
 }
 
 
