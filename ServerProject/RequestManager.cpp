@@ -51,7 +51,6 @@ void RequestManager::processRequest() {
 	while (1) {
 
 		bool t = terminate.load();
-		if (!t) { break; }
 
 		std::unique_lock<std::mutex> l(mtx1);
 		cv.wait(l, [this, t] () {
@@ -65,7 +64,8 @@ void RequestManager::processRequest() {
 
 		l.unlock();
 
-		// here receive the client request and decode it in order to begin the file download
+		// here we receive the client request and decode it in order to begin the file download
+		requestHandShake(conn);
 
 	}
 
@@ -76,6 +76,8 @@ void RequestManager::requestHandShake(std::shared_ptr<TCPconnection_server> conn
 
 	RequestMessage r_msg;
 	ReplyMsg reply_msg;
+	__int64 fileSize = 0;
+	std::string filename = "";
 
 	// TODO	implement a timeout mechanism in order to close connections that are open but unused
 
@@ -89,15 +91,42 @@ void RequestManager::requestHandShake(std::shared_ptr<TCPconnection_server> conn
 		conn->readRequest(r_msg);
 
 		//TODO	devo aspettare davide che finisca la class messagecontainer
-		
 
+		// TODO	i need to use the message class methods to decode the content of the request
+
+		if (checkParameter(fileSize, filename)) {
+			throw std::exception();
+		}
+	
+		// if the filesize is greater than the file threshold then put it in the big file queue
+		if (fileSize >= FILE_THRESHOLD) {
+			d_man.InsertBigFileRequest((size_t) fileSize, filename, conn);
+		}
+		else {
+			d_man.InsertSmallFileRequest((size_t) fileSize, filename, conn);
+		}
+		
 		conn->writeReply(reply_msg);
 	}
 	catch (std::exception &e) {
+		// TODO	implement a mechanism to send an error message to say that the request is not recognized by the server 
 		e.what();
 	}
 
 		 
+}
+
+bool RequestManager::checkParameter(__int64 size, std::string filename) {
+
+	if (size <= 0) {
+		return false;
+	}
+	if (filename.empty()) {
+		return false;
+	}
+
+	return true;
+
 }
 
 

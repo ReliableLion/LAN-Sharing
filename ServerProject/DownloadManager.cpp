@@ -90,6 +90,7 @@ void DownloadManager::DownloadBigFile() {
 	std::string fileName;
 	size_t fileSize;
 	std::shared_ptr<TCPconnection_server> conn;
+	FileHandler original_file;
 
 	while (1) {
 		std::unique_lock<std::mutex> ul(BigFileMtx);
@@ -114,16 +115,23 @@ void DownloadManager::DownloadBigFile() {
 		fileSize = new_req.fileSize;
 		conn = new_req.connection;
 
-		// open asynchronously the file
 		try {
+			// open asynchronously the temp file 
 			std::future<FileHandler> async_open = std::async(&DownloadManager::_openFile, this, fileName);
+
+			// open the file in the directory specified by the user
+			original_file = _openFile(fileName, file_path);
 		}
 		catch (FileOpenException &e) {
 			//std::cerr << e.what() << std::endl;
+			original_file.closeFile();
+			original_file.removeFile();
+
 		}
 
+		// downlaad the byte from the connection 
 
-		
+		// store the temp file in the destination
 
 
 
@@ -180,14 +188,14 @@ void DownloadManager::InsertBigFileRequest(size_t fileSize, std::string filename
 }
 
 // this method open the file to be written using a future
-FileHandler DownloadManager::_openFile(std::string filename) {
+FileHandler DownloadManager::_openFile(std::string filename, std::string path = TEMP_PATH) {
 
 	// if the filename is empty then throw an exception
 	if (filename.empty()) {
 		throw FileOpenException();
 	}
 
-	FileHandler file(filename);
+	FileHandler file(filename, path);
 	file.openFile();
 	return file;
 }

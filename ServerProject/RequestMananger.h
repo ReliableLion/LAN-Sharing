@@ -26,6 +26,7 @@ private:
 	
 	void processRequest();
 	void requestHandShake(std::shared_ptr<TCPconnection_server> conn);
+	bool checkParameter(__int64 size, std::string filename);
 
 public:
 	RequestManager();

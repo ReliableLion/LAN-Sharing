@@ -37,7 +37,8 @@ private:
 	RequestQueue BigFileRequest_q;
 	RequestQueue SmallFileRequest_q;
 
-	FileHandler _openFile(std::string filename);
+	FileHandler _openFile(std::string filename, std::string path = TEMP_PATH);
+	std::string file_path = "";
 
 public:
 	DownloadManager() = default;

@@ -1,11 +1,21 @@
 #include "FileHandler.h"
 
+FileHandler::FileHandler(std::string filename, std::string path) : filename(filename), file_dir(path) {
+	file_path = file_dir.append("\\").append(this->filename);
+}
+
+FileHandler::FileHandler(char *filename, char *path) {
+	this->file_dir = std::string(path);
+	this->filename = std::string(filename);
+	file_path = file_dir.append("\\").append(this->filename);
+}
+
 // open the file nad check if it is ready to be used
 // if t isn't possible to open the file lauch a new open file exception
 void FileHandler::openFile() {
 	
 	// open the file in binary mode 
-	file.open(filename, std::fstream::binary);
+	file.open(file_path, std::fstream::binary);
 	
 	if (!file.is_open()) {
 		//lauch a new FileOpenException to v
@@ -53,4 +63,13 @@ void FileHandler::writeData(boost::asio::mutable_buffer& buffer) {
 		throw FileWriteException();
 	}
 
+}
+
+void FileHandler::copyFile(FileHandler dest_file) {
+
+}
+
+// to be used after the file closing
+void FileHandler::removeFile() {
+	remove(this->filename.c_str());
 }
