@@ -186,15 +186,20 @@ FileHandler DownloadManager::_openFile(std::string filename, std::string path) {
 }
 
 void DownloadManager::_downloadFile(std::string filename, size_t size, std::shared_ptr<TCPconnection_server> conn) {
+
+	// varaible used to manage the file life-cycle
 	FileHandler original_file;
 	FileHandler temp_file;
 	std::future<FileHandler> async_open;
+
+	// variable used to perform a reading from network
 	size_t downloaded_byte, remaining_byte;
+	buffer_type read_buffer;
+	std::shared_ptr<buffer_type> buffer_ptr = std::make_shared<buffer_ptr>(read_buffer);
 
 	try {
 		// open asynchronously the temp file 
 		async_open = std::async(&DownloadManager::_openFile, this, filename, std::string("temp"));
-
 		// open the file in the directory specified by the user
 		original_file = _openFile(filename, file_path);
 	}
@@ -212,25 +217,35 @@ void DownloadManager::_downloadFile(std::string filename, size_t size, std::shar
 		// begin to read the data from the connection 
 		remaining_byte = size;
 		while (remaining_byte > 0) {
-				
+			downloaded_byte = conn->readDataChunks(buffer_ptr);
+			temp_file.writeData(buffer_ptr, downloaded_byte);
+			remaining_byte -= downloaded_byte;
 		}
 	}
+	// TODO write the correct exception
 	catch (std::exception &e) {
 		std::cerr << e.what() << std::endl;
 		std::cerr << "error: " << conn->getError() << std::endl;
+		// close and remove the file
+		original_file.closeFile();
+		temp_file.closeFile();
+		original_file.removeFile();
+		temp_file.removeFile();
+	}
+	catch (FileWriteException &e) {
+
 	}
 	
-
 
 	// store the temp file in the destination
 	if (original_file.copyFile(temp_file)) {
 		//TODO	the copy has gone good
+		temp_file.closeFile();
+		original_file.closeFile();
+		temp_file.removeFile();
 	}
 	else {
 		//TODO	if the copy has gone bad, repeate the copy
 	}
 
-
 }
-
-

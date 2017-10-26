@@ -80,10 +80,26 @@ ip::tcp::endpoint TCPconnection::getRemoteEndpoint() { return clientAddr; }
 
 // this method read the file's byte that are sended by the clientù
 // launch a new exception if isn't possible to read the data and set the error code
-void TCPconnection_server::readDataChunks() {
 
-	//
+/*
+	ONE POSSIBLE SOLUTION:
 
+*/
+
+size_t TCPconnection_server::readDataChunks(std::shared_ptr<buffer_type> chunk_buffer) {
+	size_t read_byte;
+
+	//check if the connection is alive
+	if (checkConnection()) {}
+
+	read(sock, *chunk_buffer, err);
+		
+	//? err or not err?
+	if (read_byte != 0 || err) {
+		// launch a new exception	
+	}
+	
+	return read_byte;
 }
 
 // read the client request by using a read_until 
@@ -116,10 +132,7 @@ void TCPconnection_server::writeReply(ReplyMsg &msg) {
 	std::ostream output_stream(&writebuff);
 	std::size_t write_byte;
 
-	if (!checkConnection()) {
-		// if the connection is closed lauch a new exception
-		throw std::exception();
-	}
+	if (!checkConnection()) { return false; }
 
 	output_stream << msg.createReply();
 

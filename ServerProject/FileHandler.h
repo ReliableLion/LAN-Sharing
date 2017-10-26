@@ -8,6 +8,8 @@
 
 #include "FileOpenException.h"
 #include "FileWriteException.h"
+#include "TCPconnection.h"
+#include "Buffer.h"
 
 #define MAX_ATTEMPTS 5
 #define TEMP_PATH std::string("C:\\users\\utentepc\\Appdata\\local\\temp")
@@ -30,10 +32,11 @@ public:
 	FileHandler() {};
 	FileHandler(std::string filename, std::string path);
 	FileHandler(char *filename, char *path);
+	~FileHandler();
 	void openFile();
 	void closeFile();
 	void removeFile();
-	void writeData(boost::asio::mutable_buffer& buffer);
+	void writeData(std::shared_ptr<buffer_type> buffer, size_t size);
 	bool copyFile(FileHandler& dest_file);
 	std::string getFilename();
 };

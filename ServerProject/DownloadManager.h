@@ -7,6 +7,8 @@
 #include <future>
 #include <condition_variable>
 #include <fstream>
+
+#include "Buffer.h"
 #include "RequestQueue.h"
 #include "FileHandler.h"
 

@@ -10,6 +10,10 @@ FileHandler::FileHandler(char *filename, char *path) {
 	file_path = file_dir.append("\\").append(this->filename);
 }
 
+FileHandler::~FileHandler() {
+	closeFile();
+}
+
 // open the file nad check if it is ready to be used
 // if t isn't possible to open the file lauch a new open file exception
 void FileHandler::openFile() {
@@ -19,7 +23,7 @@ void FileHandler::openFile() {
 	
 	if (!file.is_open()) {
 		//lauch a new FileOpenException to v
-		throw FileOpenException();
+		//throw FileOpenException();
 	}
 
 }
@@ -38,21 +42,17 @@ void FileHandler::closeFile() {
 }
 
 // this method receive as parameter the buffer and write it on the file
-void FileHandler::writeData(boost::asio::mutable_buffer& buffer) {
-	std::size_t n_byte;
-	char *write_data;
+void FileHandler::writeData(std::shared_ptr<buffer_type> buffer, size_t size) {
+	std::size_t n_byte = size;
 	int count = 0;
 	
-	n_byte = boost::asio::buffer_size(buffer);
-	write_data = boost::asio::buffer_cast<char *> (buffer);
-	
 	//check if the buffer is empty or not
-	if (write_data = NULL) {
+	if (buffer == nullptr) {
 		// throw a new exception if the buffer is null
 		throw FileWriteException();
 	}
 
-	file.write(write_data, n_byte);
+	file.write(*buffer, n_byte);
 	while (!file.good() || count < MAX_ATTEMPTS) {
 		file.write(write_data, n_byte);
 		count++;

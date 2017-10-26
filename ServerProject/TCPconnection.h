@@ -21,8 +21,7 @@
 #include <iostream>
 
 #include "Message.hpp"
-
-#define BUFF_SIZE 1024
+#include "Buffer.h"
 
 using namespace boost::asio;
 
@@ -78,7 +77,7 @@ class TCPconnection_server : public TCPconnection {
 public:
 	TCPconnection_server(io_service& io): TCPconnection(io) {}
 	~TCPconnection_server() {}
-	void readDataChunks();
+	size_t readDataChunks(std::shared_ptr<buffer_type> chunk_buffer);
 	std::string readRequest(RequestMessage &msg);
 	void writeReply(ReplyMsg &msg);
 };
