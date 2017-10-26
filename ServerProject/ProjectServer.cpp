@@ -48,19 +48,28 @@ void Server::closeServer() {
 
 // this function wait an inbound request from the applcation client
 void Server::_waitRequest() {
+	std::time_t timestamp;
 
 	try {
 		// iterate if the configuration of the app is setted to PUBLIC
 		while (AppConfiguration.get_isPublic()) {
-
-			//  the end point is specified as an IPv4 address on port 1500; 
-			// ip::tcp::acceptor accept(io_service, ip::tcp::endpoint(ip::tcp::v4(), ServerPort);
-			// creation of new connection 
-
+			//? is better to instantiate a new connection before or after the accept?
 			std::shared_ptr<TCPconnection_server> newConnection = std::shared_ptr<TCPconnection_server>(new TCPconnection_server(io));
+
+			// print that the server is waiting for incoming request
+			std::cout << "Server on IP address: " << local_endpoint.address() << " and port: " << local_endpoint.port() <<  " wait for incoming request..." << std::endl;
 
 			// accept  request
 			Acceptor.accept(newConnection->getSocket());
+			ip::tcp::endpoint remote_endpoint = newConnection->getRemoteEndpoint();
+			timestamp = std::time(nullptr);
+
+			//? is the code below necessary for the application?
+			// connection info 
+			std::cout << "(" << std::asctime(std::localtime(&timestamp)) << ")" << " server accepted an incoming request:" << std::endl;
+			std::cout << "address: "  << remote_endpoint.address() << std::endl;
+			std::cout << "port: " << remote_endpoint.port() << std::endl << std::endl;
+
 			reqMan.addRequest(newConnection);
 		}
 

@@ -65,11 +65,20 @@ void FileHandler::writeData(boost::asio::mutable_buffer& buffer) {
 
 }
 
-void FileHandler::copyFile(FileHandler dest_file) {
+bool FileHandler::copyFile(FileHandler& dest_file) {
+	std::ifstream src;
+	std::ofstream dest;
 
+	src.open(this->filename, std::fstream::binary);
+	dest.open(dest_file.getFilename, std::fstream::binary);
+
+	dest << src.rdbuf();
+	return (src.good() && dest.good());
 }
 
 // to be used after the file closing
 void FileHandler::removeFile() {
 	remove(this->filename.c_str());
 }
+
+std::string FileHandler::getFilename() { return this->filename; }

@@ -27,13 +27,15 @@ private:
 	std::string filename;
 
 public:
+	FileHandler() {};
 	FileHandler(std::string filename, std::string path);
 	FileHandler(char *filename, char *path);
 	void openFile();
 	void closeFile();
 	void removeFile();
 	void writeData(boost::asio::mutable_buffer& buffer);
-	void copyFile(FileHandler dest_file);
+	bool copyFile(FileHandler& dest_file);
+	std::string getFilename();
 };
 
 #endif // !FILE_HANDLER_H

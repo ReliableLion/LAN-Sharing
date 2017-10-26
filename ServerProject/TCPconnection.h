@@ -14,6 +14,7 @@
 #define TCP_CONNECTION_H
 
 #include <boost\asio.hpp>
+#include <boost\asio\ssl.hpp>
 #include <boost\asio\deadline_timer.hpp>
 #include <queue>
 #include <memory>
@@ -68,6 +69,7 @@ public:
 	bool checkConnection();
 	ip::tcp::socket& getSocket();
 	boost::system::error_code getError();
+	ip::tcp::endpoint getRemoteEndpoint();
 };
 
 

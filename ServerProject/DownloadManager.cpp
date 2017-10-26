@@ -58,13 +58,6 @@ void DownloadManager::DownloadSmallFile() {
 		}
 
 		// do stuff here 
-	
-		// decide if the opening of the file will be in asynchronous manner or sequential
-		try {
-			std::future<FileHandler> openFile = std::async(std::launch::async, &DownloadManager::_openFile, this, new_req.fileName);
-		} catch(FileOpenException &e) {
-
-		}
 
 	}
 
@@ -90,7 +83,7 @@ void DownloadManager::DownloadBigFile() {
 	std::string fileName;
 	size_t fileSize;
 	std::shared_ptr<TCPconnection_server> conn;
-	FileHandler original_file;
+	std::future<FileHandler> async_open;
 
 	while (1) {
 		std::unique_lock<std::mutex> ul(BigFileMtx);
@@ -115,25 +108,7 @@ void DownloadManager::DownloadBigFile() {
 		fileSize = new_req.fileSize;
 		conn = new_req.connection;
 
-		try {
-			// open asynchronously the temp file 
-			std::future<FileHandler> async_open = std::async(&DownloadManager::_openFile, this, fileName);
-
-			// open the file in the directory specified by the user
-			original_file = _openFile(fileName, file_path);
-		}
-		catch (FileOpenException &e) {
-			//std::cerr << e.what() << std::endl;
-			original_file.closeFile();
-			original_file.removeFile();
-
-		}
-
-		// downlaad the byte from the connection 
-
-		// store the temp file in the destination
-
-
+		_downloadFile(fileName, fileSize, conn);
 
 	}
 
@@ -145,6 +120,12 @@ void DownloadManager::DownloadBigFile() {
 		ul.unlock();
 
 		// do stuff here 
+
+		fileName = new_req.fileName;
+		fileSize = new_req.fileSize;
+		conn = new_req.connection;
+
+		_downloadFile(fileName, fileSize, conn);
 
 		ul.lock();
 	}
@@ -188,7 +169,11 @@ void DownloadManager::InsertBigFileRequest(size_t fileSize, std::string filename
 }
 
 // this method open the file to be written using a future
-FileHandler DownloadManager::_openFile(std::string filename, std::string path = TEMP_PATH) {
+FileHandler DownloadManager::_openFile(std::string filename, std::string path) {
+
+	if (path.compare(std::string("temp"))) {
+		path = TEMP_PATH;
+	}
 
 	// if the filename is empty then throw an exception
 	if (filename.empty()) {
@@ -198,6 +183,54 @@ FileHandler DownloadManager::_openFile(std::string filename, std::string path = 
 	FileHandler file(filename, path);
 	file.openFile();
 	return file;
+}
+
+void DownloadManager::_downloadFile(std::string filename, size_t size, std::shared_ptr<TCPconnection_server> conn) {
+	FileHandler original_file;
+	FileHandler temp_file;
+	std::future<FileHandler> async_open;
+	size_t downloaded_byte, remaining_byte;
+
+	try {
+		// open asynchronously the temp file 
+		async_open = std::async(&DownloadManager::_openFile, this, filename, std::string("temp"));
+
+		// open the file in the directory specified by the user
+		original_file = _openFile(filename, file_path);
+	}
+	catch (FileOpenException &e) {
+		//std::cerr << e.what() << std::endl;
+		original_file.closeFile();
+		original_file.removeFile();
+	}
+
+	try {
+		// wait to open the temp file 
+		async_open.wait();
+		temp_file = async_open.get();
+
+		// begin to read the data from the connection 
+		remaining_byte = size;
+		while (remaining_byte > 0) {
+				
+		}
+	}
+	catch (std::exception &e) {
+		std::cerr << e.what() << std::endl;
+		std::cerr << "error: " << conn->getError() << std::endl;
+	}
+	
+
+
+	// store the temp file in the destination
+	if (original_file.copyFile(temp_file)) {
+		//TODO	the copy has gone good
+	}
+	else {
+		//TODO	if the copy has gone bad, repeate the copy
+	}
+
+
 }
 
 

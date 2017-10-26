@@ -74,10 +74,17 @@ bool TCPconnection::checkConnection() {
 
 boost::system::error_code TCPconnection::getError() { return err; }
 
+ip::tcp::endpoint TCPconnection::getRemoteEndpoint() { return clientAddr; }
+
 //-------------TCPconnection_server
 
-// this method read the file's byte that are sended by the client 
-void TCPconnection_server::readDataChunks() {}
+// this method read the file's byte that are sended by the clientù
+// launch a new exception if isn't possible to read the data and set the error code
+void TCPconnection_server::readDataChunks() {
+
+	//
+
+}
 
 // read the client request by using a read_until 
 std::string TCPconnection_server::readRequest(RequestMessage& msg) {
