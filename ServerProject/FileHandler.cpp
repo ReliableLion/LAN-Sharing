@@ -70,7 +70,7 @@ bool FileHandler::copyFile(FileHandler& dest_file) {
 	std::ofstream dest;
 
 	src.open(this->filename, std::fstream::binary);
-	dest.open(dest_file.getFilename, std::fstream::binary);
+	dest.open(dest_file.getFilename(), std::fstream::binary);
 
 	dest << src.rdbuf();
 	return (src.good() && dest.good());

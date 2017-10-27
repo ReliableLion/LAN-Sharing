@@ -29,6 +29,7 @@ private:
 
 	UserConfig AppConfiguration;
 	RequestManager reqMan;
+	std::shared_ptr<DownloadManager> d_man_ptr;
 
 	void _waitRequest();
 	bool _portChecking(int port_number);
@@ -37,6 +38,7 @@ public:
 	// definire il construttore dopo perchè bisonga tenere conto dell'indirizzo del server e della porta
 	Server();
 	Server(const std::string ServerAddr, const int ListenPort);
+	~Server();
 	void createServer();
 	void closeServer();
 };

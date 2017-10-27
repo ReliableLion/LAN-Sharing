@@ -22,17 +22,18 @@ private:
 	std::condition_variable cv;
 	std::atomic<bool> terminate;
 
-	DownloadManager d_man;
+	std::shared_ptr<DownloadManager> d_man_ptr;
 	
-	void processRequest();
-	void requestHandShake(std::shared_ptr<TCPconnection_server> conn);
-	bool checkParameter(__int64 size, std::string filename);
+	void _processRequest();
+	void _requestHandShake(std::shared_ptr<TCPconnection_server> conn);
+	bool _checkParameter(__int64 size, std::string filename);
 
 public:
-	RequestManager();
+	RequestManager(std::shared_ptr<DownloadManager> d_man_ptr);
 	~RequestManager();
 	void addRequest(std::shared_ptr<TCPconnection_server> conn);
 	void shutdown();
+	void closeConnections();
 };
 
 #endif // !REQUEST_MANAGER_H

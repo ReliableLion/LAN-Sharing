@@ -1,12 +1,17 @@
 #include "RequestMananger.h"
 
-RequestManager::RequestManager() {
+// when a new object ReqeuestManager is instantiated the Server pass as reference the DownloadManager
+RequestManager::RequestManager(std::shared_ptr<DownloadManager> d_man_ptr) {
+	this->d_man_ptr = d_man_ptr;
 
 	for (int i = 0; i < MAX_THREADS; i++) {
 		t[i] = std::thread();
 	}
 
 	terminate.store(false);
+
+	// the downloader class set up all the thread in order to begin the file download
+	this->d_man_ptr->setupDownloader();
 }
 
 RequestManager::~RequestManager() {
@@ -14,21 +19,21 @@ RequestManager::~RequestManager() {
 }
 
 void RequestManager::shutdown() {
-	std::shared_ptr<TCPconnection_server> conn;
-
 	terminate.store(true);
 
 	for (int i = 0; i < MAX_THREADS; i++) {
 		t[i].join();
 	}
+}
 
+void RequestManager::closeConnections() {
+	std::shared_ptr<TCPconnection_server> conn;
 	// if shutdown method is called then all the connections that are in connection_pool are closed
 	while (connection_pool.empty()) {
 		conn = connection_pool.front();
 		conn->closeConnection();
 		connection_pool.pop();
 	}
-
 }
 
 void RequestManager::addRequest(std::shared_ptr<TCPconnection_server> conn) {
@@ -44,7 +49,7 @@ void RequestManager::addRequest(std::shared_ptr<TCPconnection_server> conn) {
 	cv.notify_all();
 }
 
-void RequestManager::processRequest() {
+void RequestManager::_processRequest() {
 
 	std::shared_ptr<TCPconnection_server> conn;
 
@@ -65,14 +70,14 @@ void RequestManager::processRequest() {
 		l.unlock();
 
 		// here we receive the client request and decode it in order to begin the file download
-		requestHandShake(conn);
+		_requestHandShake(conn);
 
 	}
 
 }
 
 // wiht handshake i mean the time window between the request and the reply
-void RequestManager::requestHandShake(std::shared_ptr<TCPconnection_server> conn) {
+void RequestManager::_requestHandShake(std::shared_ptr<TCPconnection_server> conn) {
 
 	RequestMessage r_msg;
 	ReplyMsg reply_msg;
@@ -94,16 +99,16 @@ void RequestManager::requestHandShake(std::shared_ptr<TCPconnection_server> conn
 
 		// TODO	i need to use the message class methods to decode the content of the request
 
-		if (checkParameter(fileSize, filename)) {
+		if (_checkParameter(fileSize, filename)) {
 			throw std::exception();
 		}
 	
 		// if the filesize is greater than the file threshold then put it in the big file queue
 		if (fileSize >= FILE_THRESHOLD) {
-			d_man.InsertBigFileRequest((size_t) fileSize, filename, conn);
+			d_man_ptr->InsertBigFileRequest((size_t) fileSize, filename, conn);
 		}
 		else {
-			d_man.InsertSmallFileRequest((size_t) fileSize, filename, conn);
+			d_man_ptr->InsertSmallFileRequest((size_t) fileSize, filename, conn);
 		}
 		
 		conn->writeReply(reply_msg);
@@ -116,7 +121,7 @@ void RequestManager::requestHandShake(std::shared_ptr<TCPconnection_server> conn
 		 
 }
 
-bool RequestManager::checkParameter(__int64 size, std::string filename) {
+bool RequestManager::_checkParameter(__int64 size, std::string filename) {
 
 	if (size <= 0) {
 		return false;

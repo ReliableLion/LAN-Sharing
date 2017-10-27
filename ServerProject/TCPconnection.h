@@ -22,6 +22,7 @@
 
 #include "Message.hpp"
 #include "Buffer.h"
+#include "TCPreadException.h"
 
 using namespace boost::asio;
 

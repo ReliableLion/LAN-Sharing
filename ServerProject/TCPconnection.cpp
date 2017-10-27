@@ -96,7 +96,7 @@ size_t TCPconnection_server::readDataChunks(std::shared_ptr<buffer_type> chunk_b
 		
 	//? err or not err?
 	if (read_byte != 0 || err) {
-		// launch a new exception	
+		throw TCPreadException();
 	}
 	
 	return read_byte;

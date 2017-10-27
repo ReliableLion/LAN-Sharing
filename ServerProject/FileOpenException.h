@@ -7,6 +7,7 @@
 	this class is used to laucnh new exception during the file opening
 */
 class FileOpenException : public std::exception {
+public:
 	virtual const char* what() const throw() {
 		return "is not possible to open/close the file";
 	}

@@ -4,7 +4,9 @@
 /*
 	create a new server instance and resolve the endpoint name 
 */
-Server::Server(std::string ServerAddr, int  ListenPort) : io(), Acceptor(io), reqMan() {
+Server::Server(std::string ServerAddr, int  ListenPort) : io(), Acceptor(io), 
+		d_man_ptr(std::shared_ptr<DownloadManager> (new DownloadManager())), reqMan(d_man_ptr) {
+
 	this->ServerAddr = ServerAddr;
 	this->int_ServerPort = ListenPort;
 	this->ServerPort = std::to_string(ListenPort);
@@ -17,14 +19,23 @@ Server::Server(std::string ServerAddr, int  ListenPort) : io(), Acceptor(io), re
 	ip::tcp::resolver resolver(io);
 	ip::tcp::resolver::query query(this->ServerAddr, this->ServerPort);
 	local_endpoint = *resolver.resolve(query);
+	d_man_ptr = std::shared_ptr<DownloadManager>(new DownloadManager());
 }
 
 /*
 	create a new server instance using default configurations
 */
-Server::Server() : io(), Acceptor(io), reqMan() {
+Server::Server() : io(), Acceptor(io), 
+		d_man_ptr(std::shared_ptr<DownloadManager> (new DownloadManager())), reqMan(d_man_ptr) {
+	
 	ip::tcp::resolver resolver(io);
 	local_endpoint = ip::tcp::endpoint(ip::tcp::v4(), int_ServerPort);
+	d_man_ptr = std::shared_ptr<DownloadManager>(new DownloadManager());
+}
+
+Server::~Server() {
+	reqMan.shutdown();
+	d_man_ptr->exitDownloader();
 }
 
 /*
@@ -75,6 +86,8 @@ void Server::_waitRequest() {
 
 		// close all the connection 
 		reqMan.shutdown();
+		reqMan.closeConnections();
+		d_man_ptr->exitDownloader();
 	}
 	catch (std::exception &e) {
 		std::cerr << e.what() << std::endl;

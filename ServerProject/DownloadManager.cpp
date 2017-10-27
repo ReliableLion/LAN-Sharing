@@ -2,7 +2,6 @@
 
 // when the costructor of this object is invoked the threads are createsd and go into sleep mode
 void DownloadManager::setupDownloader() {
-
 	terminate.store(false);
 
 	for (int i = 0; i < THREAD_NUM_BIG; i++) {
@@ -17,7 +16,10 @@ void DownloadManager::setupDownloader() {
 
 // define a method to exit 
 DownloadManager::~DownloadManager() {
+	exitDownloader();
+}
 
+void DownloadManager::exitDownloader() {
 	terminate.store(true);
 
 	for (int i = 0; i < THREAD_NUM_BIG; i++) {
@@ -30,7 +32,6 @@ DownloadManager::~DownloadManager() {
 }
 
 void DownloadManager::DownloadSmallFile() {
-
 	dwld_request new_req;
 
 	while (1) {
@@ -195,13 +196,16 @@ void DownloadManager::_downloadFile(std::string filename, size_t size, std::shar
 	// variable used to perform a reading from network
 	size_t downloaded_byte, remaining_byte;
 	buffer_type read_buffer;
-	std::shared_ptr<buffer_type> buffer_ptr = std::make_shared<buffer_ptr>(read_buffer);
+	std::shared_ptr<buffer_type> buffer_ptr = std::make_shared<buffer_type>(read_buffer);
 
 	try {
 		// open asynchronously the temp file 
 		async_open = std::async(&DownloadManager::_openFile, this, filename, std::string("temp"));
 		// open the file in the directory specified by the user
 		original_file = _openFile(filename, file_path);
+		// wait to open the temp file 
+		async_open.wait();
+		temp_file = async_open.get();
 	}
 	catch (FileOpenException &e) {
 		//std::cerr << e.what() << std::endl;
@@ -210,10 +214,6 @@ void DownloadManager::_downloadFile(std::string filename, size_t size, std::shar
 	}
 
 	try {
-		// wait to open the temp file 
-		async_open.wait();
-		temp_file = async_open.get();
-
 		// begin to read the data from the connection 
 		remaining_byte = size;
 		while (remaining_byte > 0) {
@@ -223,7 +223,7 @@ void DownloadManager::_downloadFile(std::string filename, size_t size, std::shar
 		}
 	}
 	// TODO write the correct exception
-	catch (std::exception &e) {
+	catch (TCPreadException &e) {
 		std::cerr << e.what() << std::endl;
 		std::cerr << "error: " << conn->getError() << std::endl;
 		// close and remove the file
@@ -233,7 +233,7 @@ void DownloadManager::_downloadFile(std::string filename, size_t size, std::shar
 		temp_file.removeFile();
 	}
 	catch (FileWriteException &e) {
-
+		//TODO add the file write exception handler
 	}
 	
 
