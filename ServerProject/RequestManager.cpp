@@ -27,16 +27,15 @@ void RequestManager::shutdown() {
 }
 
 void RequestManager::closeConnections() {
-	std::shared_ptr<TCPconnection_server> conn;
+	conn_ptr conn;
 	// if shutdown method is called then all the connections that are in connection_pool are closed
-	while (connection_pool.empty()) {
-		conn = connection_pool.front();
+	while (connection_pool.isEmpty()) {
+		connection_pool.popElement(conn);
 		conn->closeConnection();
-		connection_pool.pop();
 	}
 }
 
-void RequestManager::addRequest(std::shared_ptr<TCPconnection_server> conn) {
+void RequestManager::addRequest(conn_ptr conn) {
 
 	// check if the server has turned off
 	if (terminate.load()) {
@@ -45,39 +44,36 @@ void RequestManager::addRequest(std::shared_ptr<TCPconnection_server> conn) {
 
 	// add the request into the queue
 	std::lock_guard <std::mutex> l(mtx1);
-	connection_pool.push(conn);
+	connection_pool.insertElement(conn);
 	cv.notify_all();
 }
 
 void RequestManager::_processRequest() {
 
-	std::shared_ptr<TCPconnection_server> conn;
+	try {
+		conn_ptr conn;
+		while (1) {
+			std::unique_lock<std::mutex> l(mtx1);
+			cv.wait(l, [this]() {
+				return (!connection_pool.isEmpty() || terminate.load());
+			});
 
-	while (1) {
+			if (terminate.load()) { break; }
+			connection_pool.popElement(conn);
+			l.unlock();
 
-		bool t = terminate.load();
+			// here we receive the client request and decode it in order to begin the file download
+			_requestHandShake(conn);
 
-		std::unique_lock<std::mutex> l(mtx1);
-		cv.wait(l, [this, t] () {
-			return (!connection_pool.empty() || t);
-		});
-
-		if (t) { break; }
-
-		conn = connection_pool.front();
-		connection_pool.pop();
-
-		l.unlock();
-
-		// here we receive the client request and decode it in order to begin the file download
-		_requestHandShake(conn);
+		}
+	}
+	catch (std::exception &e) {
 
 	}
-
 }
 
 // wiht handshake i mean the time window between the request and the reply
-void RequestManager::_requestHandShake(std::shared_ptr<TCPconnection_server> conn) {
+void RequestManager::_requestHandShake(conn_ptr conn) {
 
 	RequestMessage r_msg;
 	ReplyMsg reply_msg;

@@ -13,7 +13,6 @@ void DownloadManager::setupDownloader() {
 	}
 }
 
-
 // define a method to exit 
 DownloadManager::~DownloadManager() {
 	exitDownloader();
@@ -51,7 +50,7 @@ void DownloadManager::DownloadSmallFile() {
 
 		try {
 			// extract the request from the queue and release the mutex 
-			SmallFileRequest_q.removeRequest(new_req);
+			SmallFileRequest_q.popElement(new_req);
 			ul.unlock();
 		}
 		catch (std::exception &e) {
@@ -66,7 +65,7 @@ void DownloadManager::DownloadSmallFile() {
 	std::unique_lock<std::mutex> ul(SmallFileMtx_2);
 	while (SmallFileRequest_q.isEmpty()) {
 		
-		SmallFileRequest_q.removeRequest(new_req);
+		SmallFileRequest_q.popElement(new_req);
 		ul.unlock();
 
 		// do stuff here
@@ -100,7 +99,7 @@ void DownloadManager::DownloadBigFile() {
 			break;
 		}
 
-		BigFileRequest_q.removeRequest(new_req);
+		BigFileRequest_q.popElement(new_req);
 		ul.unlock();
 
 		// do stuff here
@@ -117,7 +116,7 @@ void DownloadManager::DownloadBigFile() {
 	std::unique_lock<std::mutex> ul(BigFileMtx_2);
 	while (BigFileRequest_q.isEmpty()) {
 
-		BigFileRequest_q.removeRequest(new_req);
+		BigFileRequest_q.popElement(new_req);
 		ul.unlock();
 
 		// do stuff here 
@@ -188,12 +187,12 @@ FileHandler DownloadManager::_openFile(std::string filename, std::string path) {
 
 void DownloadManager::_downloadFile(std::string filename, size_t size, std::shared_ptr<TCPconnection_server> conn) {
 
-	// varaible used to manage the file life-cycle
+	// varaibles used to manage the file life-cycle
 	FileHandler original_file;
 	FileHandler temp_file;
 	std::future<FileHandler> async_open;
 
-	// variable used to perform a reading from network
+	// variables used to perform a reading from network
 	size_t downloaded_byte, remaining_byte;
 	buffer_type read_buffer;
 	std::shared_ptr<buffer_type> buffer_ptr = std::make_shared<buffer_type>(read_buffer);
@@ -231,6 +230,8 @@ void DownloadManager::_downloadFile(std::string filename, size_t size, std::shar
 		temp_file.closeFile();
 		original_file.removeFile();
 		temp_file.removeFile();
+		//close the connection
+		conn->closeConnection();
 	}
 	catch (FileWriteException &e) {
 		//TODO add the file write exception handler
@@ -243,6 +244,9 @@ void DownloadManager::_downloadFile(std::string filename, size_t size, std::shar
 		temp_file.closeFile();
 		original_file.closeFile();
 		temp_file.removeFile();
+
+		//close the connection
+		conn->closeConnection();
 	}
 	else {
 		//TODO	if the copy has gone bad, repeate the copy

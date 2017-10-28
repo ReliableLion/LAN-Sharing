@@ -4,6 +4,7 @@
 #include "TCPconnection.h"
 #include "DownloadManager.h"
 #include "Message.hpp"
+#include "RequestQueue.h"
 #include <memory>
 #include <condition_variable>
 #include <mutex>
@@ -14,10 +15,12 @@
 
 using namespace boost::asio;
 
+typedef std::shared_ptr<TCPconnection_server> conn_ptr;
+
 class RequestManager {
 private:
 	std::thread t[MAX_THREADS];
-	std::queue<std::shared_ptr<TCPconnection_server>> connection_pool;
+	ConcurrentQueue <conn_ptr> connection_pool;
 	std::mutex mtx1;
 	std::condition_variable cv;
 	std::atomic<bool> terminate;
@@ -31,7 +34,7 @@ private:
 public:
 	RequestManager(std::shared_ptr<DownloadManager> d_man_ptr);
 	~RequestManager();
-	void addRequest(std::shared_ptr<TCPconnection_server> conn);
+	void addRequest(conn_ptr conn);
 	void shutdown();
 	void closeConnections();
 };

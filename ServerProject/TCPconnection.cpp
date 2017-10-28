@@ -132,7 +132,7 @@ void TCPconnection_server::writeReply(ReplyMsg &msg) {
 	std::ostream output_stream(&writebuff);
 	std::size_t write_byte;
 
-	if (!checkConnection()) { return false; }
+	//if (!checkConnection()) { return false; }
 
 	output_stream << msg.createReply();
 

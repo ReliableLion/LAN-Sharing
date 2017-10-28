@@ -17,23 +17,53 @@ typedef struct {
 
 #define MAX_QUEUE_ELEMENTS 1000
 
+template <typename T>
+class ConcurrentQueue {
+
+private:
+	std::queue<T> c_queue;
+	int n_values;
+
+public:
+	ConcurrentQueue() { n_values = 0; }
+	~ConcurrentQueue() {}
+	void insertElement(T element) {
+
+		if (n_values == MAX_QUEUE_ELEMENTS) {
+			// launch a new exception
+		}
+
+		c_queue.push(element);
+		n_values++;
+
+	}
+	void popElement(T& element) {
+
+		if (c_queue.empty()) {
+			// throw a new exception
+		}
+
+		element = c_queue.front();
+		c_queue.pop();
+		n_values--;
+	}
+
+	bool isEmpty() {
+		return c_queue.empty();
+	}
+};
+
+
 /*
 	this class include the information about a request:
 	- filename (name of the file + path on the filesystem)
 	- size of the file 
 	- pointer to the TCP connection
 */
-class RequestQueue {
-
-private:
-	std::queue<dwld_request> incomingRequest;
-	int entries_n;
-
+class RequestQueue: public ConcurrentQueue<dwld_request> {
 public:
 	RequestQueue();
 	void insertRequest(size_t filesize, std::string fileName, std::shared_ptr<TCPconnection_server> new_connection);
-	void removeRequest(dwld_request& value);
-	bool isEmpty();
 };
 
 

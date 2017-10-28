@@ -34,7 +34,9 @@ Server::Server() : io(), Acceptor(io),
 }
 
 Server::~Server() {
+	Acceptor.close();
 	reqMan.shutdown();
+	reqMan.closeConnections();
 	d_man_ptr->exitDownloader();
 }
 
@@ -55,11 +57,16 @@ void Server::closeServer() {
 	// close all possible instance declarated into server class
 	Acceptor.close();
 	reqMan.shutdown();
+	reqMan.closeConnections();
+	d_man_ptr->exitDownloader();
 }
 
 // this function wait an inbound request from the applcation client
 void Server::_waitRequest() {
 	std::time_t timestamp;
+	boost::system::error_code err;
+	
+	std::cout << "server initialization" << std::endl << std::endl;
 
 	try {
 		// iterate if the configuration of the app is setted to PUBLIC
@@ -68,32 +75,36 @@ void Server::_waitRequest() {
 			std::shared_ptr<TCPconnection_server> newConnection = std::shared_ptr<TCPconnection_server>(new TCPconnection_server(io));
 
 			// print that the server is waiting for incoming request
-			std::cout << "Server on IP address: " << local_endpoint.address() << " and port: " << local_endpoint.port() <<  " wait for incoming request..." << std::endl;
+			std::cout << "Server on IP address: " << local_endpoint.address() << ", port: " << local_endpoint.port() <<  " wait for incoming request..." << std::endl;
 
 			// accept  request
-			Acceptor.accept(newConnection->getSocket());
+			Acceptor.accept(newConnection->getSocket(), err);
 			ip::tcp::endpoint remote_endpoint = newConnection->getRemoteEndpoint();
 			timestamp = std::time(nullptr);
 
-			//? is the code below necessary for the application?
-			// connection info 
-			std::cout << "(" << std::asctime(std::localtime(&timestamp)) << ")" << " server accepted an incoming request:" << std::endl;
-			std::cout << "address: "  << remote_endpoint.address() << std::endl;
-			std::cout << "port: " << remote_endpoint.port() << std::endl << std::endl;
+			if (err) {
+				//? is the code below necessary for the application?
+				// connection info 
+				std::cout << "(" << std::asctime(std::localtime(&timestamp)) << ")" << " server accepted an incoming request:" << std::endl;
+				std::cout << "address: " << remote_endpoint.address() << std::endl;
+				std::cout << "port: " << remote_endpoint.port() << std::endl << std::endl;
 
-			reqMan.addRequest(newConnection);
+				reqMan.addRequest(newConnection);
+			}
+			else {
+				std::cout << "an error is occurred, connection not accepted" << std::endl << std::endl;
+			}
+			
 		}
 
 		// close all the connection 
-		reqMan.shutdown();
-		reqMan.closeConnections();
-		d_man_ptr->exitDownloader();
+		closeServer();
 	}
 	catch (std::exception &e) {
+		//TODO remember to modify the catch
 		std::cerr << e.what() << std::endl;
 	}
 }
-
 
 /*
 	check if the port number is  between 0 and 65535
