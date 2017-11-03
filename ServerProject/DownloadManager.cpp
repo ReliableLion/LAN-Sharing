@@ -168,57 +168,44 @@ void DownloadManager::InsertBigFileRequest(size_t fileSize, std::string filename
 
 }
 
-// this method open the file to be written using a future
-FileHandler DownloadManager::_openFile(std::string filename, std::string path) {
-
-	if (path.compare(std::string("temp"))) {
-		path = TEMP_PATH;
-	}
-
-	// if the filename is empty then throw an exception
-	if (filename.empty()) {
-		throw FileOpenException();
-	}
-
-	FileHandler file(filename, path);
-	file.openFile();
-	return file;
-}
-
 void DownloadManager::_downloadFile(std::string filename, size_t size, std::shared_ptr<TCPconnection_server> conn) {
-
-	// varaibles used to manage the file life-cycle
-	FileHandler original_file;
-	FileHandler temp_file;
-	std::future<FileHandler> async_open;
-
 	// variables used to perform a reading from network
-	size_t downloaded_byte, remaining_byte;
+	size_t downloaded_bytes, remaining_bytes;
 	buffer_type read_buffer;
 	std::shared_ptr<buffer_type> buffer_ptr = std::make_shared<buffer_type>(read_buffer);
 
+	//definition of the file handler
+	FileHandler original_file;
+	FileHandler temp_file;
+
 	try {
-		// open asynchronously the temp file 
-		async_open = std::async(&DownloadManager::_openFile, this, filename, std::string("temp"));
-		// open the file in the directory specified by the user
-		original_file = _openFile(filename, file_path);
-		// wait to open the temp file 
-		async_open.wait();
-		temp_file = async_open.get();
+		// varaibles used to manage the file life-cycle
+		// TODO	remember to set the path for the file
+		original_file = FileHandler(filename, "");
+		temp_file = FileHandler(filename, TEMP_PATH);
+
+		// open asynchronously the two files
+		file1 = std::async(&FileHandler::openFile, &original_file);
+		file2 = std::async(&FileHandler::openFile, &temp_file);
+		
+		//wait to open the two files
+		file1.wait();
+		file2.wait();
 	}
 	catch (FileOpenException &e) {
-		//std::cerr << e.what() << std::endl;
-		original_file.closeFile();
+		std::cerr << e.what() << std::endl;
+		/*original_file.closeFile();
 		original_file.removeFile();
+		temp_file.closeFile()*/
 	}
 
 	try {
 		// begin to read the data from the connection 
-		remaining_byte = size;
-		while (remaining_byte > 0) {
-			downloaded_byte = conn->readDataChunks(buffer_ptr);
-			temp_file.writeData(buffer_ptr, downloaded_byte);
-			remaining_byte -= downloaded_byte;
+		remaining_bytes = size;
+		while (remaining_bytes > 0) {
+			downloaded_bytes = conn->readDataChunks(buffer_ptr);
+			temp_file.writeData(buffer_ptr, downloaded_bytes);
+			remaining_bytes -= downloaded_bytes;
 		}
 	}
 	// TODO write the correct exception
@@ -237,7 +224,6 @@ void DownloadManager::_downloadFile(std::string filename, size_t size, std::shar
 		//TODO add the file write exception handler
 	}
 	
-
 	// store the temp file in the destination
 	if (original_file.copyFile(temp_file)) {
 		//TODO	the copy has gone good

@@ -1,31 +1,55 @@
 #include "FileHandler.h"
 
-FileHandler::FileHandler(std::string filename, std::string path) : filename(filename), file_dir(path) {
-	file_path = file_dir.append("\\").append(this->filename);
-}
+FileHandler::FileHandler(std::string filename, std::string path) : filename(filename), file_dir(path) {}
 
 FileHandler::FileHandler(char *filename, char *path) {
 	this->file_dir = std::string(path);
 	this->filename = std::string(filename);
-	file_path = file_dir.append("\\").append(this->filename);
 }
 
 FileHandler::~FileHandler() {
 	closeFile();
 }
 
+FileHandler::FileHandler(const FileHandler& filehandler) {
+	//TODO remember to complete the copy constructor
+	// creation of a copy 
+
+}
+
+FileHandler::FileHandler(const FileHandler&& filehandler) {
+	// TODO remember to complete the move constructor
+}
+
+FileHandler& FileHandler::operator=(const FileHandler& filehandler) {
+	if (&filehandler != this) {
+		// TODO remember to complete the copy operator
+		this->file_path = filehandler.file_path;
+		this->file_dir = filehandler.file_dir;
+		this->filename = filehandler.filename;
+		return *this;
+	}
+}
+
 // open the file nad check if it is ready to be used
 // if t isn't possible to open the file lauch a new open file exception
-void FileHandler::openFile() {
+bool FileHandler::openFile() {
 	
-	// open the file in binary mode 
-	file.open(file_path, std::fstream::binary);
-	
-	if (!file.is_open()) {
-		//lauch a new FileOpenException to v
-		//throw FileOpenException();
+	//check if the filename or the file path are empty
+	if (filename.empty() || file_dir.empty()) {
+		throw FileOpenException();
 	}
 
+	// create the file path 
+	file_path = file_dir.append("\\").append(filename);
+
+	// open the file in binary mode 
+	file.open(file_path, std::fstream::binary);
+	if (!file.is_open()) {
+		//lauch a new FileOpenException
+		throw FileOpenException();
+	}
+	return true;
 }
 
 // close the file stream and lauch an exception if there are some problem 

@@ -5,25 +5,29 @@
 #include <string>
 
 /*
-	this class is contain all the information about the application config
-	such automatic confirm, default path and others settings used in the application 
+	this class is the main interface between the UI and the system 
 */
-class UserConfig {
+class UserConfiguration {
 private:
 	bool isPublic;
 	bool AutomaticAccept;
 	bool UseDefaultPath;
+
 	std::string defaultPath;
-	std::ifstream writeConfigFile;
-	std::ofstream readConfigureFile;
+	std::string filePath;
 	std::string fileName;
+
+	// the use of the configuration file is limited to a test of the system
+	std::ifstream writeConfigFile;
+	std::ofstream readConfiguFile;
 
 	//TODO: create  a link to communicate with the UI of the application
 public:
-	UserConfig();
+	UserConfiguration();
 	void setAutomaticAccept(bool value);
 	void setDefaultPath(bool useDefaultPath, std::string pathname);
 	std::string getDefaultPath();
+	std::string getFilePath();
 	bool getAutomaticAccept();
 	bool getUseDefaultPath();
 	bool get_isPublic();

@@ -35,13 +35,14 @@ private:
 
 	// termination flag
 	std::atomic<bool> terminate;
+	std::future<bool> file1;
+	std::future<bool> file2;
 
 	RequestQueue BigFileRequest_q;
 	RequestQueue SmallFileRequest_q;
 
 	std::string file_path = "";
 
-	FileHandler _openFile(std::string filename, std::string path = TEMP_PATH);
 	void _downloadFile(std::string filename, size_t size, std::shared_ptr<TCPconnection_server> conn);
 
 

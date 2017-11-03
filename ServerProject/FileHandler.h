@@ -22,18 +22,21 @@ class FileHandler {
 private:
 	// path of the temp directory
 	// TODO remember to write \\ instead of \ when you write the file path
+	// the file dir depend on the user configuration
 	std::string file_dir;
 	std::string file_path;
-
-	std::ofstream file;
 	std::string filename;
-
+	// file object
+	std::ofstream file;
 public:
 	FileHandler() {};
 	FileHandler(std::string filename, std::string path);
 	FileHandler(char *filename, char *path);
+	FileHandler(const FileHandler&& filehandler);
+	FileHandler(const FileHandler& filehandler);
 	~FileHandler();
-	void openFile();
+	FileHandler& operator=(const FileHandler& filehandler);
+	bool openFile();
 	void closeFile();
 	void removeFile();
 	void writeData(std::shared_ptr<buffer_type> buffer, size_t size);

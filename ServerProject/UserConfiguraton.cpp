@@ -1,22 +1,24 @@
 #include "UserConfiguration.h"
 #include <string>
 
-UserConfig::UserConfig() {}
+UserConfiguration::UserConfiguration() {}
 
-void UserConfig::setAutomaticAccept(bool value) { 
+void UserConfiguration::setAutomaticAccept(bool value) { 
 	
-	//TODO: in this section i will add the automatic accept taken from the interface and place it into a configuration file and in the userConfig instance 
+	//TODO: in this section i will add the automatic accept taken from the interface and place it into a configuration file and in the UserConfiguration instance 
 	this->AutomaticAccept = value; 
 }
 
-void UserConfig::setDefaultPath(bool useDefaultPath, std::string pathname) {
-	//TODO:	add the default path option in the UserConfig instance and add it into the configuration
+void UserConfiguration::setDefaultPath(bool useDefaultPath, std::string pathname) {
+	//TODO:	add the default path option in the UserConfiguration instance and add it into the configuration
 }
 
-std::string UserConfig::getDefaultPath() { return this->defaultPath; }
+std::string UserConfiguration::getFilePath() { return this->filePath; }
 
-bool UserConfig::getAutomaticAccept() { return this->AutomaticAccept; }
+std::string UserConfiguration::getDefaultPath() { return this->defaultPath; }
 
-bool UserConfig::getUseDefaultPath() { return this->UseDefaultPath; }
+bool UserConfiguration::getAutomaticAccept() { return this->AutomaticAccept; }
 
-bool UserConfig::get_isPublic() { return this->isPublic; }
+bool UserConfiguration::getUseDefaultPath() { return this->UseDefaultPath; }
+
+bool UserConfiguration::get_isPublic() { return this->isPublic; }

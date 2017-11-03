@@ -41,7 +41,7 @@ Server::~Server() {
 }
 
 /*
-	throw an exception if the Server receive as actual parameter a not valid port number
+	throw an exception if the Server receive a not valid port number
 */
 void Server::createServer() {
 	Acceptor.open(local_endpoint.protocol());
@@ -54,7 +54,7 @@ void Server::createServer() {
 }
 
 void Server::closeServer() {
-	// close all possible instance declarated into server class
+	// close all possible instances declarated into server class
 	Acceptor.close();
 	reqMan.shutdown();
 	reqMan.closeConnections();

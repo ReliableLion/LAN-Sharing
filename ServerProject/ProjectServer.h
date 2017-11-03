@@ -27,7 +27,7 @@ private:
 	std::string ServerAddr = "localhost";
 	ip::tcp::acceptor Acceptor;
 
-	UserConfig AppConfiguration;
+	UserConfiguration AppConfiguration;
 	RequestManager reqMan;
 	std::shared_ptr<DownloadManager> d_man_ptr;
 
