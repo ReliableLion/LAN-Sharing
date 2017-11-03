@@ -57,7 +57,7 @@ public:
 	void closeConnection();
 	bool checkConnection();
 	bool writeMessage(Message msg);
-	Message readMessage();
+	RequestMessage readRequestMessage();
 
 	ip::tcp::socket& getSocket();
 	boost::system::error_code getError();

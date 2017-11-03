@@ -100,13 +100,13 @@ bool TCPConnection::writeMessage(Message msg) {
 	return true;
 }
 
-Message TCPConnection::readMessage() {
+RequestMessage TCPConnection::readRequestMessage() {
 
-	Message message;
+	RequestMessage message;
 	std::vector<const_buffer> bufferContainer;
 	boost::system::error_code errorCode;
 
-	size_t byteRead = read(sock, &message.bufferContainer, errorCode);
+	size_t byteRead = read(sock, message.requestBuffer, errorCode);
 
 	if (!errorCode)
 		return message;

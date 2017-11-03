@@ -4,6 +4,8 @@
 #include <windows.h>
 #include <string>
 #include <sstream>
+#include <boost/asio.hpp>
+#include <boost/array.hpp>
 
 class Message {
 
@@ -36,42 +38,54 @@ public:
 
 		messageBody.append(sendMessage);
 
-		this->fileSize = fileSize;
-		this->fileTimestamp = fileTimestamp;
-		this->fileName = fileName;
+		this->requestBody.fileSize = fileSize;
+		this->requestBody.fileTimestamp = fileTimestamp;
+		this->requestBody.fileName = fileName;
 
-		bufferContainer.push_back(boost::asio::buffer(reinterpret_cast<void*>(this->fileSize), sizeof(__int64)));
+		bufferContainer.push_back(boost::asio::buffer(&this->requestBody.fileSize, sizeof(this->requestBody.fileSize)));
 
-		timeStamp.LowPart = this->fileTimestamp.dwLowDateTime;
-		timeStamp.HighPart = this->fileTimestamp.dwHighDateTime;
-		bufferContainer.push_back(boost::asio::buffer(reinterpret_cast<void*>(this->timeStamp.QuadPart), sizeof(FILETIME)));
+		timeStamp.LowPart = this->requestBody.fileTimestamp.dwLowDateTime;
+		timeStamp.HighPart = this->requestBody.fileTimestamp.dwHighDateTime;
+		bufferContainer.push_back(boost::asio::buffer(&this->timeStamp.QuadPart, sizeof(this->requestBody.fileTimestamp)));
 
-		messageBody.append(this->fileName);
+		messageBody.append(this->requestBody.fileName);
 		messageBody.append(endMessage);
 
 		bufferContainer.push_back(boost::asio::buffer(messageBody, messageBody.size()));
 
 	}
 
+	RequestMessage() {
+
+		requestBuffer = {
+			boost::asio::buffer(&this->requestBody.fileSize, sizeof(this->requestBody.fileSize)),
+			boost::asio::buffer(&this->timeStamp.QuadPart, sizeof(this->requestBody.fileTimestamp)),
+			boost::asio::buffer(&this->requestBody.fileName, 256) };
+	}
+
 	__int64 getFileSize() {
-		return this->fileSize;
+		return this->requestBody.fileSize;
 	}
 
 	FILETIME getFileTimeStamp() {
-		return this->fileTimestamp;
+		return this->requestBody.fileTimestamp;
 	}
 
 	std::string getFileName() {
-		return this->fileName;
+		return this->requestBody.fileName;
 	}
+
+	boost::array<boost::asio::mutable_buffer, 3> requestBuffer;
 
 private:
 	const std::string sendMessage = "SEND ";
-	__int64 fileSize;
-	FILETIME fileTimestamp;
-	std::string fileName;
+	typedef struct {
+		__int64 fileSize;
+		FILETIME fileTimestamp;
+		std::string fileName;
+	} requestStruct;
+	requestStruct requestBody;
 	ULARGE_INTEGER timeStamp;
-
 };
 
 class DiscoveryMessage: public Message {
