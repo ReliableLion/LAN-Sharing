@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <thread>
+#include <mutex>
+#include <condition_variable>
 #include <string>
 #include <ctime>
 #include "RequestMananger.h"
@@ -30,6 +32,8 @@ private:
 	UserConfiguration AppConfiguration;
 	RequestManager reqMan;
 	std::shared_ptr<DownloadManager> d_man_ptr;
+	
+	bool is_stopped;
 
 	void _waitRequest();
 	bool _portChecking(int port_number);
@@ -39,7 +43,8 @@ public:
 	Server();
 	Server(const std::string ServerAddr, const int ListenPort);
 	~Server();
-	void createServer();
+	void startServer();
+	void stopServer();
 	void closeServer();
 };
 

@@ -27,30 +27,23 @@ private:
 public:
 	ConcurrentQueue() { n_values = 0; }
 	~ConcurrentQueue() {}
-	void insertElement(T element) {
-
-		if (n_values == MAX_QUEUE_ELEMENTS) {
-			// launch a new exception
-		}
-
+	bool insertElement(T element) {
+		if (n_values == MAX_QUEUE_ELEMENTS) { return false; }
 		c_queue.push(element);
 		n_values++;
-
+		return true;
 	}
-	void popElement(T& element) {
 
+	void popElement(T& element) {
 		if (c_queue.empty()) {
 			// throw a new exception
 		}
-
 		element = c_queue.front();
 		c_queue.pop();
 		n_values--;
 	}
 
-	bool isEmpty() {
-		return c_queue.empty();
-	}
+	bool isEmpty() { return c_queue.empty(); }
 };
 
 
@@ -63,7 +56,7 @@ public:
 class RequestQueue: public ConcurrentQueue<dwld_request> {
 public:
 	RequestQueue();
-	void insertRequest(size_t filesize, std::string fileName, std::shared_ptr<TCPconnection_server> new_connection);
+	bool insertRequest(size_t filesize, std::string fileName, std::shared_ptr<TCPconnection_server> new_connection);
 };
 
 

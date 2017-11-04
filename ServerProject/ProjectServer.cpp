@@ -43,7 +43,7 @@ Server::~Server() {
 /*
 	throw an exception if the Server receive a not valid port number
 */
-void Server::createServer() {
+void Server::startServer() {
 	Acceptor.open(local_endpoint.protocol());
 	Acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
 	Acceptor.bind(local_endpoint);
@@ -70,53 +70,42 @@ void Server::_waitRequest() {
 
 	try {
 		// iterate if the configuration of the app is setted to PUBLIC
-		while (AppConfiguration.get_isPublic()) {
+		// TODO remember to change the true in order to stop the server 
+		while (true) {
 			//? is better to instantiate a new connection before or after the accept?
 			std::shared_ptr<TCPconnection_server> newConnection = std::shared_ptr<TCPconnection_server>(new TCPconnection_server(io));
 
-			// print that the server is waiting for incoming request
 			std::cout << "Server on IP address: " << local_endpoint.address() << ", port: " << local_endpoint.port() <<  " wait for incoming request..." << std::endl;
-
-			// accept  request
 			Acceptor.accept(newConnection->getSocket(), err);
 			ip::tcp::endpoint remote_endpoint = newConnection->getRemoteEndpoint();
 			timestamp = std::time(nullptr);
 
 			if (err) {
+				std::cout << "connection refused, error: " << err << std::endl << std::endl;
+			}
+			else {
 				//? is the code below necessary for the application?
-				// connection info 
 				std::cout << "(" << std::asctime(std::localtime(&timestamp)) << ")" << " server accepted an incoming request:" << std::endl;
 				std::cout << "address: " << remote_endpoint.address() << std::endl;
 				std::cout << "port: " << remote_endpoint.port() << std::endl << std::endl;
-
-				reqMan.addRequest(newConnection);
+				if (reqMan.addRequest(newConnection) == false) { std::cout << "is not possible to add a new connection in the queue" << std::endl; }
 			}
-			else {
-				std::cout << "an error is occurred, connection not accepted" << std::endl << std::endl;
-			}
-			
 		}
 
-		// close all the connection 
-		closeServer();
 	}
 	catch (std::exception &e) {
 		//TODO remember to modify the catch
-		std::cerr << e.what() << std::endl;
+		std::cout << e.what() << std::endl;
 	}
 }
 
-/*
-	check if the port number is  between 0 and 65535
-	return false if the int is not valid
-*/
-bool Server::_portChecking(int port_number) {
 
+bool Server::_portChecking(int port_number) {
+	// check if the port is betwenn 0 and 63555
 	if (port_number > MAX_PORT_N || port_number < MIN_PORT_N) {
 		return false;
 	}
 	else {
 		return true;
 	}
-
 }

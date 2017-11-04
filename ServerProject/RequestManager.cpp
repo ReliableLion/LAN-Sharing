@@ -3,12 +3,11 @@
 // when a new object ReqeuestManager is instantiated the Server pass as reference the DownloadManager
 RequestManager::RequestManager(std::shared_ptr<DownloadManager> d_man_ptr) {
 	this->d_man_ptr = d_man_ptr;
+	terminate.store(false);
 
 	for (int i = 0; i < MAX_THREADS; i++) {
 		t[i] = std::thread();
 	}
-
-	terminate.store(false);
 
 	// the downloader class set up all the thread in order to begin the file download
 	this->d_man_ptr->setupDownloader();
@@ -35,21 +34,19 @@ void RequestManager::closeConnections() {
 	}
 }
 
-void RequestManager::addRequest(conn_ptr conn) {
-
-	// check if the server has turned off
+bool RequestManager::addRequest(conn_ptr conn) {
+	// check if the server is closed
 	if (terminate.load()) {
-		throw std::exception();
+		return false;
 	}
-
 	// add the request into the queue
 	std::lock_guard <std::mutex> l(mtx1);
 	connection_pool.insertElement(conn);
 	cv.notify_all();
+	return true;
 }
 
 void RequestManager::_processRequest() {
-
 	try {
 		conn_ptr conn;
 		while (1) {
@@ -64,7 +61,6 @@ void RequestManager::_processRequest() {
 
 			// here we receive the client request and decode it in order to begin the file download
 			_requestHandShake(conn);
-
 		}
 	}
 	catch (std::exception &e) {
@@ -72,23 +68,21 @@ void RequestManager::_processRequest() {
 	}
 }
 
-// wiht handshake i mean the time window between the request and the reply
+// with handshake i mean the time window between the request and the reply
 void RequestManager::_requestHandShake(conn_ptr conn) {
-
 	RequestMessage r_msg;
 	ReplyMsg reply_msg;
 	__int64 fileSize = 0;
 	std::string filename = "";
 
 	// TODO	implement a timeout mechanism in order to close connections that are open but unused
-
 	// check if the connection is alive
 	if (!conn->checkConnection()) {
-
+		// print an erro code into the shell and return 
+		return;
 	}
 
 	try {
-		// use the reveive method of connection to read the client incoming request
 		conn->readRequest(r_msg);
 
 		//TODO	devo aspettare davide che finisca la class messagecontainer
@@ -113,6 +107,10 @@ void RequestManager::_requestHandShake(conn_ptr conn) {
 		// TODO	implement a mechanism to send an error message to say that the request is not recognized by the server 
 		e.what();
 	}
+	/*
+	 handle the case with that is impossible to send the request to the download manager
+	*/
+
 
 		 
 }

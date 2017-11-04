@@ -67,18 +67,22 @@ void FileHandler::closeFile() {
 
 // this method receive as parameter the buffer and write it on the file
 void FileHandler::writeData(std::shared_ptr<buffer_type> buffer, size_t size) {
+	
+	// with data i mean the byte read from the socket 
+	// size is the lenght of the data received from the socket
 	std::size_t n_byte = size;
+	const char *data;
 	int count = 0;
 	
-	//check if the buffer is empty or not
 	if (buffer == nullptr) {
-		// throw a new exception if the buffer is null
 		throw FileWriteException();
 	}
 
-	file.write(*buffer, n_byte);
+	data = ArraytoString(*buffer);
+
+	file.write(data, n_byte);
 	while (!file.good() || count < MAX_ATTEMPTS) {
-		file.write(write_data, n_byte);
+		file.write(data, n_byte);
 		count++;
 	}
 
