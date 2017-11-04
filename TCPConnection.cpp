@@ -90,9 +90,9 @@ void ConnectionPool::stop_all() {
 	connSet.clear();
 }
 
-bool TCPConnection::writeMessage(Message msg) {
+bool TCPConnection::writeRequestMessage(RequestMessage msg) {
 
-	size_t byteTransferred = write(this->sock, msg.getMessageData());
+	size_t byteTransferred = write(this->sock, msg.bufferContainer);
 
 	if (byteTransferred != msg.getMessageSize())
 		return false;
@@ -103,7 +103,6 @@ bool TCPConnection::writeMessage(Message msg) {
 RequestMessage TCPConnection::readRequestMessage() {
 
 	RequestMessage message;
-	std::vector<const_buffer> bufferContainer;
 	boost::system::error_code errorCode;
 
 	size_t byteRead = read(sock, message.requestBuffer, errorCode);

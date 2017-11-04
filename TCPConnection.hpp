@@ -56,7 +56,7 @@ public:
 	~TCPConnection();
 	void closeConnection();
 	bool checkConnection();
-	bool writeMessage(Message msg);
+	bool writeRequestMessage(RequestMessage msg);
 	RequestMessage readRequestMessage();
 
 	ip::tcp::socket& getSocket();
