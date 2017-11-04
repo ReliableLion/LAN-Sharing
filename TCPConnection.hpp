@@ -59,9 +59,6 @@ public:
 	bool writeRequestMessage(RequestMessage msg);
 	RequestMessage readRequestMessage();
 
-	bool writeDiscoveryMessage(DiscoveryMessage msg);
-	DiscoveryMessage readDiscoveryMessage();
-
 	ip::tcp::socket& getSocket();
 	boost::system::error_code getError();
 };

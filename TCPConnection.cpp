@@ -114,33 +114,6 @@ RequestMessage TCPConnection::readRequestMessage() {
 
 }
 
-bool TCPConnection::writeDiscoveryMessage(DiscoveryMessage msg) {
-
-	size_t byteTransferred = write(this->sock, boost::asio::buffer(msg.getDiscoveryMessage()));
-
-	if (byteTransferred != msg.getMessageSize())
-		return false;
-
-	return true;
-}
-
-DiscoveryMessage TCPConnection::readDiscoveryMessage() {
-
-	boost::system::error_code errorCode;
-	streambuf sb;
-
-	size_t byteRead = read(sock, sb, errorCode);
-	boost::asio::streambuf::const_buffers_type bufs = sb.data();
-	std::string str(boost::asio::buffers_begin(bufs), boost::asio::buffers_begin(bufs) + byteRead);
-	DiscoveryMessage message = DiscoveryMessage(str);
-
-	if (!errorCode)
-		return message;
-	else
-		throw std::exception();
-
-}
-
 TCPClientConnection::TCPClientConnection(io_service& io_serv) : TCPConnection(io_serv), resolver(io_serv) {}
 
 void TCPClientConnection::connect(std::string serverAddress, std::string serverPort) {

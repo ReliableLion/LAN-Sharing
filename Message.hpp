@@ -121,15 +121,11 @@ public:
 		messageBody.append(helloMsg);
 		messageBody.append(username);
 		messageBody.append(endMessage);
-
-		bufferContainer.push_back(boost::asio::buffer(messageBody, messageBody.size()));
 	}
 
 	DiscoveryMessage() {
 		messageBody.append(discoveryMsg);
 		messageBody.append(endMessage);
-
-		bufferContainer.push_back(boost::asio::buffer(messageBody, messageBody.size()));
 	}
 
 	const std::string helloMsg = "MYUSERNAME ";
@@ -138,9 +134,5 @@ public:
 	std::string getDiscoveryMessage() {
 		return messageBody;
 	}
-
-private:
-	std::vector<boost::asio::const_buffer> bufferContainer;
-
 
 };
