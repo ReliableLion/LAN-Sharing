@@ -135,6 +135,10 @@ public:
 	const std::string helloMsg = "MYUSERNAME ";
 	const std::string discoveryMsg = "LAN-SHARING LOOKINGFOR";
 
+	std::string getDiscoveryMessage() {
+		return messageBody;
+	}
+
 private:
 	std::vector<boost::asio::const_buffer> bufferContainer;
 
