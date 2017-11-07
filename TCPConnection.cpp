@@ -90,7 +90,17 @@ void ConnectionPool::stop_all() {
 	connSet.clear();
 }
 
-bool TCPConnection::writeRequestMessage(RequestMessage msg) {
+TCPClientConnection::TCPClientConnection(io_service& io_serv) : TCPConnection(io_serv), resolver(io_serv) {}
+
+void TCPClientConnection::connect(std::string serverAddress, std::string serverPort) {
+
+	tcp::resolver::query query(tcp::v4(), serverAddress, serverPort);
+	tcp::resolver::iterator iterator = resolver.resolve(query);
+
+	boost::asio::connect(sock, iterator);
+}
+
+bool TCPClientConnection::writeRequestMessage(RequestMessage msg) {
 
 	size_t byteTransferred = write(this->sock, msg.bufferContainer);
 
@@ -100,7 +110,7 @@ bool TCPConnection::writeRequestMessage(RequestMessage msg) {
 	return true;
 }
 
-RequestMessage TCPConnection::readRequestMessage() {
+RequestMessage TCPClientConnection::readRequestMessage() {
 
 	RequestMessage message;
 	boost::system::error_code errorCode;
@@ -112,14 +122,4 @@ RequestMessage TCPConnection::readRequestMessage() {
 	else
 		throw std::exception();
 
-}
-
-TCPClientConnection::TCPClientConnection(io_service& io_serv) : TCPConnection(io_serv), resolver(io_serv) {}
-
-void TCPClientConnection::connect(std::string serverAddress, std::string serverPort) {
-
-	tcp::resolver::query query(tcp::v4(), serverAddress, serverPort);
-	tcp::resolver::iterator iterator = resolver.resolve(query);
-
-	boost::asio::connect(sock, iterator);
 }

@@ -1,18 +1,24 @@
 #include "Discovery.hpp"
+#include "TCPConnection.hpp"
 
 using namespace std;
 
 int main(int argc, char* argv[]){
+
 	try
 	{
 
+		
+		TCPClientConnection::connect()
+
+		/*
 		Discovery service = Discovery("prova");
 
 		cout << "Starting UDP server..." << endl;
 
 		service.startDiscoveryService();
 
-		cout << "UDP server started!" << endl << "Sending boradcast message..." << endl;
+		cout << "UDP server started!" << endl << "Sending boradcast message..." << endl;*/
 		
 		/*auto temp = service.findUser("192.168.1.102", "1234");
 

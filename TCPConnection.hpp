@@ -56,8 +56,6 @@ public:
 	~TCPConnection();
 	void closeConnection();
 	bool checkConnection();
-	bool writeRequestMessage(RequestMessage msg);
-	RequestMessage readRequestMessage();
 
 	ip::tcp::socket& getSocket();
 	boost::system::error_code getError();
@@ -84,5 +82,7 @@ private:
 public:
 	TCPClientConnection(io_service& io_serv);
 	void connect(std::string serverAddress, std::string serverPort);
+	bool writeRequestMessage(RequestMessage msg);
+	RequestMessage readRequestMessage();
 
 };
