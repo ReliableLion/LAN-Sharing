@@ -4,8 +4,11 @@
 #include <windows.h>
 #include <string>
 #include <sstream>
+#include "Protocol.hpp"
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
+
+using namespace protocol;
 
 typedef struct {
 	__int64 fileSize;
@@ -17,9 +20,21 @@ class Message {
 
 public:
 
-	size_t getMessageSize() {
-		return messageSize;
-	}
+	Message();
+	Message(const char * buffer, const int size); //Will use existing allocated buffer and create packet from it
+												 //Packet(const Packet & p); //Will allocate new buffer but copy buffer from packet argument
+	Message(const MessageType::TYPE m); //Used for when sending a packet that only contains a packet type (Ex. End of File Packet)
+	void Append(const MessageType::TYPE mt);
+	void Append(const __int64 int64);
+	void Append(const std::size_t m);
+	void Append(const Message & m);
+	void Append(const std::string & str);
+	void Append(const char * buffer, const int size); //Will use existing allocated buffer and create packet from it
+
+
+	std::vector<int8_t> m_buffer; //Message Packet Buffer
+
+	bool Message::getPacketType(int & messageType);
 
 protected:
 	std::string messageBody = "";
@@ -36,7 +51,7 @@ public:
 	// This is used to create a RequestMessage, which it's supposed will be sent
 	RequestMessage(__int64 fileSize, FILETIME fileTimestamp, std::string fileName) {
 
-		messageBody.append(sendMessage);
+		messageBody.append(MessageType::getMessageType(MessageType::SEND));
 
 		this->requestBody.fileSize = fileSize;
 		this->requestBody.fileTimestamp = fileTimestamp;
@@ -108,7 +123,6 @@ public:
 	std::vector<boost::asio::const_buffer> bufferContainer;
 
 private:
-	const std::string sendMessage = "SEND ";
 	requestStruct requestBody;
 	ULARGE_INTEGER timeStamp;
 
