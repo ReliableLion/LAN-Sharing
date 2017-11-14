@@ -16,12 +16,16 @@ bool session::TCPConnection::acceptConnection(SOCKET s) {
 }
 
 bool session::TCPConnection::closeConnection() {
-	if (closesocket(sock) == SOCKET_ERROR) {
-		std::cout << "problem during the socket closing, error: " << std::to_string(WSAGetLastError()) << std::endl;
-		exit(1);
-	} else {
-		std::cout << "connection closed" << std::endl;
+	if (closesocket(sock) == SOCKET_ERROR)
+	{
+		if (WSAGetLastError() == WSAENOTSOCK) //If socket error is that operation is not performed on a socket (This happens when the socket has already been closed)
+			return true; //return true since connection has already been closed
+
+		std::cout << "Failed to close the socket. Winsock Error: " + std::to_string(WSAGetLastError()) + "!";
+		return false;
 	}
+
+	return true;
 }
 
 void session::TCPConnection::printEndpointInfo() {
@@ -87,4 +91,48 @@ bool session::TCPConnection::sendall(const char* data, int totalByte) {
 		uploadedByte += sentByte;
 	}
 	return true;
+}
+
+bool session::TCPConnection::readline(char *data, int& readByte, int maxByte) {
+	int rByte = readline_unbuffered(data, (size_t)maxByte);
+
+	if (rByte == 0) {
+		return false;
+	} else 
+	if (rByte < 0) {
+		throw SocketException(WSAGetLastError());
+	} else 
+	if (rByte > 0) {
+		readByte = rByte;
+		return true;
+	}
+}
+
+size_t session::TCPConnection::readline_unbuffered(char *vptr, size_t maxlen) {
+
+	size_t n, rc;
+	char c, *ptr;
+
+	ptr = vptr;
+	for (n = 1; n<maxlen; n++)
+	{
+		if ((rc = recv(sock, &c, 1, 0)) == 1)
+		{
+			*ptr++ = c;
+			if (c == '\n')
+				break;	/* newline is stored, like fgets() */
+		}
+		else if (rc == 0)
+		{
+			if (n == 1)
+				return 0; /* EOF, no data read */
+			else
+				break; /* EOF, some data was read */
+		}
+		else
+			return -1; /* error, errno set by read() */
+	}
+	*ptr = 0; /* null terminate like fgets() */
+
+	return n;
 }

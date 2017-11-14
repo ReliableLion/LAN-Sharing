@@ -3,6 +3,7 @@
 #include "Session.hpp"
 #include "ConcurrentQueue.hpp"
 #include <mutex>
+#include <condition_variable>
 #include <atomic>
 #include <thread>
 #include <vector>
@@ -12,6 +13,9 @@ private:
 	ConcurrentQueue<session::conn_ptr> connectionQueue;
 	std::atomic<bool> is_terminated;
 	const int maxThreads = 4;
+	const int maxRequestAttempts = 3;
+	std::mutex mtx;
+	std::condition_variable cv;
 	std::vector<std::thread> threadPool;
 private:
 	void extractConnection();
