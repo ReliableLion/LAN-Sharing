@@ -1,8 +1,7 @@
 #pragma once
 
-static class Constants {
+namespace Constants {
 
-public:
 	static const int MAXBUFL = 1024;
 
 };

@@ -1,13 +1,10 @@
 #pragma once
-
 #include <iostream>
+#include <WinSock2.h>
 #include <windows.h>
-#include <string>
 #include <sstream>
 #include "Protocol.hpp"
 #include <vector>
-#include <boost/asio.hpp>
-#include <boost/array.hpp>
 
 using namespace protocol;
 
@@ -50,7 +47,7 @@ class RequestMessage : public Message {
 public:
 
 	// This is used to create a RequestMessage, which it's supposed will be sent
-	RequestMessage(__int64 fileSize, FILETIME fileTimestamp, std::string fileName) {};
+	RequestMessage(__int64 fileSize, FILETIME fileTimestamp, std::string fileName);
 
 	// This is used to create an empty RequestMessage, which it's supposed will be received
 	RequestMessage() {};
@@ -67,12 +64,9 @@ public:
 		return this->requestBody.fileName;
 	}
 
-	void RequestMessage::prepareMessage() {};
+	void RequestMessage::prepareMessage();
 
-	requestStruct RequestMessage::getRequestData() {};
-
-	boost::array<boost::asio::mutable_buffer, 3> requestBuffer;
-	std::vector<boost::asio::const_buffer> bufferContainer;
+	requestStruct RequestMessage::getRequestData();
 
 private:
 	requestStruct requestBody;

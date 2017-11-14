@@ -1,7 +1,4 @@
 #include "Session.hpp"
-#include <Ws2tcpip.h> //for inet_pton
-#pragma comment(lib,"ws2_32.lib") //Required for WinSock
-#include <iostream> //for std::cout
 
 using namespace session;
 
@@ -43,18 +40,20 @@ bool TCPConnection::recvToEndl(char * data) {
 
 	size_t nread = readline_unbuffered(sock, data, Constants::MAXBUFL);
 	if (nread == 0) {
-		return 0;
+		return false;
 	}
 	else if (nread < 0) {
 		std::cout << "(%s) error - readline() failed" << std::endl;
 
-		return 1;
+		return false;
 	}
+
+	return true;
 }
 
-size_t readline_unbuffered(int fd, char *vptr, size_t maxlen) {
+size_t TCPConnection::readline_unbuffered(int fd, char *vptr, size_t maxlen) {
 
-	int n, rc;
+	size_t n, rc;
 	char c, *ptr;
 
 	ptr = vptr;
@@ -77,7 +76,6 @@ size_t readline_unbuffered(int fd, char *vptr, size_t maxlen) {
 			return -1; /* error, errno set by read() */
 	}
 	*ptr = 0; /* null terminate like fgets() */
-	delete(ptr);
 
 	return n;
 }

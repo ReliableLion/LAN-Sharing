@@ -1,5 +1,4 @@
 #include "Discovery.hpp"
-#include "TCPConnection.hpp"
 
 using namespace std;
 
@@ -9,7 +8,7 @@ int main(int argc, char* argv[]){
 	{
 
 		
-		TCPClientConnection::connect()
+		//TCPClientConnection::connect()
 
 		/*
 		Discovery service = Discovery("prova");

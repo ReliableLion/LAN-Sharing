@@ -1,6 +1,6 @@
 #pragma once
-
 #include "UDPService.hpp"
+#include "Message.hpp"
 
 using namespace std;
 

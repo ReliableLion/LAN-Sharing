@@ -4,15 +4,12 @@
 #include <cstring>
 #include <iostream>
 
-#include <boost/bind.hpp>
-#include <boost/asio.hpp>
-
-using boost::asio::ip::udp;
 using namespace std;
 
 enum { max_length = 1024 };
 const int udpPort = 1234;
 
+/*
 class UDPServer {
 
 public:
@@ -59,8 +56,8 @@ public:
 		}
 	}
 
-	void handle_send_to(const boost::system::error_code& /*error*/,
-		size_t /*bytes_sent*/) {
+	void handle_send_to(const boost::system::error_code& ,
+		size_t) {
 
 		socket_.async_receive_from(
 			boost::asio::buffer(data_, max_length), sender_endpoint_,
@@ -133,4 +130,4 @@ private:
 
 	udp::socket sock;
 
-};
+}; */

@@ -1,6 +1,5 @@
 #include "Message.hpp"
 #include <cstdint> //Required to use std::int32_t
-#include <WinSock2.h> //for htonl
 
 Message::Message(){}
 
@@ -31,7 +30,7 @@ void Message::Append(const Message & p) { //Allocate new block for buffer
 
 void Message::Append(__int64 int64) {
 
-	__int64 val = htonl((__int64)int64);
+	__int64 val = htonll(int64);
 	Append((const char*)&val, sizeof(__int64));
 }
 
@@ -77,7 +76,7 @@ requestStruct RequestMessage::getRequestData() {
 	last = m_buffer.end();
 	std::vector<int8_t> fileName(first, last);
 
-	char* name;
+	char name[256];
 	memcpy((void *)name, (void*)&(*(m_buffer.begin() + sizeof(__int64) + sizeof(__int64))), last - first);
 	this->requestBody.fileName = std::string(name);
 
@@ -88,13 +87,13 @@ void RequestMessage::prepareMessage() {
 
 	Message::Append((const char*)messageBody.c_str());
 
-	__int64 fileSize = htonl((__int64)this->requestBody.fileSize);
+	__int64 fileSize = htonll(this->requestBody.fileSize);
 	Message::Append((const char*)&fileSize, sizeof(__int64));
 
 	timeStamp.LowPart = this->requestBody.fileTimestamp.dwLowDateTime;
 	timeStamp.HighPart = this->requestBody.fileTimestamp.dwHighDateTime;
 
-	__int64 fileTimestamp = htonl((__int64)timeStamp.QuadPart);
+	__int64 fileTimestamp = htonll(timeStamp.QuadPart);
 	Message::Append((const char*)&fileTimestamp, sizeof(__int64));
 
 	Message::Append((const char*)this->requestBody.fileName.c_str(), sizeof(this->requestBody.fileName.size()));
