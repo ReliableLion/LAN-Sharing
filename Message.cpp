@@ -44,6 +44,10 @@ void Message::Append(std::size_t s) {
 	Append((__int64)s);
 }
 
+void Message::getPacketType(char* packetType) {
+	memcpy((void*)packetType, (void*)&(*m_buffer.begin()), 4);
+}
+
 RequestMessage::RequestMessage(__int64 fileSize, FILETIME fileTimestamp, std::string fileName) {
 
 	messageBody.append(MessageType::getMessageType(MessageType::SEND));

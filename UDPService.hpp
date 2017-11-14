@@ -1,13 +1,30 @@
 #pragma once
-
-#include <cstdlib>
-#include <cstring>
+#include <WinSock2.h>
+#include <ws2tcpip.h>
 #include <iostream>
+
+#include "Constants.hpp"
+
+// link with Ws2_32.lib
+#pragma comment (lib, "Ws2_32.lib")
 
 using namespace std;
 
-enum { max_length = 1024 };
-const int udpPort = 1234;
+class UDPClient {
+
+public:
+
+	UDPClient::UDPClient(std::string address, std::string port);
+
+	void UDPClient::send_datagram(char *buffer, const struct sockaddr_in saddr);
+	int receive_datagram(char *buffer, const struct sockaddr_in saddr);
+
+private:
+	int sock;
+	char buffer[MAXBUFL] = "";
+	char serverAddress[INET_ADDRSTRLEN];
+	int serverPort;
+};
 
 /*
 class UDPServer {

@@ -20,7 +20,6 @@ bool TCPConnection::connectTo(const char * ip, const int port) {
 	std::cout << "Client Connected to: " << remote_address.sin_addr.s_addr << ":" << remote_address.sin_port << std::endl << std::endl;
 
 	return true;
-
 }
 
 bool TCPConnection::recvall(char * data, int totalBytes) {
@@ -38,14 +37,14 @@ bool TCPConnection::recvall(char * data, int totalBytes) {
 
 bool TCPConnection::recvToEndl(char * data) {
 
-	size_t nread = readline_unbuffered(sock, data, Constants::MAXBUFL);
+	size_t nread = readline_unbuffered(sock, data, MAXBUFL);
 	if (nread == 0) {
 		return false;
 	}
 	else if (nread < 0) {
 		std::cout << "(%s) error - readline() failed" << std::endl;
 
-		return false;
+		throw SOCKET_ERROR;
 	}
 
 	return true;

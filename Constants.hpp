@@ -1,7 +1,6 @@
 #pragma once
 
-namespace Constants {
-
-	static const int MAXBUFL = 1024;
-
-};
+#define MAXBUFL 1024
+#define CHUNK 1460
+#define UDP_PORT 1234
+#define TIMEOUT 3

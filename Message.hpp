@@ -32,7 +32,7 @@ public:
 
 	std::vector<int8_t> m_buffer; //Message Packet Buffer
 
-	bool Message::getPacketType(int & messageType);
+	void Message::getPacketType(char* messageType);
 
 protected:
 	std::string messageBody = "";
