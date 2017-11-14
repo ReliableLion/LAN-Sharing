@@ -40,21 +40,34 @@ Server::~Server() {
 	d_man_ptr->exitDownloader();
 }
 
-/*
-	throw an exception if the Server receive a not valid port number
-*/
 void Server::startServer() {
 	Acceptor.open(local_endpoint.protocol());
 	Acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
 	Acceptor.bind(local_endpoint);
 	Acceptor.listen();
 
+	// set server active
+	is_passive.store(false);
+
 	// begin to wait for request
 	_waitRequest();
 }
 
+void Server::pauseServer() {
+	if (is_passive.load()) {
+		// lauch a new exception 
+	}
+	else {
+		is_passive.store(true);
+	}
+}
+
+void Server::restartServer() {
+	is_passive.store(false);
+}
+
 void Server::closeServer() {
-	// close all possible instances declarated into server class
+	// close all possible instances declarated into the server
 	Acceptor.close();
 	reqMan.shutdown();
 	reqMan.closeConnections();
@@ -68,37 +81,26 @@ void Server::_waitRequest() {
 	
 	std::cout << "server initialization" << std::endl << std::endl;
 
-	try {
-		// iterate if the configuration of the app is setted to PUBLIC
-		// TODO remember to change the true in order to stop the server 
-		while (true) {
-			//? is better to instantiate a new connection before or after the accept?
-			std::shared_ptr<TCPconnection_server> newConnection = std::shared_ptr<TCPconnection_server>(new TCPconnection_server(io));
+	// iterate if the configuration of the app is setted to PUBLIC
+	// TODO remember to change the true in order to stop the server 
+	while (true) {
+		//? is better to instantiate a new connection before or after the accept?
+		std::shared_ptr<TCPconnection_server> newConnection = std::shared_ptr<TCPconnection_server>(new TCPconnection_server(io));
 
-			std::cout << "Server on IP address: " << local_endpoint.address() << ", port: " << local_endpoint.port() <<  " wait for incoming request..." << std::endl;
-			Acceptor.accept(newConnection->getSocket(), err);
-			ip::tcp::endpoint remote_endpoint = newConnection->getRemoteEndpoint();
-			timestamp = std::time(nullptr);
+		std::cout << "Server on IP address: " << local_endpoint.address() << ", port: " << local_endpoint.port() << " wait for incoming request..." << std::endl;
+		Acceptor.accept(newConnection->getSocket(), err);
+		timestamp = std::time(nullptr);
 
-			if (err) {
-				std::cout << "connection refused, error: " << err << std::endl << std::endl;
-			}
-			else {
-				//? is the code below necessary for the application?
-				std::cout << "(" << std::asctime(std::localtime(&timestamp)) << ")" << " server accepted an incoming request:" << std::endl;
-				std::cout << "address: " << remote_endpoint.address() << std::endl;
-				std::cout << "port: " << remote_endpoint.port() << std::endl << std::endl;
-				if (reqMan.addRequest(newConnection) == false) { std::cout << "is not possible to add a new connection in the queue" << std::endl; }
-			}
+		// TODO use a mechanism to refuse the connection if the server is in passive mode
+		if (is_passive.load() == false) {
+			_acceptTCPConnection(newConnection, err, timestamp);
 		}
-
-	}
-	catch (std::exception &e) {
-		//TODO remember to modify the catch
-		std::cout << e.what() << std::endl;
-	}
+		else {
+			_refuseTCPConnection(newConnection, err);
+		}
+		
+	}	
 }
-
 
 bool Server::_portChecking(int port_number) {
 	// check if the port is betwenn 0 and 63555
@@ -107,5 +109,32 @@ bool Server::_portChecking(int port_number) {
 	}
 	else {
 		return true;
+	}
+}
+
+void Server::_acceptTCPConnection(std::shared_ptr<TCPconnection_server> connection, boost::system::error_code err, std::time_t timestamp) {
+	if (err) {
+		std::cout << "connection refused, error: " << err << std::endl << std::endl;
+	}
+	else {
+		//? is the code below necessary for the application?
+		ip::tcp::endpoint remote_endpoint = connection->getRemoteEndpoint();
+		std::cout << "(" << std::asctime(std::localtime(&timestamp)) << ")" << " server accepted an incoming request:" << std::endl;
+		std::cout << "address: " << remote_endpoint.address() << std::endl;
+		std::cout << "port: " << remote_endpoint.port() << std::endl << std::endl;
+		if (reqMan.addRequest(connection) == false) { std::cout << "is not possible to add a new connection in the queue" << std::endl; }
+	}
+}
+
+void Server::_refuseTCPConnection(std::shared_ptr<TCPconnection_server> connection, boost::system::error_code err) {
+	if (err) {
+		std::cout << "connection refused, error: " << err << std::endl << std::endl;
+	}
+	else {
+		// send a error msg error and close the connection
+
+		//TODO send a msg to say that the server not accept incoming connection
+
+		connection->closeConnection();
 	}
 }

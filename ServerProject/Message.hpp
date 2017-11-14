@@ -6,6 +6,7 @@
 #include <sstream>
 #include <vector>
 #include <boost\asio.hpp>
+#include "BadRequest.h"
 
 class Message {
 
@@ -105,11 +106,11 @@ public:
 
 };
 
-class ReplyMsg: public Message {
+class ReplyMessage: public Message {
 private:
 	const std::string ok = "OK";
 public:
-	ReplyMsg() {};
+	ReplyMessage() {};
 	const std::string createReply() {
 		Message::stream << ok << Message::endMessage;
 		return stream.str();

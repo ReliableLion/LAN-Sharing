@@ -2,9 +2,7 @@
 #define SERVER_H 
 
 #include <iostream>
-#include <thread>
-#include <mutex>
-#include <condition_variable>
+#include <atomic>
 #include <string>
 #include <ctime>
 #include "RequestMananger.h"
@@ -33,10 +31,12 @@ private:
 	RequestManager reqMan;
 	std::shared_ptr<DownloadManager> d_man_ptr;
 	
-	bool is_stopped;
+	std::atomic<bool> is_passive;
 
 	void _waitRequest();
 	bool _portChecking(int port_number);
+	void _acceptTCPConnection(std::shared_ptr<TCPconnection_server> connection, boost::system::error_code err, std::time_t timestamp);
+	void _refuseTCPConnection(std::shared_ptr<TCPconnection_server> connection, boost::system::error_code err);
 
 public:
 	// definire il construttore dopo perchè bisonga tenere conto dell'indirizzo del server e della porta
@@ -44,7 +44,8 @@ public:
 	Server(const std::string ServerAddr, const int ListenPort);
 	~Server();
 	void startServer();
-	void stopServer();
+	void pauseServer();
+	void restartServer();
 	void closeServer();
 };
 

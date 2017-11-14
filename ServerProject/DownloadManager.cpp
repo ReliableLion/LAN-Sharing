@@ -135,37 +135,25 @@ void DownloadManager::DownloadBigFile() {
 }
 
 void DownloadManager::InsertSmallFileRequest(size_t fileSize, std::string filename, std::shared_ptr<TCPconnection_server> new_connection) {
-	
 	if (terminate.load() == false) {
 		std::lock_guard<std::mutex> lg(SmallFileMtx);
-
-		// insert in the queue for the small file
 		SmallFileRequest_q.insertRequest(fileSize, filename, new_connection);
-
-		// notify the all the thread that is arrived a new request of downlaod
 		SmallFile_cv.notify_all();
 	}
 	else {
-		// is not possible to insert new data
+		
 	}
-
 }
 
 void DownloadManager::InsertBigFileRequest(size_t fileSize, std::string filename, std::shared_ptr<TCPconnection_server> new_connection) {
-
 	if (terminate.load() == false) {
 		std::lock_guard<std::mutex> lg(BigFileMtx);
-
-		// insert in the queue for the small file
 		BigFileRequest_q.insertRequest(fileSize, filename, new_connection);
-
-		// notify the all the thread that is arrived a new request of downlaod
 		BigFile_cv.notify_all();
 	}
 	else {
-		// is not possible to insert new data
+		
 	}
-
 }
 
 void DownloadManager::_downloadFile(std::string filename, size_t size, std::shared_ptr<TCPconnection_server> conn) {

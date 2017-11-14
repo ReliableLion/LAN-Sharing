@@ -25,6 +25,7 @@ void RequestManager::shutdown() {
 	}
 }
 
+// close connection should be called after the shutdown
 void RequestManager::closeConnections() {
 	conn_ptr conn;
 	// if shutdown method is called then all the connections that are in connection_pool are closed
@@ -71,61 +72,70 @@ void RequestManager::_processRequest() {
 // with handshake i mean the time window between the request and the reply
 void RequestManager::_requestHandShake(conn_ptr conn) {
 	RequestMessage r_msg;
-	ReplyMsg reply_msg;
+	ReplyMessage reply_msg;
 	__int64 fileSize = 0;
 	std::string filename = "";
 
 	// TODO	implement a timeout mechanism in order to close connections that are open but unused
 	// check if the connection is alive
-	if (!conn->checkConnection()) {
-		// print an erro code into the shell and return 
+	if (!conn->checkConnection()) { 
 		return;
 	}
 
 	try {
 		conn->readRequest(r_msg);
 
-		//TODO	devo aspettare davide che finisca la class messagecontainer
+		/*				
+		*	check if the request is valid or not
+		*/
 
+		//TODO	devo aspettare davide che finisca la class message
 		// TODO	i need to use the message class methods to decode the content of the request
 
 		if (_checkParameter(fileSize, filename)) {
-			throw std::exception();
+			std::cout << "filename is null or the filesize is less than 0" << std::endl;
+			return;
 		}
-	
-		// if the filesize is greater than the file threshold then put it in the big file queue
-		if (fileSize >= FILE_THRESHOLD) {
-			d_man_ptr->InsertBigFileRequest((size_t) fileSize, filename, conn);
+
+		/*
+		*	insert the request in the right queue
+		*/
+		try {
+			if (fileSize >= FILE_THRESHOLD) {
+				d_man_ptr->InsertBigFileRequest((size_t)fileSize, filename, conn);
+			}
+			else {
+				d_man_ptr->InsertSmallFileRequest((size_t)fileSize, filename, conn);
+			}
 		}
-		else {
-			d_man_ptr->InsertSmallFileRequest((size_t) fileSize, filename, conn);
+		catch (RequestInsertionException &e) {
+			// is not possible to insert in the queue the request
+			std::cout << e.what() << std::endl;
+			return;
 		}
 		
+		/*
+		*	send a reply message to the client
+		*/
 		conn->writeReply(reply_msg);
 	}
 	catch (std::exception &e) {
 		// TODO	implement a mechanism to send an error message to say that the request is not recognized by the server 
-		e.what();
+		std::cout << e.what() << std::endl;
 	}
 	/*
-	 handle the case with that is impossible to send the request to the download manager
-	*/
-
-
-		 
+	 manage the case with that is impossible to send the request to the download manager
+	*/	 
 }
 
 bool RequestManager::_checkParameter(__int64 size, std::string filename) {
-
 	if (size <= 0) {
 		return false;
 	}
 	if (filename.empty()) {
 		return false;
 	}
-
 	return true;
-
 }
 
 

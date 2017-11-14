@@ -2,6 +2,7 @@
 #define REQUEST_QUEUE_H
 
 #include "TCPconnection.h"
+#include "RequestInsertionException.h"
 #include <string>
 #include <memory>
 #include <queue>
@@ -11,7 +12,7 @@
 */
 typedef struct {
 	std::string fileName;
-	size_t fileSize;
+	std::size_t fileSize;
 	std::shared_ptr<TCPconnection_server> connection;
 } dwld_request;
 
@@ -56,7 +57,7 @@ public:
 class RequestQueue: public ConcurrentQueue<dwld_request> {
 public:
 	RequestQueue();
-	bool insertRequest(size_t filesize, std::string fileName, std::shared_ptr<TCPconnection_server> new_connection);
+	void insertRequest(std::size_t filesize, std::string fileName, std::shared_ptr<TCPconnection_server> new_connection);
 };
 
 
