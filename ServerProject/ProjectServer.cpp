@@ -1,5 +1,4 @@
 #include "ProjectServer.h"
-#include <boost\bind.hpp>
 
 /*
 	create a new server instance and resolve the endpoint name 
