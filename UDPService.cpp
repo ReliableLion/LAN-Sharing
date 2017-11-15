@@ -1,6 +1,8 @@
 #include "UDPService.hpp"
 #include "Exceptions.hpp"
 
+using namespace udp_service;
+
 UDPClient::UDPClient(std::string address, std::string port) {
 
 	struct addrinfo hints, *res, *res0;
@@ -51,9 +53,6 @@ UDPClient::UDPClient(std::string address, std::string port) {
 
 }
 
-/*
-* SENDING DATAGRAM
-*/
 void UDPClient::send_datagram(char *buffer, const struct sockaddr_in saddr) {
 
 	/* send datagram */
@@ -63,9 +62,6 @@ void UDPClient::send_datagram(char *buffer, const struct sockaddr_in saddr) {
 	cout << "(%s) --- Data has been sent!\n" << endl;
 }
 
-/*
-* RECEIVING DATAGRAM
-*/
 int UDPClient::receive_datagram(char *buffer, const struct sockaddr_in saddr) {
 
 	struct timeval tval;
@@ -113,4 +109,60 @@ int UDPClient::receive_datagram(char *buffer, const struct sockaddr_in saddr) {
 
 		return 1;
 	}
+}
+
+
+UDPServer::UDPServer() {
+
+	struct sockaddr_in* server_address, client_address, *client_address_ptr;
+	socklen_t address_len;
+
+	client_address_ptr = &client_address;
+	ZeroMemory(&client_address, sizeof(client_address));
+
+	/* create socket */
+	sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+	/* specify address to bind to */
+	memset(&server_address, 0, sizeof(server_address));
+	server_address->sin_family = AF_INET;
+	server_address->sin_port = htons((uint16_t)UDP_PORT);
+	server_address->sin_addr.s_addr = htonl(INADDR_ANY);
+
+	bind(sock, (sockaddr*)&server_address, sizeof(server_address));
+
+	cout << "--- Socket created!" << endl;
+
+
+	while (1) {
+
+		inet_ntop(AF_INET, &(server_address->sin_addr), serverAddress, INET_ADDRSTRLEN);
+
+		cout << "--- Listening on " << serverAddress << ":" << ntohs(server_address->sin_port) << endl;
+
+		address_len = receive_datagram(buffer, client_address_ptr, MAXBUFL);
+
+		send_datagram(buffer, client_address_ptr, address_len, strlen(buffer));
+	}
+
+}
+
+void UDPServer::send_datagram(char *buffer, const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) {
+
+	sendto(sock, buffer, len, 0, (struct sockaddr*)saddr, addr_len); // strlen(buffer) because I want to send just the valid characters.
+
+	cout << "--- Data has been sent!" << endl;
+}
+
+socklen_t UDPServer::receive_datagram(char *buffer, const struct sockaddr_in *caddr, size_t len) {
+
+	socklen_t address_len = sizeof(caddr);
+	size_t n;
+
+	n = recvfrom(sock, buffer, len, 0, (struct sockaddr*)caddr, &address_len);
+
+	if (n > (len))
+		cout << "--- Some bytes lost!" << endl;
+
+	return address_len;
 }

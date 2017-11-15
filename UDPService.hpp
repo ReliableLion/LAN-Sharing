@@ -10,21 +10,42 @@
 
 using namespace std;
 
-class UDPClient {
+namespace udp_service {
 
-public:
+	class UDPClient {
 
-	UDPClient::UDPClient(std::string address, std::string port);
+	public:
 
-	void UDPClient::send_datagram(char *buffer, const struct sockaddr_in saddr);
-	int receive_datagram(char *buffer, const struct sockaddr_in saddr);
+		UDPClient::UDPClient(std::string address, std::string port);
 
-private:
-	int sock;
-	char buffer[MAXBUFL] = "";
-	char serverAddress[INET_ADDRSTRLEN];
-	int serverPort;
-};
+		void UDPClient::send_datagram(char *buffer, const struct sockaddr_in saddr);
+		int UDPClient::receive_datagram(char *buffer, const struct sockaddr_in saddr);
+
+	private:
+		int sock;
+		char buffer[MAXBUFL] = "";
+		char serverAddress[INET_ADDRSTRLEN];
+		int serverPort;
+	};
+
+	class UDPServer {
+
+		UDPServer::UDPServer();
+
+		void UDPServer::send_datagram(char *buffer, const struct sockaddr_in *saddr, socklen_t addr_len, size_t len);
+		socklen_t UDPServer::receive_datagram(char *buffer, const struct sockaddr_in *caddr, size_t len);
+
+	private:
+		int sock;
+		char buffer[MAXBUFL] = "";
+		char serverAddress[INET_ADDRSTRLEN];
+
+	};
+
+
+
+}
+
 
 /*
 class UDPServer {
