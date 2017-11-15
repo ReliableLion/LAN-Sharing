@@ -1,4 +1,4 @@
-#ifndef REQUEST_MANAGER_H
+/*#ifndef REQUEST_MANAGER_H
 #define REQUEST_MANAGER_H
 
 #include "TCPconnection.h"
@@ -39,5 +39,5 @@ public:
 	void closeConnections();
 };
 
-#endif // !REQUEST_MANAGER_H
+#endif // !REQUEST_MANAGER_H*/
 

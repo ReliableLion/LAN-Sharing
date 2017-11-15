@@ -1,4 +1,4 @@
-#include "RequestMananger.h"
+/*#include "RequestMananger.h"
 
 // when a new object ReqeuestManager is instantiated the Server pass as reference the DownloadManager
 RequestManager::RequestManager(std::shared_ptr<DownloadManager> d_man_ptr) {
@@ -92,7 +92,7 @@ void RequestManager::_requestHandShake(conn_ptr conn) {
 		//TODO	devo aspettare davide che finisca la class message
 		// TODO	i need to use the message class methods to decode the content of the request
 
-		if (_checkParameter(fileSize, filename)) {
+		/*if (_checkParameter(fileSize, filename)) {
 			std::cout << "filename is null or the filesize is less than 0" << std::endl;
 			return;
 		}
@@ -100,7 +100,7 @@ void RequestManager::_requestHandShake(conn_ptr conn) {
 		/*
 		*	insert the request in the right queue
 		*/
-		try {
+		/*try {
 			if (fileSize >= FILE_THRESHOLD) {
 				d_man_ptr->InsertBigFileRequest((size_t)fileSize, filename, conn);
 			}
@@ -117,7 +117,7 @@ void RequestManager::_requestHandShake(conn_ptr conn) {
 		/*
 		*	send a reply message to the client
 		*/
-		conn->writeReply(reply_msg);
+		/*conn->writeReply(reply_msg);
 	}
 	catch (std::exception &e) {
 		// TODO	implement a mechanism to send an error message to say that the request is not recognized by the server 
@@ -126,7 +126,7 @@ void RequestManager::_requestHandShake(conn_ptr conn) {
 	/*
 	 manage the case with that is impossible to send the request to the download manager
 	*/	 
-}
+/*}
 
 bool RequestManager::_checkParameter(__int64 size, std::string filename) {
 	if (size <= 0) {
@@ -136,6 +136,6 @@ bool RequestManager::_checkParameter(__int64 size, std::string filename) {
 		return false;
 	}
 	return true;
-}
+}*/
 
 

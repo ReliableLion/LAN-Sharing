@@ -2,6 +2,9 @@
 #include "stdafx.h"
 #include "Session.hpp"
 #include "ConcurrentQueue.hpp"
+#include "FileHandler.hpp"
+#include "SocketException.h"
+#include "TimeoutException.hpp"
 #include <mutex>
 #include <condition_variable>
 #include <atomic>

@@ -4,7 +4,6 @@
 #include "FileWriteException.h"
 #include <fstream>
 #include <string>
-#include <memory>
 
 #define MAX_ATTEMPTS 5
 #define TEMP_PATH std::string("C:\\users\\utentepc\\Appdata\\local\\temp")
@@ -19,7 +18,8 @@ protected:
 public:
 	FileHandler() {};
 	FileHandler(std::string filename, std::string path);
-	virtual bool openFile() = 0;
+	~FileHandler();
+	virtual bool openFile() =0;
 	bool closeFile();
 	void removeFile();
 	void writeData(const char *buffer, size_t size);
@@ -34,10 +34,12 @@ class InputFileHandler : public FileHandler {
 public:
 	InputFileHandler(std::string filename, std::string path);
 	bool openFile();
+	void readFile();
 };
 
 class OutputFileHandler : public FileHandler {
 public:
 	OutputFileHandler(std::string filename, std::string path);
 	bool openFile();
+	void writeData(const char *buffer, size_t size);
 };

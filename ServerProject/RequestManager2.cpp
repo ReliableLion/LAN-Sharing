@@ -85,10 +85,21 @@ void RequestManager::processRequest() {
 			-if the packet is not received correctly, send an error and set the index + 1
 			*/
 
+
 		} while (received_correctly || i == maxRequestAttempts);
-	}
-	catch (std::exception &e) {
+
+		if (!received_correctly) {
+
+		}
+		else {
+			// TODO close the connection
+		}
 
 	}
-	
+	catch (TimeoutException &e) {
+		// TODO close the connection 
+	}
+	catch (SocketException &e) {
+		// TODO close the connection
+	}
 }

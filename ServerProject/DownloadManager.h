@@ -1,4 +1,4 @@
-#ifndef DOWNLOAD_MANAGER_H
+/*#ifndef DOWNLOAD_MANAGER_H
 #define DOWNLOAD_MANAGER_H
 
 #include <thread>
@@ -57,4 +57,4 @@ public:
 	void exitDownloader();
 };
 
-#endif // DONWLOAD_MANAGER_H
+#endif // DONWLOAD_MANAGER_H*/

@@ -18,7 +18,7 @@ public:
 		std::lock_guard<std::mutex> queue_lock(mtx);
 		if (element_n == max_element) { return false; }
 		c_queue.push(element);
-		n_values++;
+		element_n++;
 		return true;
 	}
 
@@ -27,11 +27,12 @@ public:
 		if (element_n == 0) { return false; }
 		element = c_queue.front();
 		c_queue.pop();
-		n_values--;
+		element_n--;
 		return true;
 	}
 
 	bool isEmpty() { 
 		std::lock_guard<std::mutex> queue_lock(mtx);
-		return c_queue.empty(); }
+		return c_queue.empty();
+	}
 };

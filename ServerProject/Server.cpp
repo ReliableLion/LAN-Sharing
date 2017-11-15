@@ -7,7 +7,7 @@
 
 //			PUBLIC METHODS
 
-Server::Server(int port = 1500){
+Server::Server(int port){
 	// when a new instance of Server is declared, a new listen socket is created  and binded to receive incoming request
 	// winsock startup
 	WSAData wsaData;

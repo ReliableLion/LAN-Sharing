@@ -25,25 +25,6 @@ bool FileHandler::closeFile() {
 	}
 }
 
-void FileHandler::writeData(const char *buffer, size_t size) {
-	std::size_t n_byte = size;
-	int count = 0;
-
-	if (buffer == nullptr) {
-		throw FileWriteException();
-	}
-
-	file.write(buffer, n_byte);
-	while (!file.good() || count < MAX_ATTEMPTS) {
-		file.write(buffer, n_byte);
-		count++;
-	}
-
-	if (count == MAX_ATTEMPTS) {
-		throw FileWriteException();
-	}
-}
-
 bool FileHandler::copyFile(FileHandler& dest_file) {
 	std::ifstream src;
 	std::ofstream dest;
@@ -55,8 +36,8 @@ bool FileHandler::copyFile(FileHandler& dest_file) {
 	return (src.good() && dest.good());
 }
 
-// to be used after the file closing
-void FileHandler::removeFile() {
+						
+void FileHandler::removeFile() {			
 	remove(this->filename.c_str());
 }
 
@@ -85,11 +66,30 @@ bool OutputFileHandler::openFile() {
 		throw FileOpenException();
 	}
 
-	file_path = file_dir.append("\\").append(filename);		// pathname definition
+	file_path = file_dir.append("\\").append(filename);							// pathname definition
 
 	file.open(file_path, std::fstream::binary, std::fstream::out);				// open the file in binary mode 
 	if (!file.is_open()) {
 		throw FileOpenException();
 	}
 	return true;
+}
+
+void OutputFileHandler::writeData(const char *buffer, size_t size) {
+	std::size_t n_byte = size;
+	int count = 0;
+
+	if (buffer == nullptr) {
+		throw FileWriteException();
+	}
+
+	file.write(buffer, n_byte);
+	while (!file.good() || count < MAX_ATTEMPTS) {
+		file.write(buffer, n_byte);
+		count++;
+	}
+
+	if (count == MAX_ATTEMPTS) {
+		throw FileWriteException();
+	}
 }

@@ -1,4 +1,4 @@
-#include "DownloadManager.h"
+/*#include "DownloadManager.h"
 
 // when the costructor of this object is invoked the threads are createsd and go into sleep mode
 void DownloadManager::setupDownloader() {
@@ -185,7 +185,7 @@ void DownloadManager::_downloadFile(std::string filename, size_t size, std::shar
 		/*original_file.closeFile();
 		original_file.removeFile();
 		temp_file.closeFile()*/
-	}
+	/*}
 
 	try {
 		// begin to read the data from the connection 
@@ -226,4 +226,4 @@ void DownloadManager::_downloadFile(std::string filename, size_t size, std::shar
 		//TODO	if the copy has gone bad, repeate the copy
 	}
 
-}
+}*/

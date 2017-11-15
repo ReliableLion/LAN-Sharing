@@ -8,8 +8,6 @@
 
 namespace session {
 
-	typedef std::shared_ptr<TCPConnection> conn_ptr;
-
 	class TCPConnection {
 	private:
 		SOCKET sock = 0;
@@ -27,5 +25,7 @@ namespace session {
 		bool sendall(const char *data, int totalByte);
 		bool readline(char *data, int& readByte, int maxByte);
 	};
+
+	typedef std::shared_ptr<TCPConnection> conn_ptr;
 
 }
