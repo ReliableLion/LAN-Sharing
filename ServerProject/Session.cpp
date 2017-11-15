@@ -73,7 +73,6 @@ bool session::TCPConnection::recvall(char* data, int totalByte) {
 			return false;
 		}
 	}
-	std::cout << "data received correctly!" << std::endl;
 	return true;
 }
 

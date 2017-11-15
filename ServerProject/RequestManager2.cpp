@@ -72,6 +72,7 @@ void RequestManager::processRequest() {
 	}*/
 
 	bool received_correctly = false;
+	bool connection_closed = false;
 	int i = 0;
 
 	// TODO declare here the requestManager and ReplyManager
@@ -83,18 +84,22 @@ void RequestManager::processRequest() {
 				-if the request is accepted pass the connection to the downloadmanager
 				-if the requets is not accepted send an error
 			-if the packet is not received correctly, send an error and set the index + 1
+			-if the connection is closed, write a message
 			*/
 
 
-		} while (received_correctly || i == maxRequestAttempts);
+		} while (received_correctly || connection_closed || i == maxRequestAttempts);
 
 		if (!received_correctly) {
 
-		}
-		else {
+		} else 
+		if (i == maxRequestAttempts) {
 			// TODO close the connection
+		} else 
+		if (connection_closed){
+			std::cout << "connection closed by peer" << std::endl;
 		}
-
+		
 	}
 	catch (TimeoutException &e) {
 		// TODO close the connection 
@@ -102,4 +107,8 @@ void RequestManager::processRequest() {
 	catch (SocketException &e) {
 		// TODO close the connection
 	}
+}
+
+bool sendReply(session::conn_ptr conn) {
+	return true;
 }

@@ -23,6 +23,7 @@ private:
 private:
 	void extractConnection();
 	void processRequest();
+	bool sendReply(session::conn_ptr conn);
 public:
 	RequestManager();
 	~RequestManager();
