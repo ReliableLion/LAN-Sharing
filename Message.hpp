@@ -5,6 +5,8 @@
 #include <sstream>
 #include "Protocol.hpp"
 #include <vector>
+#include "Constants.hpp"
+#include "Exceptions.hpp"
 
 using namespace protocol;
 
@@ -31,8 +33,6 @@ public:
 
 
 	std::vector<int8_t> m_buffer; //Message Packet Buffer
-
-	void Message::getPacketType(char* messageType);
 
 protected:
 	std::string messageBody = "";
@@ -67,6 +67,7 @@ public:
 	void RequestMessage::prepareMessage();
 
 	requestStruct RequestMessage::getRequestData();
+	void RequestMessage::getPacketType(char* packetType);
 
 private:
 	requestStruct requestBody;
@@ -78,21 +79,18 @@ class DiscoveryMessage: public Message {
 
 public:
 	DiscoveryMessage(std::string username) {
-		messageBody.append(helloMsg);
-		messageBody.append(username);
-		messageBody.append(endMessage);
+		Append(HELLO_MSG);
+		Append(username);
+		Append(endMessage);
 	}
 
 	DiscoveryMessage() {
-		messageBody.append(discoveryMsg);
+		Append(DISCOVERY_MSG);
 		messageBody.append(endMessage);
 	}
 
-	const std::string helloMsg = "MYUSERNAME ";
-	const std::string discoveryMsg = "LAN-SHARING LOOKINGFOR";
+	std::string DiscoveryMessage::getUsername(char* username);
 
-	std::string getDiscoveryMessage() {
-		return messageBody;
-	}
+	void DiscoveryMessage::getPacketType(char* packetType);
 
 };

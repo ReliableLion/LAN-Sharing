@@ -13,3 +13,13 @@ namespace udp_exception {
 		std::string errorMessage;
 	};
 }
+
+class messageException : public std::exception
+{
+public:
+	messageException(std::string str) : errorMessage(str) {};
+	const char* what() const throw() { return errorMessage.c_str(); }
+
+private:
+	std::string errorMessage;
+};

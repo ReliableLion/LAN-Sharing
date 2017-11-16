@@ -1,12 +1,19 @@
 #include "UDPService.hpp"
 #include "Exceptions.hpp"
+#include "Message.hpp"
 
 using namespace udp_service;
 
-UDPClient::UDPClient(std::string address, std::string port) {
+UDPClient::UDPClient() {
+	//Set broadcast address
+	broadcastAddress.sin_family = AF_INET;
+	broadcastAddress.sin_addr.s_addr = htonl(0xffffffff); //broadcast address
+	broadcastAddress.sin_port = htons(10000);
+}
+
+void UDPClient::getServerInfo(std::string address, std::string port) {
 
 	struct addrinfo hints, *res, *res0;
-	struct sockaddr_in* server_address;
 
 	memset(&server_address, 0, sizeof(server_address));
 
@@ -40,12 +47,12 @@ UDPClient::UDPClient(std::string address, std::string port) {
 	}
 
 	if (res != NULL)
-		server_address = (struct sockaddr_in *)res->ai_addr;
+		server_address = *((struct sockaddr_in *)res->ai_addr);
 	else 
 		throw udp_exception::udpException("- Error couldn't connect! No server found!");
 
-	inet_ntop(AF_INET, &(server_address->sin_addr), serverAddress, INET_ADDRSTRLEN);
-	serverPort = ntohs(server_address->sin_port);
+	inet_ntop(AF_INET, &(server_address.sin_addr), serverAddress, INET_ADDRSTRLEN);
+	serverPort = ntohs(server_address.sin_port);
 
 	freeaddrinfo(res0);
 
@@ -53,7 +60,7 @@ UDPClient::UDPClient(std::string address, std::string port) {
 
 }
 
-void UDPClient::send_datagram(char *buffer, const struct sockaddr_in saddr) {
+void UDPClient::sendDatagram(char *buffer, const struct sockaddr_in saddr) {
 
 	/* send datagram */
 
@@ -62,7 +69,33 @@ void UDPClient::send_datagram(char *buffer, const struct sockaddr_in saddr) {
 	cout << "(%s) --- Data has been sent!\n" << endl;
 }
 
-int UDPClient::receive_datagram(char *buffer, const struct sockaddr_in saddr) {
+void UDPClient::sendBroadcast(char *buffer) {
+
+	int broadcast = 1;
+
+	// Create a UDP socket
+	if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
+		throw udp_exception::udpException("--- Error socket() failed!\n");
+
+	// Set socket options to broadcast
+	if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, reinterpret_cast<char *>(&broadcast), sizeof(broadcast)) < 0)
+		if (closesocket(sock) != 0)
+			throw udp_exception::udpException("--- Error closesocket() failed!\n");
+
+
+	// Broadcast data on the socket
+	if (sendto(sock, DISCOVERY_MSG, strlen(DISCOVERY_MSG) + 1, 0, reinterpret_cast<sockaddr *> (&broadcastAddress), sizeof(broadcastAddress)) < 0)
+		if (closesocket(sock) != 0)
+			throw udp_exception::udpException("--- Error closesocket() failed!\n");
+
+	cout << "(%s) --- Broadcast packet has been sent!\n" << endl;
+
+	if (closesocket(sock) != 0)
+		throw udp_exception::udpException("--- Error closesocket() failed!\n");
+
+}
+
+int UDPClient::receiveDatagram(char *buffer, const struct sockaddr_in saddr) {
 
 	struct timeval tval;
 	fd_set cset;
@@ -116,6 +149,8 @@ UDPServer::UDPServer() {
 
 	struct sockaddr_in* server_address, client_address, *client_address_ptr;
 	socklen_t address_len;
+	DiscoveryMessage packet;
+	char packetType[11];
 
 	client_address_ptr = &client_address;
 	ZeroMemory(&client_address, sizeof(client_address));
@@ -142,7 +177,12 @@ UDPServer::UDPServer() {
 
 		address_len = receive_datagram(buffer, client_address_ptr, MAXBUFL);
 
-		send_datagram(buffer, client_address_ptr, address_len, strlen(buffer));
+		packet.Append(buffer, strlen(buffer));
+
+		packet.getPacketType(packetType);
+
+		if(packetType == HELLO_MSG)
+			send_datagram(buffer, client_address_ptr, address_len, strlen(buffer));
 	}
 
 }
@@ -152,6 +192,14 @@ void UDPServer::send_datagram(char *buffer, const struct sockaddr_in *saddr, soc
 	sendto(sock, buffer, len, 0, (struct sockaddr*)saddr, addr_len); // strlen(buffer) because I want to send just the valid characters.
 
 	cout << "--- Data has been sent!" << endl;
+}
+
+void UDPServer::sendHello(const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) {
+
+	sendto(sock, HELLO_MSG, strlen(HELLO_MSG), 0, (struct sockaddr*)saddr, addr_len); // strlen(buffer) because I want to send just the valid characters.
+
+	cout << "--- Data has been sent!" << endl;
+
 }
 
 socklen_t UDPServer::receive_datagram(char *buffer, const struct sockaddr_in *caddr, size_t len) {
@@ -165,4 +213,12 @@ socklen_t UDPServer::receive_datagram(char *buffer, const struct sockaddr_in *ca
 		cout << "--- Some bytes lost!" << endl;
 
 	return address_len;
+}
+
+UDPClient::~UDPClient() {
+	closesocket(sock);
+}
+
+UDPServer::~UDPServer() {
+	closesocket(sock);
 }

@@ -44,10 +44,6 @@ void Message::Append(std::size_t s) {
 	Append((__int64)s);
 }
 
-void Message::getPacketType(char* packetType) {
-	memcpy((void*)packetType, (void*)&(*m_buffer.begin()), 4);
-}
-
 RequestMessage::RequestMessage(__int64 fileSize, FILETIME fileTimestamp, std::string fileName) {
 
 	messageBody.append(MessageType::getMessageType(MessageType::SEND));
@@ -103,4 +99,27 @@ void RequestMessage::prepareMessage() {
 	Message::Append((const char*)this->requestBody.fileName.c_str(), sizeof(this->requestBody.fileName.size()));
 
 	Message::Append((const char*)endMessage.c_str());
+}
+
+void RequestMessage::getPacketType(char* packetType) {
+	memcpy((void*)packetType, (void*)&(*m_buffer.begin()), 4);
+}
+
+void DiscoveryMessage::getPacketType(char* packetType) {
+	// HELLO_MSG is the smallest string within a discovery message packet
+	memcpy((void*)packetType, (void*)&(*m_buffer.begin()), strlen(HELLO_MSG));
+}
+
+std::string DiscoveryMessage::getUsername(char* username) {
+
+	char packetType[] = HELLO_MSG;
+
+	memcpy((void*)packetType, (void*)&(*m_buffer.begin()), strlen(HELLO_MSG));
+
+	if (packetType == HELLO_MSG)
+		// HELLO_MSG is the smallest string within a discovery message packet
+		memcpy((void*)username, (void*)&(m_buffer.at(strlen(HELLO_MSG))), strlen(HELLO_MSG));
+	else
+		throw messageException("packet is not an Hello Message!\n");
+
 }
