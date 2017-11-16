@@ -1,5 +1,6 @@
 #pragma once
 #include "stdafx.h"
+#include "Constant.hpp"
 #include "Session.hpp"
 #include "ConcurrentQueue.hpp"
 #include "FileHandler.hpp"
@@ -13,14 +14,19 @@
 
 class RequestManager {
 private:
-	ConcurrentQueue<session::conn_ptr> connectionQueue;
+	// thread & synchronization variables
+	const int maxThreads = REQUEST_THREADS;
+	const int fileThreshold = FILE_SIZE_THRESHOLD;
+	const int maxRequestAttempts = MAX_REQUEST_ATTEMPTS;
 	std::atomic<bool> is_terminated;
-	const int maxThreads = 4;
-	const int maxRequestAttempts = 3;
 	std::mutex mtx;
 	std::condition_variable cv;
 	std::vector<std::thread> threadPool;
+	
+	// connection variables
+	ConcurrentQueue<session::conn_ptr> connectionQueue;
 private:
+	// private methods
 	void extractConnection();
 	void processRequest();
 	bool sendReply(session::conn_ptr conn);

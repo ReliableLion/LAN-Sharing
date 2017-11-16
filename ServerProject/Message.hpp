@@ -1,120 +1,98 @@
 #pragma once
-
 #include <iostream>
+#include <WinSock2.h>
 #include <windows.h>
-#include <string>
 #include <sstream>
+#include "Protocol.hpp"
 #include <vector>
-#include <boost\asio.hpp>
-#include "BadRequest.h"
-#include ""
+
+using namespace protocol;
+
+typedef struct {
+	__int64 fileSize;
+	FILETIME fileTimestamp;
+	std::string fileName;
+} requestStruct;
 
 class Message {
 
 public:
-	std::vector<boost::asio::const_buffer> getMessageData() {
-		return bufferContainer;
-	}
 
-	size_t getMessageSize() {
-		return bufferContainer.size();
-	}
+	Message();
+	Message(const char * buffer, const int size); //Will use existing allocated buffer and create packet from it
+												  //Packet(const Packet & p); //Will allocate new buffer but copy buffer from packet argument
+	Message(const MessageType::TYPE m); //Used for when sending a packet that only contains a packet type (Ex. End of File Packet)
+	void Append(const MessageType::TYPE mt);
+	void Append(const __int64 int64);
+	void Append(const std::size_t m);
+	void Append(const Message & m);
+	void Append(const std::string & str);
+	void Append(const char * buffer, const int size); //Will use existing allocated buffer and create packet from it
 
-	void setMessageData(std::vector<boost::asio::const_buffer> buffCont) {
-		this->bufferContainer = buffCont;
-	}
 
-	const std::string getEndMessage() { return Message::endMessage; }
-	
+	std::vector<int8_t> m_buffer; //Message Packet Buffer
+
+	void Message::getPacketType(char* messageType);
 
 protected:
 	std::string messageBody = "";
 	std::stringstream stream;
 	const std::string endMessage = "\r\n";
-	std::vector<boost::asio::const_buffer> bufferContainer;
+	size_t messageSize;
+
 };
 
 class RequestMessage : public Message {
 
 public:
+
+	// This is used to create a RequestMessage, which it's supposed will be sent
+	RequestMessage(__int64 fileSize, FILETIME fileTimestamp, std::string fileName);
+
+	// This is used to create an empty RequestMessage, which it's supposed will be received
 	RequestMessage() {};
 
-	RequestMessage(__int64 fileSize, FILETIME fileTimestamp, std::string fileName) {
-
-		Message::messageBody.append(sendMessage);
-
-		this->fileSize = fileSize;
-		this->fileTimestamp = fileTimestamp;
-		this->fileName = fileName;
-
-		Message::bufferContainer.push_back(boost::asio::buffer(reinterpret_cast<void*>(this->fileSize), sizeof(__int64)));
-
-		timeStamp.LowPart = this->fileTimestamp.dwLowDateTime;
-		timeStamp.HighPart = this->fileTimestamp.dwHighDateTime;
-		bufferContainer.push_back(boost::asio::buffer(reinterpret_cast<void*>(this->timeStamp.QuadPart), sizeof(FILETIME)));
-
-		messageBody.append(this->fileName);
-		messageBody.append(endMessage);
-
-		bufferContainer.push_back(boost::asio::buffer(messageBody, messageBody.size()));
-
+	__int64 RequestMessage::getFileSize() {
+		return this->requestBody.fileSize;
 	}
 
-	void decodeRequest() {
-
+	FILETIME RequestMessage::getFileTimeStamp() {
+		return this->requestBody.fileTimestamp;
 	}
 
-	__int64 getFileSize() {
-		return this->fileSize;
+	std::string RequestMessage::getFileName() {
+		return this->requestBody.fileName;
 	}
 
-	FILETIME getFileTimeStamp() {
-		return this->fileTimestamp;
-	}
+	void RequestMessage::prepareMessage();
 
-	std::string getFileName() {
-		return this->fileName;
-	}
+	requestStruct RequestMessage::getRequestData();
 
 private:
-	const std::string sendMessage = "SEND ";
-	__int64 fileSize;
-	FILETIME fileTimestamp;
-	std::string fileName;
+	requestStruct requestBody;
 	ULARGE_INTEGER timeStamp;
+
 };
 
 class DiscoveryMessage : public Message {
 
 public:
 	DiscoveryMessage(std::string username) {
-		Message::messageBody.append(helloMsg);
-		Message::messageBody.append(username);
-		Message::messageBody.append(endMessage);
-
-		bufferContainer.push_back(boost::asio::buffer(Message::messageBody, Message::messageBody.size()));
+		messageBody.append(helloMsg);
+		messageBody.append(username);
+		messageBody.append(endMessage);
 	}
 
 	DiscoveryMessage() {
-		Message::messageBody.append(discoveryMsg);
-		Message::messageBody.append(endMessage);
-
-		bufferContainer.push_back(boost::asio::buffer(Message::messageBody, Message::messageBody.size()));
+		messageBody.append(discoveryMsg);
+		messageBody.append(endMessage);
 	}
 
 	const std::string helloMsg = "MYUSERNAME ";
 	const std::string discoveryMsg = "LAN-SHARING LOOKINGFOR";
 
-};
-
-class ReplyMessage: public Message {
-private:
-	const std::string ok = "OK";
-public:
-	ReplyMessage() {};
-	const std::string createReply() {
-		Message::stream << ok << Message::endMessage;
-		return stream.str();
+	std::string getDiscoveryMessage() {
+		return messageBody;
 	}
 
 };
