@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include "SocketException.h"
 #include "TimeoutException.hpp"
-#include <WinSock2.h>
 #include <memory>
 #include <ctime>
 

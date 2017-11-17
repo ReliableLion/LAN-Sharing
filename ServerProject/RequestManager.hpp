@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "Constant.hpp"
 #include "Session.hpp"
+#include "DownloadManager.hpp"
 #include "ConcurrentQueue.hpp"
 #include "FileHandler.hpp"
 #include "SocketException.h"
@@ -25,6 +26,9 @@ private:
 	
 	// connection variables
 	ConcurrentQueue<session::conn_ptr> connectionQueue;
+
+	// download manager for the file download
+	DownloadManager dw_man;
 private:
 	// private methods
 	void extractConnection();

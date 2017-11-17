@@ -1,6 +1,4 @@
-#ifndef USER_CONFIGURATION_H 
-#define USER_CONFIGURATION_H 
-
+#pragma once
 #include <fstream>
 #include <string>
 
@@ -31,7 +29,4 @@ public:
 	bool getAutomaticAccept();
 	bool getUseDefaultPath();
 	bool get_isPublic();
-};
-
-
-#endif // USER_CONFIGURATION_H 
+}; 

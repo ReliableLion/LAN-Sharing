@@ -5,16 +5,13 @@
 #include <fstream>
 #include <string>
 
-#define MAX_ATTEMPTS 5
-#define TEMP_PATH std::string("C:\\users\\utentepc\\Appdata\\local\\temp")
-
 class FileHandler {
 protected:
-	// TODO remember to write \\ instead of \ when you write the file path
-	std::string file_dir;
+	std::string file_dir;								// TODO remember to write \\ instead of \ when you write the file path
 	std::string file_path;
 	std::string filename;
-	std::fstream file;			// file stream
+	std::fstream file;									// generic file stream for write and read operation on files
+	const int maxAttempts = MAX_FILE_ATTEMPTS;
 public:
 	FileHandler() {};
 	FileHandler(std::string filename, std::string path);
@@ -22,7 +19,6 @@ public:
 	virtual bool openFile() =0;
 	bool closeFile();
 	void removeFile();
-	void writeData(const char *buffer, size_t size);
 	bool copyFile(FileHandler& dest_file);
 	std::string getFilename();
 	/*FileHandler(char *filename, char *path);
@@ -34,12 +30,12 @@ class InputFileHandler : public FileHandler {
 public:
 	InputFileHandler(std::string filename, std::string path);
 	bool openFile();
-	void readFile();
+	void readFile(char *buffer, std::size_t size);
 };
 
 class OutputFileHandler : public FileHandler {
 public:
 	OutputFileHandler(std::string filename, std::string path);
 	bool openFile();
-	void writeData(const char *buffer, size_t size);
+	void writeData(const char *buffer, std::size_t size);
 };

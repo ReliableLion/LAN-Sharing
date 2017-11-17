@@ -1,5 +1,4 @@
-#include "UserConfiguration.h"
-#include <string>
+#include "UserConfiguration.hpp"
 
 UserConfiguration::UserConfiguration() {}
 

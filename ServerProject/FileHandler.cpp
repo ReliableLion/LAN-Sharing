@@ -53,10 +53,14 @@ bool InputFileHandler::openFile() {
 	file_path = file_dir.append("\\").append(filename);							// pathname definition
 
 	file.open(file_path, std::fstream::binary, std::fstream::in);				// open the file in binary mode 
-	if (!file.is_open()) {
+	if (!file.good()) {
 		throw FileOpenException();
 	}
 	return true;
+}
+
+void InputFileHandler::readFile(char *buffer, std::size_t size) {
+
 }
 
 OutputFileHandler::OutputFileHandler(std::string filename, std::string path) : FileHandler(filename, path) {}
@@ -69,13 +73,13 @@ bool OutputFileHandler::openFile() {
 	file_path = file_dir.append("\\").append(filename);							// pathname definition
 
 	file.open(file_path, std::fstream::binary, std::fstream::out);				// open the file in binary mode 
-	if (!file.is_open()) {
+	if (!file.good()) {
 		throw FileOpenException();
 	}
 	return true;
 }
 
-void OutputFileHandler::writeData(const char *buffer, size_t size) {
+void OutputFileHandler::writeData(const char *buffer, std::size_t size) {
 	std::size_t n_byte = size;
 	int count = 0;
 
@@ -83,13 +87,18 @@ void OutputFileHandler::writeData(const char *buffer, size_t size) {
 		throw FileWriteException();
 	}
 
-	file.write(buffer, n_byte);
-	while (!file.good() || count < MAX_ATTEMPTS) {
-		file.write(buffer, n_byte);
-		count++;
+	if (!file.is_open()) {						// if file is not open, try to open it, otherwisw throw a new FileWrite Eception
+		if (!openFile()) {
+			throw FileWriteException();
+		}
 	}
 
-	if (count == MAX_ATTEMPTS) {
+	do {
+		file.write(buffer, n_byte);
+		count++;
+	} while (!file.good() || count < maxAttempts);
+
+	if (count == maxAttempts) {
 		throw FileWriteException();
 	}
 }

@@ -1,10 +1,11 @@
 #pragma once
-#include <iostream>
-#include <WinSock2.h>
+#include "stdafx.h"
+#include "Protocol.hpp"
 #include <windows.h>
 #include <sstream>
-#include "Protocol.hpp"
 #include <vector>
+
+
 
 using namespace protocol;
 

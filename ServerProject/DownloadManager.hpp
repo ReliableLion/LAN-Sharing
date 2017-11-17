@@ -1,6 +1,7 @@
 #pragma once
-#include "Constant.hpp"
+#include "stdafx.h"
 #include "ConcurrentQueue.hpp"
+#include "FileHandler.hpp"
 #include "Session.hpp"
 #include "Message.hpp"
 #include "windows.h"
@@ -24,7 +25,14 @@ private:
 	std::mutex mtxB, mtxS;
 	std::atomic<bool> is_terminated;
 	std::condition_variable cvB, cvS;
+
+	// file variables
+	std::string path;
+	const std::string temp_path = TEMP_PATH;
 private:
+	void processBigFile();
+	void processSmallFile();
+	void downloadFile(dw_request request);
 public:
 	DownloadManager();
 	~DownloadManager();

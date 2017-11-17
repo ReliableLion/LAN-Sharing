@@ -9,3 +9,5 @@
 #define FILE_SIZE_THRESHOLD 1024 * 1024 // 1MB
 #define REQUEST_THREADS 4
 #define MAX_REQUEST_ATTEMPTS 3
+#define MAX_FILE_ATTEMPTS 5
+#define TEMP_PATH std::string("C:\\users\\utentepc\\Appdata\\local\\temp")

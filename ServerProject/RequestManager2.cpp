@@ -1,9 +1,8 @@
 #include "RequestManager.hpp"
-#include "stdafx.h"
 
 //		PUBLIC METHODS
 
-RequestManager::RequestManager() {
+RequestManager::RequestManager() : dw_man() {
 	is_terminated.store(false);
 	for (int i = 0; i < maxThreads; i++) {
 		threadPool.push_back(std::thread(&RequestManager::processRequest, this));
@@ -19,8 +18,9 @@ RequestManager::~RequestManager() {
 		connection->closeConnection();
 	}
 
-	for (int i = 0; i < maxThreads; i++) {			// wait the threads termination
-		threadPool[i].join();
+	for (int i = 0; i < maxThreads; i++) {			// close all the threads
+		cv.notify_all();
+		threadPool[i].join();						// "unlock" the threads that wait on the condition variable
 	}
 }
 
@@ -43,18 +43,18 @@ bool RequestManager::addConnection(session::conn_ptr newConnection) {
 
 void RequestManager::extractConnection() {
 	session::conn_ptr newConnection;
-	std::unique_lock<std::mutex> l(mtx, std::defer_lock);
+	std::unique_lock<std::mutex> ul(mtx, std::defer_lock);
 
 	while (1) {
-		l.lock();
+		ul.lock();
 
-		cv.wait(l, [this]() {
+		cv.wait(ul, [this]() {
 			return (!connectionQueue.isEmpty() || is_terminated.load());
 		});
 		
 		if (is_terminated.load()) break;
 		connectionQueue.popElement(newConnection);
-		l.unlock();
+		ul.unlock();
 
 		processRequest();
 	}
