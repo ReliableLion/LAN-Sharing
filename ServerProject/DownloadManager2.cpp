@@ -93,6 +93,20 @@ void DownloadManager::processBigFile() {
 void DownloadManager::downloadFile(dw_request request) {
 	OutputFileHandler dest_file(request.req.fileName, path);
 	OutputFileHandler temp_file(request.req.fileName, temp_path);
+	int leftByte = request.req.fileSize;
+	
+	try {
+		dest_file.openFile();								// open the two files, if an exception is throw by the program then the file is closed by the destructor
+		temp_file.openFile();
 
+		while (leftByte != 0) {
+			// TODO	put here the code for the file download
+			//int readByte = request.conn->recvall()
+		}
+	}
+	catch (SocketException &se) {
+	}
+	catch (FileWriteException &fwe) {
 
+	}
 }

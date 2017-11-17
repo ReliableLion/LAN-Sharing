@@ -37,7 +37,7 @@ void session::TCPConnection::printEndpointInfo() {
 	std::cout << "port number: " << remote_address.sin_port << std::endl << std::endl;
 }
 
-bool session::TCPConnection::recvall(char* data, int totalByte) {
+bool session::TCPConnection::recvall(char *data, int totalByte, int& totalReadByte) {
 	struct timeval time;
 	int byteReceived = 0;
 	FD_SET readSock;
@@ -63,6 +63,7 @@ bool session::TCPConnection::recvall(char* data, int totalByte) {
 				throw SocketException(WSAGetLastError());
 			} else
 			if (byteRead == 0) {
+				totalReadByte = byteReceived;
 				return false;
 			}
 			else {
@@ -70,13 +71,15 @@ bool session::TCPConnection::recvall(char* data, int totalByte) {
 			}
 
 		} else {
+			totalReadByte = byteReceived;
 			return false;
 		}
 	}
+	totalReadByte = byteReceived;
 	return true;
 }
 
-bool session::TCPConnection::sendall(const char* data, int totalByte) {
+bool session::TCPConnection::sendall(const char* data, int totalByte, int& totalSentByte) {
 	int uploadedByte = 0;
 	
 	while (uploadedByte < totalByte) {

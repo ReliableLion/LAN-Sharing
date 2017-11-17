@@ -3,6 +3,7 @@
 #include "SocketException.h"
 #include "TimeoutException.hpp"
 #include <memory>
+#include <iomanip>
 #include <ctime>
 
 namespace session {
@@ -20,8 +21,8 @@ namespace session {
 		bool acceptConnection(SOCKET s);
 		bool closeConnection();
 		void printEndpointInfo();
-		bool recvall(char *data, int totalByte);
-		bool sendall(const char *data, int totalByte);
+		bool recvall(char *data, int totalByte, int& totalReadByte);
+		bool sendall(const char *data, int totalByte, int& totalSentByte);
 		bool readline(char *data, int& readByte, int maxByte);
 	};
 

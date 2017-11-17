@@ -101,4 +101,6 @@ void OutputFileHandler::writeData(const char *buffer, std::size_t size) {
 	if (count == maxAttempts) {
 		throw FileWriteException();
 	}
+
+	
 }

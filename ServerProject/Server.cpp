@@ -37,10 +37,16 @@ Server::~Server() {
 }
 
 void Server::listenNewConnection() {
-	// accept the incoming request 
 	session::TCPConnection newConn;
-	if (newConn.acceptConnection(l_socket)) {
+	std::time_t timestamp;
+												
+	if (newConn.acceptConnection(l_socket)) {				// accept an imcoming request
+		timestamp = std::time(0);
+		std::cout << "***************************************************" << std::endl;
+		std::cout << "(" << std::put_time(std::localtime(&timestamp), "%c") << ") ";
+		std::cout << "Server accepted an incoming request" << std::endl << "Client information: " << std::endl;
 		newConn.printEndpointInfo();
+		std::cout << "***************************************************" << std::endl;
 	}
 	else {
 		// TODO	notify to the user, via user interface, the connection problem
