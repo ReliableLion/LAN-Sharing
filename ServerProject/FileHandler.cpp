@@ -25,6 +25,11 @@ bool FileHandler::closeFile() {
 	}
 }
 
+/**
+ * \brief 
+ * \param dest_file 
+ * \return 
+ */
 bool FileHandler::copyFile(FileHandler& dest_file) {
 	std::ifstream src;
 	std::ofstream dest;

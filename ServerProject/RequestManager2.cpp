@@ -1,4 +1,5 @@
 #include "RequestManager.hpp"
+#include "PacketManager.hpp"
 
 //		PUBLIC METHODS
 
@@ -10,7 +11,7 @@ RequestManager::RequestManager() : dw_man() {
 }
 
 RequestManager::~RequestManager() {
-	is_terminated.store(true);			// this flag is used to stop the threads computation
+	is_terminated.store(true);						// this flag is used to stop the threads computation
 	session::conn_ptr connection;		
 
 	while (!connectionQueue.isEmpty()) {			// iterate the entire queue and close the pending connections
@@ -24,6 +25,11 @@ RequestManager::~RequestManager() {
 	}
 }
 
+/**
+ * \brief insert the connection inside
+ * \param newConnection 
+ * \return 
+ */
 bool RequestManager::addConnection(session::conn_ptr newConnection) {
 	if (!is_terminated.load()) {
 		std::lock_guard<std::mutex> l(mtx);
@@ -45,38 +51,33 @@ void RequestManager::extractConnection() {
 	session::conn_ptr newConnection;
 	std::unique_lock<std::mutex> ul(mtx, std::defer_lock);
 
-	while (1) {
+	while (true) {
 		ul.lock();
 
-		cv.wait(ul, [this]() {
-			return (!connectionQueue.isEmpty() || is_terminated.load());
+		cv.wait(ul, [this]() {														// wait on the condition varaible
+			return (!connectionQueue.isEmpty() || is_terminated.load());			// unlock the condition variable only if the queue is not empty or the server has been closed
 		});
 		
-		if (is_terminated.load()) break;
-		connectionQueue.popElement(newConnection);
+		if (is_terminated.load()) break;											// if the server has been closed this method must return in order to join the threads
+		connectionQueue.popElement(newConnection);	
 		ul.unlock();
 
-		processRequest();
+		receiveRequest(newConnection);
 	}
 }
 
-void RequestManager::processRequest() {
-	
-	/*if (!receivePacket()) {			// if the packet is not correctly decode send an message of error
-
-		sendPacket();
-		if (!receivePacket()) {
-				// print an error and close the connection
-		}
-
-	}*/
-
+/**
+ * \brief process every pending request received by the server
+ * \param connection 
+ */
+void RequestManager::receiveRequest(session::conn_ptr connection) {
+	PacketManager packet_manager;
 	bool received_correctly = false;
 	bool connection_closed = false;
 	int i = 0;
 
 	// TODO declare here the requestManager and ReplyManager
-	try{
+	try {
 		do {
 
 			/*
@@ -87,28 +88,59 @@ void RequestManager::processRequest() {
 			-if the connection is closed, write a message
 			*/
 
+			switch (packet_manager.receivePacket(connection))
+			{
+				case (CLD_CONN): {									// connection closed
+				
+				} break;
+
+				case (URZ_PACKET): {								// packet not recognized
+				
+				} break;
+
+				case (READ_CORRECTLY): {							// packet read correctly
+
+					// 
+				
+				} break;
+
+				default: {
+				} break;
+			}
 
 		} while (received_correctly || connection_closed || i == maxRequestAttempts);
 
-		if (!received_correctly) {
-
+		// check if the pac
+		if (!received_correctly) {										
+			std::cout << "request received correclty" << std::endl;
 		} else 
 		if (i == maxRequestAttempts) {
 			// TODO close the connection
+			connection->closeConnection();
+			std::cout << "max attempts reached by the server, close the connection" << std::endl;
 		} else 
-		if (connection_closed){
+		if (connection_closed) {
 			std::cout << "connection closed by peer" << std::endl;
 		}
 		
 	}
 	catch (TimeoutException &e) {
 		// TODO close the connection 
+		connection->closeConnection();
 	}
 	catch (SocketException &e) {
 		// TODO close the connection
+		connection->closeConnection();
 	}
 }
 
-bool sendReply(session::conn_ptr conn) {
+bool RequestManager::sendReply(session::conn_ptr conn) {
 	return true;
 }
+
+			// PRIVATE METHODS
+void RequestManager::processRequest() {
+	
+}
+
+

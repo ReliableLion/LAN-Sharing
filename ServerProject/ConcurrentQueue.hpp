@@ -1,14 +1,14 @@
 #pragma once
+#include "Constant.hpp"
 #include <queue>
 #include <mutex>
 
 template <typename T>
 class ConcurrentQueue {
-
 private:
 	std::queue<T> c_queue;
 	int element_n;
-	const int max_element = 1000;
+	const int max_element = QUEUE_MAX_ELEMENTS;
 	std::mutex mtx;
 public:
 	ConcurrentQueue() { element_n = 0; }

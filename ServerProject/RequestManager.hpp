@@ -28,14 +28,14 @@ private:
 	ConcurrentQueue<session::conn_ptr> connectionQueue;
 
 	// download manager for the file download
-	DownloadManager dw_man;
-private:
-	// private methods
+	DownloadManager download_manager;
+private: // private methods
 	void extractConnection();
+	void receiveRequest(session::conn_ptr connection);
 	void processRequest();
 	bool sendReply(session::conn_ptr conn);
 public:
 	RequestManager();
 	~RequestManager();
-	bool RequestManager::addConnection(session::conn_ptr newConnection);
+	bool addConnection(session::conn_ptr newConnection);
 };

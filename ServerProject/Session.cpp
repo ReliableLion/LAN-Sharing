@@ -37,6 +37,13 @@ void session::TCPConnection::printEndpointInfo() {
 	std::cout << "port number: " << remote_address.sin_port << std::endl << std::endl;
 }
 
+/**
+ * \brief 
+ * \param data : buffer filled with data received
+ * \param totalByte : number of bytes to be read
+ * \param totalReadByte : number of Bytes really read
+ * \return false if the connection has been closed by peer, otherside true
+ */
 bool session::TCPConnection::recvall(char *data, int totalByte, int& totalReadByte) {
 	struct timeval time;
 	int byteReceived = 0;
@@ -79,6 +86,13 @@ bool session::TCPConnection::recvall(char *data, int totalByte, int& totalReadBy
 	return true;
 }
 
+/**
+ * \brief 
+ * \param data : buffer used to send the data
+ * \param totalByte : # of bytes to be sent
+ * \param totalSentByte : reference type, total number of bytes really sent
+ * \return false if the connection has been closed by peer, true if the data has been sent correctly
+ */
 bool session::TCPConnection::sendall(const char* data, int totalByte, int& totalSentByte) {
 	int uploadedByte = 0;
 	
@@ -95,6 +109,13 @@ bool session::TCPConnection::sendall(const char* data, int totalByte, int& total
 	return true;
 }
 
+/**
+ * \brief 
+ * \param data : buffer used to write the dato 
+ * \param readByte : reference value, total number of byte read
+ * \param maxByte : max # of Bytes that can be read
+ * \return false if the connection has been closed by peer, true if the data are read correclty
+ */
 bool session::TCPConnection::readline(char *data, int& readByte, int maxByte) {
 	int rByte = readline_unbuffered(data, (size_t)maxByte);
 
@@ -109,6 +130,8 @@ bool session::TCPConnection::readline(char *data, int& readByte, int maxByte) {
 		return true;
 	}
 }
+
+//					PRIVATE METHODS
 
 size_t session::TCPConnection::readline_unbuffered(char *vptr, size_t maxlen) {
 

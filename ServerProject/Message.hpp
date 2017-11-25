@@ -22,7 +22,7 @@ public:
 	Message();
 	Message(const char * buffer, const int size); //Will use existing allocated buffer and create packet from it
 												  //Packet(const Packet & p); //Will allocate new buffer but copy buffer from packet argument
-	Message(const MessageType::TYPE m); //Used for when sending a packet that only contains a packet type (Ex. End of File Packet)
+	Message(const MessageType::TYPE m);			  //Used for when sending a packet that only contains a packet type (Ex. End of File Packet)
 	void Append(const MessageType::TYPE mt);
 	void Append(const __int64 int64);
 	void Append(const std::size_t m);

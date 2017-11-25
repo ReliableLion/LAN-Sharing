@@ -58,7 +58,7 @@ void DownloadManager::processSmallFile() {
 	std::unique_lock<std::mutex> ul(mtxS, std::defer_lock);
 	dw_request smallFileReq;
 
-	while (1) {
+	while (true) {
 		ul.lock();
 
 		cvS.wait(ul, [this] {
@@ -76,7 +76,7 @@ void DownloadManager::processBigFile() {
 	std::unique_lock<std::mutex> ul(mtxB, std::defer_lock);
 	dw_request bigFileReq;
 
-	while (1) {
+	while (true) {
 		ul.lock();
 
 		cvB.wait(ul, [this] {
@@ -96,15 +96,25 @@ void DownloadManager::downloadFile(dw_request request) {
 	int leftByte = request.req.fileSize;
 	
 	try {
-		dest_file.openFile();								// open the two files, if an exception is throw by the program then the file is closed by the destructor
-		temp_file.openFile();
+		temp_file.openFile();								// open the two files, if an exception is throw by the program then the file is closed by the destructor
 
 		while (leftByte != 0) {
 			// TODO	put here the code for the file download
 			//int readByte = request.conn->recvall()
 		}
+
+		dest_file.openFile();
+		if (dest_file.copyFile(temp_file)) {
+			temp_file.closeFile();
+			temp_file.removeFile();
+			dest_file.closeFile();
+		}
+		else {
+			// TODO is not possible to copy the temp file into the destination file
+		}
 	}
 	catch (SocketException &se) {
+			
 	}
 	catch (FileWriteException &fwe) {
 
