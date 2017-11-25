@@ -1,141 +1,161 @@
-/*#include "RequestMananger.h"
+#include "RequestManager.hpp"
+#include "PacketManager.hpp"
 
-// when a new object ReqeuestManager is instantiated the Server pass as reference the DownloadManager
-RequestManager::RequestManager(std::shared_ptr<DownloadManager> d_man_ptr) {
-	this->d_man_ptr = d_man_ptr;
-	terminate.store(false);
+//		PUBLIC METHODS
 
-	for (int i = 0; i < MAX_THREADS; i++) {
-		t[i] = std::thread();
+RequestManager::RequestManager() : download_manager() {
+	is_terminated.store(false);
+	for (int i = 0; i < maxThreads; i++) {
+		threadPool.push_back(std::thread(&RequestManager::extractConnection, this));
 	}
-
-	// the downloader class set up all the thread in order to begin the file download
-	this->d_man_ptr->setupDownloader();
 }
 
 RequestManager::~RequestManager() {
-	shutdown();
-}
+	is_terminated.store(true);						// this flag is used to stop the threads computation
+	session::conn_ptr connection;		
 
-void RequestManager::shutdown() {
-	terminate.store(true);
+	while (!connectionQueue.isEmpty()) {			// iterate the entire queue and close the pending connections
+		connectionQueue.popElement(connection);
+		connection->close_connection();
+	}
 
-	for (int i = 0; i < MAX_THREADS; i++) {
-		t[i].join();
+	for (auto i = 0; i < maxThreads; i++) {			// close all the threads
+		cv.notify_all();
+		threadPool[i].join();						// "unlock" the threads that wait on the condition variable
 	}
 }
 
-// close connection should be called after the shutdown
-void RequestManager::closeConnections() {
-	conn_ptr conn;
-	// if shutdown method is called then all the connections that are in connection_pool are closed
-	while (connection_pool.isEmpty()) {
-		connection_pool.popElement(conn);
-		conn->closeConnection();
+/**
+ * \brief insert the connection inside
+ * \param newConnection 
+ * \return 
+ */
+bool RequestManager::addConnection(session::conn_ptr newConnection) {
+	if (!is_terminated.load()) {
+
+		std::lock_guard<std::mutex> l(mtx);
+		if (!connectionQueue.insertElement(newConnection)) {
+			return false;			// the queue has reached the max number of element
+		}
+		return true;
+	}
+		return false;				// this object has been closed
+}
+
+//		PRIVATE METHODS
+
+void RequestManager::extractConnection() {
+	session::conn_ptr newConnection;
+	std::unique_lock<std::mutex> ul(mtx, std::defer_lock);
+
+	while (true) {
+		ul.lock();
+
+		cv.wait(ul, [this]() {														// wait on the condition varaible
+			return (!connectionQueue.isEmpty() || is_terminated.load());			// unlock the condition variable only if the queue is not empty or the server has been closed
+		});
+		
+		if (is_terminated.load()) break;											// if the server has been closed this method must return in order to join the threads
+		connectionQueue.popElement(newConnection);	
+		ul.unlock();
+
+		receiveRequest(newConnection);
 	}
 }
 
-bool RequestManager::addRequest(conn_ptr conn) {
-	// check if the server is closed
-	if (terminate.load()) {
-		return false;
-	}
-	// add the request into the queue
-	std::lock_guard <std::mutex> l(mtx1);
-	connection_pool.insertElement(conn);
-	cv.notify_all();
-	return true;
-}
+/**
+ * \brief process every pending request received by the server
+ * \param connection 
+ */
+void RequestManager::receiveRequest(session::conn_ptr connection) {
+	PacketManager packet_manager;
+	bool received_correctly;
+	bool connection_closed;
+	int i = 0;
 
-void RequestManager::_processRequest() {
+	// TODO declare here the requestManager and ReplyManager
 	try {
-		conn_ptr conn;
-		while (1) {
-			std::unique_lock<std::mutex> l(mtx1);
-			cv.wait(l, [this]() {
-				return (!connection_pool.isEmpty() || terminate.load());
-			});
+		do {
+			received_correctly = false;
+			connection_closed = false;
+			/*
+			-if the packet is received correctly, write the reply and set received correclty true
+				-if the request is accepted pass the connection to the downloadmanager
+				-if the requets is not accepted send an error
+			-if the packet is not received correctly, send an error and set the index + 1
+			-if the connection is closed, write a message
+			*/
 
-			if (terminate.load()) { break; }
-			connection_pool.popElement(conn);
-			l.unlock();
+			switch (packet_manager.receivePacket(connection)) {
+				case (CLD_CONN): {									// connection closed
+					connection_closed = true;
+				} break;
 
-			// here we receive the client request and decode it in order to begin the file download
-			_requestHandShake(conn);
-		}
-	}
-	catch (std::exception &e) {
+				case (URZ_PACKET): {								// packet not recognized
+				
+					received_correctly = false;
+					i++;
+					// send an error 
 
-	}
-}
+				} break;
 
-// with handshake i mean the time window between the request and the reply
-void RequestManager::_requestHandShake(conn_ptr conn) {
-	RequestMessage r_msg;
-	ReplyMessage reply_msg;
-	__int64 fileSize = 0;
-	std::string filename = "";
+				case (READ_CORRECTLY): {							// packet read correctly
 
-	// TODO	implement a timeout mechanism in order to close connections that are open but unused
-	// check if the connection is alive
-	if (!conn->checkConnection()) { 
-		return;
-	}
+					if (processRequest(packet_manager, connection)) {
+						received_correctly = false;
+						i++;										// increment the bad-request counter
+					} else {
+						received_correctly = true;
+					}
+				
+				} break;
 
-	try {
-		conn->readRequest(r_msg);
-
-		/*				
-		*	check if the request is valid or not
-		*/
-
-		//TODO	devo aspettare davide che finisca la class message
-		// TODO	i need to use the message class methods to decode the content of the request
-
-		/*if (_checkParameter(fileSize, filename)) {
-			std::cout << "filename is null or the filesize is less than 0" << std::endl;
-			return;
-		}
-
-		/*
-		*	insert the request in the right queue
-		*/
-		/*try {
-			if (fileSize >= FILE_THRESHOLD) {
-				d_man_ptr->InsertBigFileRequest((size_t)fileSize, filename, conn);
+				default: {
+				} break;
 			}
-			else {
-				d_man_ptr->InsertSmallFileRequest((size_t)fileSize, filename, conn);
-			}
-		}
-		catch (RequestInsertionException &e) {
-			// is not possible to insert in the queue the request
-			std::cout << e.what() << std::endl;
-			return;
+
+		} while (received_correctly || connection_closed || i == maxRequestAttempts);
+
+		// check if the pac
+		if (!received_correctly) {										
+			std::cout << "request received correclty" << std::endl;
+		} else 
+		if (i == maxRequestAttempts) {
+			// TODO close the connection
+			connection->close_connection();
+			std::cout << "max attempts reached by the server, close the connection" << std::endl;
+		} else 
+		if (connection_closed) {
+			std::cout << "connection closed by peer" << std::endl;
 		}
 		
-		/*
-		*	send a reply message to the client
-		*/
-		/*conn->writeReply(reply_msg);
 	}
-	catch (std::exception &e) {
-		// TODO	implement a mechanism to send an error message to say that the request is not recognized by the server 
-		std::cout << e.what() << std::endl;
+	catch (TimeoutException &e) {
+		// TODO close the connection 
+		connection->close_connection();
 	}
-	/*
-	 manage the case with that is impossible to send the request to the download manager
-	*/	 
-/*}
+	catch (SocketException &e) {
+		// TODO close the connection
+		connection->close_connection();
+	}
+}
 
-bool RequestManager::_checkParameter(__int64 size, std::string filename) {
-	if (size <= 0) {
-		return false;
-	}
-	if (filename.empty()) {
-		return false;
-	}
+bool RequestManager::sendReply(session::conn_ptr conn) {
 	return true;
-}*/
+}
+
+bool RequestManager::processRequest(PacketManager& packet_manager, session::conn_ptr connection) {
+	requestStruct request = packet_manager.get_request_struct();
+
+	if (!packet_manager.checkRequest()) return false;
+	
+	if (request.fileSize >= fileThreshold) {
+		download_manager.insertBigFile(request, connection);
+	} else {
+		download_manager.insertSmallFile(request, connection);
+	}
+
+	return true;
+}
 
 

@@ -15,7 +15,7 @@ protected:
 public:
 	FileHandler() {};
 	FileHandler(std::string filename, std::string path);
-	~FileHandler();
+	virtual ~FileHandler();
 	virtual bool openFile() =0;
 	bool closeFile();
 	void removeFile();
@@ -29,6 +29,7 @@ public:
 class InputFileHandler : public FileHandler {
 public:
 	InputFileHandler(std::string filename, std::string path);
+	~InputFileHandler();
 	bool openFile();
 	void readFile(char *buffer, std::size_t size);
 };
@@ -36,6 +37,7 @@ public:
 class OutputFileHandler : public FileHandler {
 public:
 	OutputFileHandler(std::string filename, std::string path);
+	~OutputFileHandler();
 	bool openFile();
 	void writeData(const char *buffer, std::size_t size);
 };

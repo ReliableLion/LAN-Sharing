@@ -50,6 +50,10 @@ std::string FileHandler::getFilename() { return this->filename; }
 
 InputFileHandler::InputFileHandler(std::string filename, std::string path) : FileHandler(filename, path) {}
 
+InputFileHandler::~InputFileHandler() {
+	closeFile();
+}
+
 bool InputFileHandler::openFile() {
 	if (filename.empty() || file_dir.empty()) {				//check if the filename or the file path are empty
 		throw FileOpenException();
@@ -69,6 +73,10 @@ void InputFileHandler::readFile(char *buffer, std::size_t size) {
 }
 
 OutputFileHandler::OutputFileHandler(std::string filename, std::string path) : FileHandler(filename, path) {}
+
+OutputFileHandler::~OutputFileHandler() {
+	closeFile();
+}
 
 bool OutputFileHandler::openFile() {
 	if (filename.empty() || file_dir.empty()) {				//check if the filename or the file path are empty

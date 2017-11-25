@@ -5,8 +5,6 @@
 #include <sstream>
 #include <vector>
 
-
-
 using namespace protocol;
 
 typedef struct {

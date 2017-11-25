@@ -39,12 +39,12 @@ void Server::listenNewConnection() {
 	session::TCPConnection newConn;
 	std::time_t timestamp;
 												
-	if (newConn.acceptConnection(l_socket)) {				// accept an imcoming request
+	if (newConn.accept_connection(l_socket)) {				// accept an imcoming request
 		timestamp = std::time(0);
 		std::cout << "***************************************************" << std::endl;
 		std::cout << "(" << std::put_time(std::localtime(&timestamp), "%c") << ") ";
 		std::cout << "Server accepted an incoming request" << std::endl << "Client information: " << std::endl;
-		newConn.printEndpointInfo();
+		newConn.print_endpoint_info();
 		std::cout << "***************************************************" << std::endl;
 	}
 	else {

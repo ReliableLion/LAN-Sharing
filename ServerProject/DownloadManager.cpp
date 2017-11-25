@@ -1,229 +1,118 @@
-/*#include "DownloadManager.h"
+#include "DownloadManager.hpp"
 
-// when the costructor of this object is invoked the threads are createsd and go into sleep mode
-void DownloadManager::setupDownloader() {
-	terminate.store(false);
+DownloadManager::DownloadManager() {
+	is_terminated.store(false);
 
-	for (int i = 0; i < THREAD_NUM_BIG; i++) {
-		bigFileThread[i] = std::thread(&DownloadManager::DownloadBigFile, this);
+	for (int i = 0; i < maxThreadB; i++) {												// threads declarations for the big file download
+		threadPoolB.push_back(std::thread(&DownloadManager::processBigFile, this));		// pass to these threads the process big file methods
 	}
 
-	for (int i = 0; i < THREAD_NUM_SMALL; i++) {
-		smallFileThread[i] = std::thread(&DownloadManager::DownloadSmallFile, this);
+	for (int i = 0; i < maxThreadS; i++) {												// threads declarations for the small file download
+		threadPoolS.push_back(std::thread(&DownloadManager::processSmallFile, this));	// pass to these threads the process small file methods
 	}
 }
 
-// define a method to exit 
 DownloadManager::~DownloadManager() {
-	exitDownloader();
-}
+	is_terminated.store(true);								// set is terminated true in order to stop the threds execution
 
-void DownloadManager::exitDownloader() {
-	terminate.store(true);
-
-	for (int i = 0; i < THREAD_NUM_BIG; i++) {
-		bigFileThread[i].join();
+	for (int i = 0; i < maxThreadS; i++) {					// join all the threads
+		cvS.notify_all();									// "unlock" all the threads that waits on the condition variable
+		threadPoolS[i].join();
 	}
 
-	for (int i = 0; i < THREAD_NUM_SMALL; i++) {
-		smallFileThread[i].join();
+	for (int i = 0; i < maxThreadB; i++) {					// join all the threads
+		cvB.notify_all();									// "unlock" all the threads that waits on the condition variable
+		threadPoolB[i].join();
 	}
 }
 
-void DownloadManager::DownloadSmallFile() {
-	dwld_request new_req;
+bool DownloadManager::insertBigFile(requestStruct request, session::conn_ptr connection) {
+	downloadStruct newRequest;
+	newRequest.req = request;
+	newRequest.conn = connection;
 
-	while (1) {
-		std::unique_lock<std::mutex> ul(SmallFileMtx);
+	std::unique_lock<std::mutex> ul(mtxB);
+	bigFileQ.insertElement(newRequest);
+	cvB.notify_all();
+	return true;
+}
 
-		bool isTerminated = terminate.load();
+bool DownloadManager::insertSmallFile(requestStruct request, session::conn_ptr connection) {
+	downloadStruct newRequest;
+	newRequest.req = request;
+	newRequest.conn = connection;
 
-		// wait if the queue is not empty
-		SmallFile_cv.wait(ul, [this, isTerminated]() {
-			return (!SmallFileRequest_q.isEmpty() || isTerminated);
+	std::unique_lock<std::mutex> ul(mtxS);
+	smallFileQ.insertElement(newRequest);
+	cvS.notify_all();
+	return true;
+}
+
+//				PRIVATE METHODS	
+
+void DownloadManager::processSmallFile() {
+	std::unique_lock<std::mutex> ul(mtxS, std::defer_lock);
+	downloadStruct smallFileReq;
+
+	while (true) {
+		ul.lock();
+
+		cvS.wait(ul, [this] {
+			return (!smallFileQ.isEmpty() || is_terminated.load());
 		});
 
-		if (isTerminated) {
-			ul.unlock();
-			break;
-		}
+		if (!is_terminated.load()) break;
+		smallFileQ.popElement(smallFileReq);
 
-		try {
-			// extract the request from the queue and release the mutex 
-			SmallFileRequest_q.popElement(new_req);
-			ul.unlock();
-		}
-		catch (std::exception &e) {
-			e.what();
-		}
-
-		// do stuff here 
-
+		// TODO insert here the function for the file download
 	}
-
-	// second port mechanism
-	std::unique_lock<std::mutex> ul(SmallFileMtx_2);
-	while (SmallFileRequest_q.isEmpty()) {
-		
-		SmallFileRequest_q.popElement(new_req);
-		ul.unlock();
-
-		// do stuff here
-
-		ul.lock();
-	}
-
-	// release the lock after that the queue is empty
-	ul.unlock();
 }
 
-void DownloadManager::DownloadBigFile() {
+void DownloadManager::processBigFile() {
+	std::unique_lock<std::mutex> ul(mtxB, std::defer_lock);
+	downloadStruct bigFileReq;
 
-	dwld_request new_req;
-	std::string fileName;
-	size_t fileSize;
-	std::shared_ptr<TCPconnection_server> conn;
-	std::future<FileHandler> async_open;
+	while (true) {
+		ul.lock();
 
-	while (1) {
-		std::unique_lock<std::mutex> ul(BigFileMtx);
-
-		bool isTerminated = terminate.load();
-		// wait if the queue is empty
-		BigFile_cv.wait(ul, [this, isTerminated]() {
-			return (!BigFileRequest_q.isEmpty() || isTerminated);
+		cvB.wait(ul, [this] {
+			return (!bigFileQ.isEmpty() || is_terminated.load());
 		});
 
-		if (isTerminated) {
-			ul.unlock();
-			break;
-		}
+		if (!is_terminated.load()) break;
+		smallFileQ.popElement(bigFileReq);
 
-		BigFileRequest_q.popElement(new_req);
-		ul.unlock();
-
-		// do stuff here
-
-		fileName = new_req.fileName;
-		fileSize = new_req.fileSize;
-		conn = new_req.connection;
-
-		_downloadFile(fileName, fileSize, conn);
-
-	}
-
-	// second port for mechanism
-	std::unique_lock<std::mutex> ul(BigFileMtx_2);
-	while (BigFileRequest_q.isEmpty()) {
-
-		BigFileRequest_q.popElement(new_req);
-		ul.unlock();
-
-		// do stuff here 
-
-		fileName = new_req.fileName;
-		fileSize = new_req.fileSize;
-		conn = new_req.connection;
-
-		_downloadFile(fileName, fileSize, conn);
-
-		ul.lock();
-	}
-
-	// release the lock when the queue is empty
-	ul.unlock();
-}
-
-void DownloadManager::InsertSmallFileRequest(size_t fileSize, std::string filename, std::shared_ptr<TCPconnection_server> new_connection) {
-	if (terminate.load() == false) {
-		std::lock_guard<std::mutex> lg(SmallFileMtx);
-		SmallFileRequest_q.insertRequest(fileSize, filename, new_connection);
-		SmallFile_cv.notify_all();
-	}
-	else {
-		
+		// TODO insert here the function for the file download
 	}
 }
 
-void DownloadManager::InsertBigFileRequest(size_t fileSize, std::string filename, std::shared_ptr<TCPconnection_server> new_connection) {
-	if (terminate.load() == false) {
-		std::lock_guard<std::mutex> lg(BigFileMtx);
-		BigFileRequest_q.insertRequest(fileSize, filename, new_connection);
-		BigFile_cv.notify_all();
-	}
-	else {
-		
-	}
-}
-
-void DownloadManager::_downloadFile(std::string filename, size_t size, std::shared_ptr<TCPconnection_server> conn) {
-	// variables used to perform a reading from network
-	size_t downloaded_bytes, remaining_bytes;
-	buffer_type read_buffer;
-	std::shared_ptr<buffer_type> buffer_ptr = std::make_shared<buffer_type>(read_buffer);
-
-	//definition of the file handler
-	FileHandler original_file;
-	FileHandler temp_file;
-
-	try {
-		// varaibles used to manage the file life-cycle
-		// TODO	remember to set the path for the file
-		original_file = FileHandler(filename, "");
-		temp_file = FileHandler(filename, TEMP_PATH);
-
-		// open asynchronously the two files
-		file1 = std::async(&FileHandler::openFile, &original_file);
-		file2 = std::async(&FileHandler::openFile, &temp_file);
-		
-		//wait to open the two files
-		file1.wait();
-		file2.wait();
-	}
-	catch (FileOpenException &e) {
-		std::cerr << e.what() << std::endl;
-		/*original_file.closeFile();
-		original_file.removeFile();
-		temp_file.closeFile()*/
-	/*}
-
-	try {
-		// begin to read the data from the connection 
-		remaining_bytes = size;
-		while (remaining_bytes > 0) {
-			downloaded_bytes = conn->readDataChunks(buffer_ptr);
-			temp_file.writeData(buffer_ptr, downloaded_bytes);
-			remaining_bytes -= downloaded_bytes;
-		}
-	}
-	// TODO write the correct exception
-	catch (TCPreadException &e) {
-		std::cerr << e.what() << std::endl;
-		std::cerr << "error: " << conn->getError() << std::endl;
-		// close and remove the file
-		original_file.closeFile();
-		temp_file.closeFile();
-		original_file.removeFile();
-		temp_file.removeFile();
-		//close the connection
-		conn->closeConnection();
-	}
-	catch (FileWriteException &e) {
-		//TODO add the file write exception handler
-	}
+void DownloadManager::downloadFile(downloadStruct request) {
+	OutputFileHandler dest_file(request.req.fileName, path);
+	OutputFileHandler temp_file(request.req.fileName, temp_path);
+	int leftByte = request.req.fileSize;
 	
-	// store the temp file in the destination
-	if (original_file.copyFile(temp_file)) {
-		//TODO	the copy has gone good
-		temp_file.closeFile();
-		original_file.closeFile();
-		temp_file.removeFile();
+	try {
+		temp_file.openFile();								// open the two files, if an exception is throw by the program then the file is closed by the destructor
 
-		//close the connection
-		conn->closeConnection();
-	}
-	else {
-		//TODO	if the copy has gone bad, repeate the copy
-	}
+		while (leftByte != 0) {
+			// TODO	put here the code for the file download
+			//int readByte = request.conn->recvall()
+		}
 
-}*/
+		dest_file.openFile();
+		if (dest_file.copyFile(temp_file)) {
+			temp_file.closeFile();
+			temp_file.removeFile();
+			dest_file.closeFile();
+		}
+		else {
+			// TODO is not possible to copy the temp file into the destination file
+		}
+	}
+	catch (SocketException &se) {
+			
+	}
+	catch (FileWriteException &fwe) {
+
+	}
+}

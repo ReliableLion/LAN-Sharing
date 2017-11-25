@@ -12,18 +12,18 @@ namespace session {
 	private:
 		SOCKET sock = 0;
 		SOCKADDR_IN remote_address;
-		const long sec = 10;
-		const long usec = 0;
+		const long sec = TIMEOUT_SEC;
+		const long usec = TIMEOUT_USEC;
 	private:
 		size_t readline_unbuffered(char *vptr, size_t maxlen);
 	public:
 		TCPConnection();
-		bool acceptConnection(SOCKET s);
-		bool closeConnection();
-		void printEndpointInfo();
-		bool recvall(char *data, int totalByte, int& totalReadByte);
-		bool sendall(const char *data, int totalByte, int& totalSentByte);
-		bool readline(char *data, int& readByte, int maxByte);
+		bool accept_connection(const SOCKET s);
+		bool close_connection() const;
+		void print_endpoint_info() const;
+		bool recvall(char *data, const int totalBytes, int& totalReadBytes);
+		bool sendall(const char *data, const int totalBytes, int& totalSentBytes);
+		bool readline(char *data, const int maxBytes, int& readBytes);
 	};
 
 	typedef std::shared_ptr<TCPConnection> conn_ptr;

@@ -12,6 +12,7 @@
 #include <atomic>
 #include <thread>
 #include <vector>
+#include "PacketManager.hpp"
 
 class RequestManager {
 private:
@@ -32,7 +33,7 @@ private:
 private: // private methods
 	void extractConnection();
 	void receiveRequest(session::conn_ptr connection);
-	void processRequest();
+	bool processRequest(PacketManager& packet_manager, session::conn_ptr connection);
 	bool sendReply(session::conn_ptr conn);
 public:
 	RequestManager();

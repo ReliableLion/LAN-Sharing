@@ -3,22 +3,24 @@
 
 session::TCPConnection::TCPConnection() {}
 
-bool session::TCPConnection::acceptConnection(SOCKET s) {
+bool session::TCPConnection::accept_connection(const SOCKET s) {
 	int addrlen = sizeof(remote_address);
 	sock = accept(s, (SOCKADDR*)&remote_address, &addrlen);
-	if (sock ==  SOCKET_ERROR) {
+
+	if (sock ==  SOCKET_ERROR) {								// check if the scoket return an error
 		std::cout << "server refused the connection, error: " << std::to_string(WSAGetLastError()) << std::endl;
 		return false;
 	}
-	else {
-		return true;
-	}
+	
+	return true;
 }
 
-bool session::TCPConnection::closeConnection() {
+bool session::TCPConnection::close_connection() const {
+
 	if (closesocket(sock) == SOCKET_ERROR)
 	{
-		if (WSAGetLastError() == WSAENOTSOCK) //If socket error is that operation is not performed on a socket (This happens when the socket has already been closed)
+		if (WSAGetLastError() == WSAENOTSOCK)
+			//If socket error is that operation is not performed on a socket (This happens when the socket has already been closed)
 			return true; //return true since connection has already been closed
 
 		std::cout << "Failed to close the socket. Winsock Error: " + std::to_string(WSAGetLastError()) + "!";
@@ -28,7 +30,7 @@ bool session::TCPConnection::closeConnection() {
 	return true;
 }
 
-void session::TCPConnection::printEndpointInfo() {
+void session::TCPConnection::print_endpoint_info() const {
 	if (sock == 0) {
 		std::cout << "socket not connected" << std::endl;
 		return;
@@ -44,45 +46,46 @@ void session::TCPConnection::printEndpointInfo() {
  * \param totalReadByte : number of Bytes really read
  * \return false if the connection has been closed by peer, otherside true
  */
-bool session::TCPConnection::recvall(char *data, int totalByte, int& totalReadByte) {
+bool session::TCPConnection::recvall(char *data, int totalBytes, int& totalReadBytes) {
 	struct timeval time;
 	int byteReceived = 0;
-	FD_SET readSock;
+	FD_SET read_sock;
 
-	FD_ZERO(&readSock);
-	FD_SET(sock, &readSock);
+	FD_ZERO(&read_sock);
+	FD_SET(sock, &read_sock);
 
-	while (byteReceived < totalByte) {
+	while (byteReceived < totalBytes) {
 		time.tv_sec = sec; 
 		time.tv_usec = usec;
-		int result = select(1, &readSock, NULL, NULL, &time);
+
+		int result = select(1, &read_sock, nullptr, nullptr, &time);
 
 		if (result == SOCKET_ERROR) {
 			throw SocketException(WSAGetLastError());
-		} else 
+		} 
 		if (result == 0) {
 			throw TimeoutException();
-		} else 
+		}
+
 		if (result == 1) {
 
-			int byteRead = recv(sock, data + byteReceived, totalByte - byteReceived, 0);
+			int byteRead = recv(sock, data + byteReceived, totalBytes - byteReceived, 0);
 			if (byteRead == SOCKET_ERROR) {
 				throw SocketException(WSAGetLastError());
-			} else
+			}
 			if (byteRead == 0) {
-				totalReadByte = byteReceived;
+				totalReadBytes = byteReceived;
 				return false;
 			}
-			else {
-				byteReceived += byteRead;
-			}
+
+			byteReceived += byteRead;					// increment the number of bytes received
 
 		} else {
-			totalReadByte = byteReceived;
+			totalReadBytes = byteReceived;
 			return false;
 		}
 	}
-	totalReadByte = byteReceived;
+	totalReadBytes = byteReceived;
 	return true;
 }
 
@@ -93,18 +96,18 @@ bool session::TCPConnection::recvall(char *data, int totalByte, int& totalReadBy
  * \param totalSentByte : reference type, total number of bytes really sent
  * \return false if the connection has been closed by peer, true if the data has been sent correctly
  */
-bool session::TCPConnection::sendall(const char* data, int totalByte, int& totalSentByte) {
-	int uploadedByte = 0;
+bool session::TCPConnection::sendall(const char* data, const int totalBytes, int& totalSentBytes) {
+	int uploadedBytes = 0;
 	
-	while (uploadedByte < totalByte) {
-		int sentByte = send(sock, data + uploadedByte, totalByte - uploadedByte, 0);
-		if (sentByte == 0) {
+	while (uploadedBytes < totalBytes) {
+		int sentBytes = send(sock, data + uploadedBytes, totalBytes - uploadedBytes, 0);
+		if (sentBytes == 0) {
 			return false;
 		} else 
-		if (sentByte == SOCKET_ERROR) {
+		if (sentBytes == SOCKET_ERROR) {
 			throw SocketException(WSAGetLastError());
 		}
-		uploadedByte += sentByte;
+		uploadedBytes += sentBytes;
 	}
 	return true;
 }
@@ -116,17 +119,17 @@ bool session::TCPConnection::sendall(const char* data, int totalByte, int& total
  * \param maxByte : max # of Bytes that can be read
  * \return false if the connection has been closed by peer, true if the data are read correclty
  */
-bool session::TCPConnection::readline(char *data, int& readByte, int maxByte) {
-	int rByte = readline_unbuffered(data, (size_t)maxByte);
+bool session::TCPConnection::readline(char *data, const int maxBytes, int& readBytes) {
+	int rByte = readline_unbuffered(data, (size_t)maxBytes);
 
 	if (rByte == 0) {
 		return false;
-	} else 
+	}  
 	if (rByte < 0) {
 		throw SocketException(WSAGetLastError());
-	} else 
+	}  
 	if (rByte > 0) {
-		readByte = rByte;
+		readBytes = rByte;
 		return true;
 	}
 }
