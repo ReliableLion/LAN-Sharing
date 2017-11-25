@@ -1,4 +1,7 @@
 #include "FileHandler.hpp"
+#include<Mswsock.h>
+// link with Ws2_32.lib
+#pragma comment (lib, "Mswsock.lib")
 
 FileHandler::FileHandler(std::string filename, std::string path) : filename(filename), file_dir(path) {}
 
@@ -147,7 +150,7 @@ bool TransmitFileHandler::openFile() {
 
 bool TransmitFileHandler::transmit_file(const SOCKET socket) const {
 
-	if (!TransmitFile(socket, handle_file_, 0, CHUNK, nullptr, nullptr, TF_USE_SYSTEM_THREAD))
+	if (!::TransmitFile(socket, handle_file_, 0, CHUNK, nullptr, nullptr, TF_USE_SYSTEM_THREAD))
 		return true;
 	throw transmit_file_exception(WSAGetLastError());
 }
