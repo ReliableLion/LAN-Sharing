@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "Constants.hpp"
+#include <map>
 
 // link with Ws2_32.lib
 #pragma comment (lib, "Ws2_32.lib")
@@ -18,10 +19,10 @@ namespace udp_service {
 
 		UDPClient::UDPClient();
 
-		void UDPClient::getServerInfo(std::string address, std::string port);
-		void UDPClient::sendDatagram(char *buffer, const struct sockaddr_in saddr);
-		int UDPClient::receiveDatagram(char *buffer, const struct sockaddr_in saddr);
-		void UDPClient::sendBroadcast(char *buffer);
+		void UDPClient::get_server_info(std::string address, std::string port);
+		void UDPClient::send_datagram(const struct sockaddr_in saddr) const;
+		int UDPClient::receive_datagram(const struct sockaddr_in saddr);
+		void UDPClient::send_broadcast();
 
 		UDPClient::~UDPClient();
 
@@ -38,9 +39,11 @@ namespace udp_service {
 
 		UDPServer::UDPServer();
 
-		void UDPServer::send_datagram(char *buffer, const struct sockaddr_in *saddr, socklen_t addr_len, size_t len);
-		socklen_t UDPServer::receive_datagram(char *buffer, const struct sockaddr_in *caddr, size_t len);
-		void UDPServer::sendHello(const struct sockaddr_in *saddr, socklen_t addr_len, size_t len);
+		void UDPServer::send_datagram(char *buffer, const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
+		socklen_t UDPServer::receive_datagram(char *buffer, const struct sockaddr_in *caddr, size_t len) const;
+		void UDPServer::sendHello(const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
+
+		map<char*, string> get_online_users(const struct sockaddr_in saddr);
 
 		UDPServer::~UDPServer();
 

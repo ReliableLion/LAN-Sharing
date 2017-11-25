@@ -91,6 +91,6 @@ public:
 
 	std::string DiscoveryMessage::getUsername(char* username);
 
-	void DiscoveryMessage::getPacketType(char* packetType);
+	std::string DiscoveryMessage::getPacketType();
 
 };

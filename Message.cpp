@@ -85,29 +85,37 @@ requestStruct RequestMessage::getRequestData() {
 
 void RequestMessage::prepareMessage() {
 
-	Message::Append((const char*)messageBody.c_str());
+	Append((const char*)messageBody.c_str());
 
 	__int64 fileSize = htonll(this->requestBody.fileSize);
-	Message::Append((const char*)&fileSize, sizeof(__int64));
+	Append((const char*)&fileSize, sizeof(__int64));
 
 	timeStamp.LowPart = this->requestBody.fileTimestamp.dwLowDateTime;
 	timeStamp.HighPart = this->requestBody.fileTimestamp.dwHighDateTime;
 
 	__int64 fileTimestamp = htonll(timeStamp.QuadPart);
-	Message::Append((const char*)&fileTimestamp, sizeof(__int64));
+	Append((const char*)&fileTimestamp, sizeof(__int64));
 
-	Message::Append((const char*)this->requestBody.fileName.c_str(), sizeof(this->requestBody.fileName.size()));
+	Append((const char*)this->requestBody.fileName.c_str(), sizeof(this->requestBody.fileName.size()));
 
-	Message::Append((const char*)endMessage.c_str());
+	Append((const char*)endMessage.c_str());
 }
 
 void RequestMessage::getPacketType(char* packetType) {
 	memcpy((void*)packetType, (void*)&(*m_buffer.begin()), 4);
 }
 
-void DiscoveryMessage::getPacketType(char* packetType) {
-	// HELLO_MSG is the smallest string within a discovery message packet
-	memcpy((void*)packetType, (void*)&(*m_buffer.begin()), strlen(HELLO_MSG));
+std::string DiscoveryMessage::getPacketType() {
+
+	const auto message = reinterpret_cast<char*>((m_buffer.data()));
+
+	if (strlen(message) >= strlen(HELLO_MSG) && strncmp(message, HELLO_MSG, strlen(HELLO_MSG)) == 0)
+		return HELLO_MSG;
+	
+	if (strlen(message) >= strlen(DISCOVERY_MSG) && strncmp(message, DISCOVERY_MSG, strlen(DISCOVERY_MSG)) == 0)
+		return DISCOVERY_MSG;
+	
+	return nullptr;
 }
 
 std::string DiscoveryMessage::getUsername(char* username) {
@@ -122,4 +130,5 @@ std::string DiscoveryMessage::getUsername(char* username) {
 	else
 		throw messageException("packet is not an Hello Message!\n");
 
+	return nullptr;
 }

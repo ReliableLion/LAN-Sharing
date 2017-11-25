@@ -1,6 +1,7 @@
 #pragma once
 #include <exception>
 #include <iostream>
+#include <sstream>
 
 namespace udp_exception {
 	class udpException: public std::exception
@@ -22,4 +23,19 @@ public:
 
 private:
 	std::string errorMessage;
+};
+
+class SocketException : public std::exception {
+private:
+	int error;
+public:
+	SocketException(int error) {
+		this->error = error;
+	}
+
+	virtual const char* what() const throw() {
+		std::stringstream s;
+		s << "problem with socket, error: " << error;
+		return s.str().c_str();
+	}
 };
