@@ -21,6 +21,8 @@ packet_code PacketManager::receivePacket(session::conn_ptr connection) {
 
 	if (msgType == protocol::MessageType::type::undefined) return URZ_PACKET;				// if the packet is unrecognizedr
 	if (msgType == protocol::MessageType::type::send) return READ_CORRECTLY;				// if the packet is send
+	
+	return URZ_PACKET;
 }
 
 request_struct PacketManager::get_request_struct() {
