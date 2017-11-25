@@ -5,6 +5,7 @@
 #include <Ws2tcpip.h> //for inet_pton
 #pragma comment(lib,"ws2_32.lib") //Required for WinSock
 #include <iostream> //for std::cout
+#include <memory>
 
 namespace session {
 
@@ -12,11 +13,12 @@ namespace session {
 
 	public:
 		TCPConnection() {};
-		bool TCPConnection::connectTo(const char * ip, const int port);
-		bool TCPConnection::recvall(char * data, int totalBytes);
-		bool TCPConnection::recvToEndl(char * data);
-		size_t TCPConnection::readline_unbuffered(int fd, char *vptr, size_t maxlen);
-		bool TCPConnection::closeConnection();
+		bool TCPConnection::connect_to(const char * ip, const int port);
+		bool TCPConnection::recvall(char * data, int totalBytes) const;
+		bool TCPConnection::readline(char * data) const;
+		size_t TCPConnection::readline_unbuffered(char *vptr, size_t maxlen) const;
+		bool transmit_file_handler(std::string file_name, std::string file_path) const;
+		bool TCPConnection::close_connection() const;
 		~TCPConnection();
 
 	private:
@@ -35,5 +37,7 @@ namespace session {
 		TCPConnection connection;
 
 	};
+
+	typedef std::shared_ptr<TCPConnection> conn_ptr;
 
 }

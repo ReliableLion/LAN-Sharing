@@ -1,33 +1,31 @@
 #pragma once
-#include <iostream>
 #include <WinSock2.h>
 #include <windows.h>
 #include <sstream>
 #include "Protocol.hpp"
 #include <vector>
 #include "Constants.hpp"
-#include "Exceptions.hpp"
 
 using namespace protocol;
 
 typedef struct {
-	__int64 fileSize;
-	FILETIME fileTimestamp;
-	std::string fileName;
-} requestStruct;
+	__int64 file_size;
+	FILETIME file_timestamp;
+	std::string file_name;
+} request_struct;
 
-class Message {
+class message {
 
 public:
 
-	Message();
-	Message(const char * buffer, const int size); //Will use existing allocated buffer and create packet from it
+	message();
+	message(const char * buffer, const int size); //Will use existing allocated buffer and create packet from it
 												 //Packet(const Packet & p); //Will allocate new buffer but copy buffer from packet argument
-	Message(const MessageType::TYPE m); //Used for when sending a packet that only contains a packet type (Ex. End of File Packet)
-	void Append(const MessageType::TYPE mt);
+	explicit message(const MessageType::type m); //Used for when sending a packet that only contains a packet type (Ex. End of File Packet)
+	void Append(const MessageType::type mt);
 	void Append(const __int64 int64);
 	void Append(const std::size_t m);
-	void Append(const Message & m);
+	void Append(const message & m);
 	void Append(const std::string & str);
 	void Append(const char * buffer, const int size); //Will use existing allocated buffer and create packet from it
 
@@ -42,7 +40,7 @@ protected:
 
 };
 
-class RequestMessage : public Message {
+class RequestMessage : public message {
 
 public:
 
@@ -52,45 +50,46 @@ public:
 	// This is used to create an empty RequestMessage, which it's supposed will be received
 	RequestMessage() {};
 
-	__int64 RequestMessage::getFileSize() {
-		return this->requestBody.fileSize;
+	__int64 RequestMessage::get_file_size() const {
+		return this->requestBody.file_size;
 	}
 
-	FILETIME RequestMessage::getFileTimeStamp() {
-		return this->requestBody.fileTimestamp;
+	FILETIME RequestMessage::get_file_time_stamp() const {
+		return this->requestBody.file_timestamp;
 	}
 
-	std::string RequestMessage::getFileName() {
-		return this->requestBody.fileName;
+	std::string RequestMessage::get_file_name() const {
+		return this->requestBody.file_name;
 	}
 
-	void RequestMessage::prepareMessage();
+	void RequestMessage::prepare_message();
 
-	requestStruct RequestMessage::getRequestData();
-	void RequestMessage::getPacketType(char* packetType);
+	request_struct RequestMessage::get_request_data();
+	void RequestMessage::get_packet_type(char* packetType);
+	std::vector<int8_t> get_packet_data() const;
 
 private:
-	requestStruct requestBody;
+	request_struct requestBody;
 	ULARGE_INTEGER timeStamp;
 
 };
 
-class DiscoveryMessage: public Message {
+class discovery_message: public message {
 
 public:
-	DiscoveryMessage(std::string username) {
+	explicit discovery_message(const std::string username) {
 		Append(HELLO_MSG);
 		Append(username);
 		Append(endMessage);
 	}
 
-	DiscoveryMessage() {
+	discovery_message() {
 		Append(DISCOVERY_MSG);
 		messageBody.append(endMessage);
 	}
 
-	std::string DiscoveryMessage::getUsername(char* username);
+	std::string discovery_message::getUsername(char* username);
 
-	std::string DiscoveryMessage::getPacketType();
+	std::string discovery_message::get_packet_type();
 
 };

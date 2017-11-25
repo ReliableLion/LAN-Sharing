@@ -1,16 +1,17 @@
 #include "Session.hpp"
+#include "FileHandler.hpp"
 
 using namespace session;
 
-bool TCPConnection::connectTo(const char * ip, const int port) {
+bool TCPConnection::connect_to(const char * ip, const int port) {
 
 	inet_pton(AF_INET, ip, &remote_address.sin_addr.s_addr); //Server Address [127.0.0.1] = localhost
 	remote_address.sin_port = htons(port); //Port 
 	remote_address.sin_family = AF_INET; //IPv4 Socket
 
 	sock = socket(AF_INET, SOCK_STREAM, 0); //Set Connection socket
-	int sizeofaddr = sizeof(remote_address);
-	if (connect(sock, (SOCKADDR*)&remote_address, sizeofaddr) != 0) //If we are unable to connect...
+	const int sizeofaddr = sizeof(remote_address);
+	if (connect(sock, reinterpret_cast<SOCKADDR*>(&remote_address), sizeofaddr) != 0) //If we are unable to connect...
 	{
 		std::cout << "Client failed to connect to: " << remote_address.sin_addr.s_addr << ":" << remote_address.sin_port << std::endl << std::endl;
 
@@ -22,26 +23,26 @@ bool TCPConnection::connectTo(const char * ip, const int port) {
 	return true;
 }
 
-bool TCPConnection::recvall(char * data, int totalBytes) {
+bool TCPConnection::recvall(char * data, const int total_bytes) const {
+	
+	auto bytes_received = 0; //Holds the total bytes received
+	while (bytes_received < total_bytes) { //While we still have more bytes to recv 
 
-	int bytesReceived = 0; //Holds the total bytes received
-	while (bytesReceived < totalBytes) { //While we still have more bytes to recv 
-
-		int RetnCheck = recv(sock, data + bytesReceived, totalBytes - bytesReceived, 0); //Try to recv remaining bytes
-		if (RetnCheck == SOCKET_ERROR || RetnCheck == 0) //If there is a socket error while trying to recv bytes or if connection is lost
+		const auto retn_check = recv(sock, data + bytes_received, total_bytes - bytes_received, 0); //Try to recv remaining bytes
+		if (retn_check == SOCKET_ERROR || retn_check == 0) //If there is a socket error while trying to recv bytes or if connection is lost
 			return false; //Return false - failed to recvall
-		bytesReceived += RetnCheck; //Add to total bytes received
+		bytes_received += retn_check; //Add to total bytes received
 	}
 	return true; //Success!
 }
 
-bool TCPConnection::recvToEndl(char * data) {
-
-	size_t nread = readline_unbuffered(sock, data, MAXBUFL);
+bool TCPConnection::readline(char * data) const {
+	
+	const auto nread = readline_unbuffered(data, MAXBUFL);
 	if (nread == 0) {
 		return false;
 	}
-	else if (nread < 0) {
+	if (nread == -1) {
 		std::cout << "(%s) error - readline() failed" << std::endl;
 
 		throw SOCKET_ERROR;
@@ -50,15 +51,15 @@ bool TCPConnection::recvToEndl(char * data) {
 	return true;
 }
 
-size_t TCPConnection::readline_unbuffered(int fd, char *vptr, size_t maxlen) {
+size_t TCPConnection::readline_unbuffered(char *vptr, const size_t maxlen) const {
 
 	size_t n, rc;
-	char c, *ptr;
+	char c;
 
-	ptr = vptr;
+	auto ptr = vptr;
 	for (n = 1; n<maxlen; n++)
 	{
-		if ((rc = recv(fd, &c, 1, 0)) == 1)
+		if ((rc = recv(sock, &c, 1, 0)) == 1)
 		{
 			*ptr++ = c;
 			if (c == '\n')
@@ -68,8 +69,8 @@ size_t TCPConnection::readline_unbuffered(int fd, char *vptr, size_t maxlen) {
 		{
 			if (n == 1)
 				return 0; /* EOF, no data read */
-			else
-				break; /* EOF, some data was read */
+			break;
+			/* EOF, some data was read */
 		}
 		else
 			return -1; /* error, errno set by read() */
@@ -79,7 +80,25 @@ size_t TCPConnection::readline_unbuffered(int fd, char *vptr, size_t maxlen) {
 	return n;
 }
 
-bool TCPConnection::closeConnection() {
+bool TCPConnection::transmit_file_handler(const std::string file_name, const std::string file_path) const {
+
+	TransmitFileHandler handler(file_name, file_path);
+
+	try {
+		if (handler.openFile())
+			return handler.transmit_file(sock);
+	}
+	catch (transmit_file_exception& error) {
+		std::cout << error.what() << std::endl;
+	}
+	catch (file_open_exception& error) {
+		std::cout << error.what() << std::endl;
+	}
+
+	return false;
+}
+
+bool TCPConnection::close_connection() const {
 
 	if (closesocket(sock) == SOCKET_ERROR)
 	{
@@ -95,5 +114,5 @@ bool TCPConnection::closeConnection() {
 
 TCPConnection::~TCPConnection() {
 
-	closeConnection();
+	close_connection();
 }

@@ -33,3 +33,6 @@
 
 #define USERNAME "Davide"
 #define USERNAME_LENGTH 255
+
+/* FILE SECTION */
+#define MAX_FILE_ATTEMPTS 5

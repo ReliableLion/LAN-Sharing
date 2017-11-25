@@ -13,44 +13,45 @@ using namespace std;
 
 namespace udp_service {
 
-	class UDPClient {
+	class udp_client {
 
 	public:
 
-		UDPClient::UDPClient();
+		udp_client::udp_client();
 
-		void UDPClient::get_server_info(std::string address, std::string port);
-		void UDPClient::send_datagram(const struct sockaddr_in saddr) const;
-		int UDPClient::receive_datagram(const struct sockaddr_in saddr);
-		void UDPClient::send_broadcast();
+		void udp_client::get_server_info(std::string address, std::string port);
+		void udp_client::send_datagram(const struct sockaddr_in saddr) const;
+		int udp_client::receive_datagram(const struct sockaddr_in saddr);
+		void udp_client::send_broadcast();
 
-		UDPClient::~UDPClient();
+		udp_client::~udp_client();
 
 	private:
 		int sock;
-		char buffer[MAXBUFL] = "";
-		char serverAddress[INET_ADDRSTRLEN];
-		int serverPort;
+		char buffer_[MAXBUFL] = "";
+		char server_address_[INET_ADDRSTRLEN];
+		int server_port_;
 		struct sockaddr_in broadcastAddress, server_address;
 
 	};
 
-	class UDPServer {
+	class udp_server {
 
-		UDPServer::UDPServer();
+	public:
+		udp_server::udp_server();
 
-		void UDPServer::send_datagram(char *buffer, const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
-		socklen_t UDPServer::receive_datagram(char *buffer, const struct sockaddr_in *caddr, size_t len) const;
-		void UDPServer::sendHello(const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
+		void udp_server::send_datagram(char *buffer, const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
+		socklen_t udp_server::receive_datagram(char *buffer, const struct sockaddr_in *caddr, size_t len) const;
+		void udp_server::sendHello(const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
 
 		map<char*, string> get_online_users(const struct sockaddr_in saddr);
 
-		UDPServer::~UDPServer();
+		udp_server::~udp_server();
 
 	private:
 		int sock;
-		char buffer[MAXBUFL] = "";
-		char serverAddress[INET_ADDRSTRLEN];
+		char buffer_[MAXBUFL] = "";
+		char server_address_[INET_ADDRSTRLEN];
 
 	};
 

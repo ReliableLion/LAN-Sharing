@@ -6,28 +6,28 @@ namespace protocol {
 
 	public:
 
-		static int protocol::MessageType::getMessageType(std::string msgType);
+		static int protocol::MessageType::getMessageType(std::string msg_type);
 
-		static std::string protocol::MessageType::getMessageType(int msgType);
+		static std::string protocol::MessageType::getMessageType(int msg_type);
 
-		const enum TYPE {
-			SEND,
-			OK,
-			ERR,
-			UNDEFINED
+		const enum type {
+			send,
+			ok,
+			err,
+			undefined
 		};
 
-		int getErrorType(std::string msgType) {
+		static int get_error_type(std::string msg_type) {
 			return 0;
 		}
 
-		const enum ERROR_TYPE {
+		const enum error_type {
 
 		};
 
 	private:
-		static const std::map<std::string, int> messageType;
-		const std::map<std::string, int> errorType = {};
+		static const std::map<std::string, int> message_type;
+		const std::map<std::string, int> error_type_ = {};
 
 	};
 }

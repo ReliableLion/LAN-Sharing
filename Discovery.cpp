@@ -6,7 +6,7 @@ std::map<std::string, std::string> Discovery::findUsers() {
 	map<std::string, std::string> users;
 	pair<std::string, std::string> userPair;
 
-	DiscoveryMessage helloMessage = DiscoveryMessage(this->username);
+	discovery_message helloMessage = discovery_message(this->username);
 
 	//udpClient.sendBroadcastMessage(helloMessage.getMessageBody());
 
@@ -23,7 +23,7 @@ std::map<std::string, std::string> Discovery::findUser(string host, string port)
 	map<std::string, std::string> users;
 	pair<std::string, std::string> userPair;
 
-	DiscoveryMessage helloMessage = DiscoveryMessage(this->username);
+	discovery_message helloMessage = discovery_message(this->username);
 
 	//udpClient.sendMessage(host, port, helloMessage.getMessageBody());
 
@@ -35,7 +35,7 @@ std::map<std::string, std::string> Discovery::findUser(string host, string port)
 
 void Discovery::startDiscoveryService() {
 
-	DiscoveryMessage helloMessage = DiscoveryMessage(this->username);
+	discovery_message helloMessage = discovery_message(this->username);
 
 	//UDPServer udpServer(io_service, helloMessage.getMessageBody());
 
