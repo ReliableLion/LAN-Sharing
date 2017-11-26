@@ -11,10 +11,10 @@ public:
 
 public: // enumerator declaration
 	const enum TYPE {
-		SEND,
-		OK,
-		ERR,
-		UNDEFINED
+		send,
+		ok,
+		err,
+		undefined
 	};
 
 	const enum ERROR_TYPE {

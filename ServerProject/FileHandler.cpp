@@ -20,9 +20,8 @@ bool FileHandler::closeFile() {
 		file.close();
 		return true;
 	}
-	else {
-		return false;
-	}
+	
+	return false;
 }
 
 /**
@@ -114,6 +113,4 @@ void OutputFileHandler::writeData(const char *buffer, std::size_t size) {
 	if (count == maxAttempts) {
 		throw FileWriteException();
 	}
-
-	
 }

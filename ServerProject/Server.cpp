@@ -6,7 +6,7 @@
 
 //			PUBLIC METHODS
 
-Server::Server(int port){
+Server::Server(int port) : request_manager() {
 	// when a new instance of Server is declared, a new listen socket is created  and binded to receive incoming request
 	// winsock startup
 	WSAData wsaData;
@@ -20,7 +20,7 @@ Server::Server(int port){
 	local_addr.sin_port = htons(port);
 	local_addr.sin_family = AF_INET;
 
-	l_socket = socket(AF_INET, SOCK_STREAM, 0);
+	l_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (bind(l_socket, (SOCKADDR*) &local_addr, sizeof(local_addr)) == SOCKET_ERROR) {
 		std::cout << "impossible to bind the socket with the specified address, error:" << std::to_string(WSAGetLastError()) << std::endl;
 		exit(1);
@@ -32,7 +32,7 @@ Server::Server(int port){
 }
 
 Server::~Server() {
-	
+	closeServer();
 }
 
 void Server::listenNewConnection() {
@@ -46,9 +46,15 @@ void Server::listenNewConnection() {
 		std::cout << "Server accepted an incoming request" << std::endl << "Client information: " << std::endl;
 		newConn.print_endpoint_info();
 		std::cout << "***************************************************" << std::endl;
+
+		request_manager.addConnection(std::make_shared<session::TCPConnection>(newConn));			// add the request inside the request manager
 	}
 	else {
 		// TODO	notify to the user, via user interface, the connection problem
-
 	}
+}
+
+void Server::closeServer()
+{
+	closesocket(l_socket);						// close the socket 
 }

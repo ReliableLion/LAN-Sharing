@@ -2,14 +2,14 @@
 
 int protocol::MessageType::getMessageType(std::string msgType) {
 
-	if (messageType.at(msgType) == SEND)
-		return SEND;
-	else if (messageType.at(msgType) == OK)
-		return OK;
-	else if (messageType.at(msgType) == ERR)
-		return ERR;
+	if (messageType.at(msgType) == send)
+		return send;
+	else if (messageType.at(msgType) == ok)
+		return ok;
+	else if (messageType.at(msgType) == err)
+		return err;
 	else
-		return UNDEFINED;
+		return undefined;
 }
 
 std::string protocol::MessageType::getMessageType(int msgType) {

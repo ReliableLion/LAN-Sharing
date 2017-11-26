@@ -34,9 +34,8 @@ bool RequestManager::addConnection(session::conn_ptr newConnection) {
 	if (!is_terminated.load()) {
 
 		std::lock_guard<std::mutex> l(mtx);
-		if (!connectionQueue.insertElement(newConnection)) {
-			return false;			// the queue has reached the max number of element
-		}
+		if (!connectionQueue.insertElement(newConnection)) return false;			// the queue has reached the max number of element
+		cv.notify_all();
 		return true;
 	}
 		return false;				// this object has been closed

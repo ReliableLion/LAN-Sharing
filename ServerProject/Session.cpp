@@ -31,12 +31,16 @@ bool session::TCPConnection::close_connection() const {
 }
 
 void session::TCPConnection::print_endpoint_info() const {
+	char client_address[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(remote_address.sin_addr), client_address, INET_ADDRSTRLEN);
+
 	if (sock == 0) {
 		std::cout << "socket not connected" << std::endl;
 		return;
 	}
-	std::cout << "IP address: " << remote_address.sin_addr.s_addr << std::endl;
-	std::cout << "port number: " << remote_address.sin_port << std::endl << std::endl;
+
+	std::cout << "IP address: " << client_address << std::endl;
+	std::cout << "port number: " << ntohs(remote_address.sin_port) << std::endl << std::endl;
 }
 
 /**

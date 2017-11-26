@@ -10,17 +10,22 @@ PacketManager::PacketManager() {}
  */
 packet_code PacketManager::receivePacket(session::conn_ptr connection) {
 	char buffer[BUFF_LENGTH];
-	char packetType[4];
+	char packetType[5];
 	int readBytes = 0;
 
 	if (connection->readline(buffer, buffer_length, readBytes) == false) return CLD_CONN;
 	
 	message.Append(buffer);																		// set the buffer inside the PacketMessage instance
 	message.getPacketType(packetType);															// check the packet type	
-	int msgType = protocol::MessageType::getMessageType(std::string(packetType));
+	try {
+		int msgType = protocol::MessageType::getMessageType(std::string(packetType));
+
+		if (msgType == protocol::MessageType::TYPE::undefined) return URZ_PACKET;				// if the packet is unrecognizedr
+		if (msgType == protocol::MessageType::TYPE::send) return READ_CORRECTLY;				// if the packet is send}
 	
-	if (msgType == protocol::MessageType::TYPE::UNDEFINED) return URZ_PACKET;				// if the packet is unrecognizedr
-	if (msgType == protocol::MessageType::TYPE::SEND) return READ_CORRECTLY;				// if the packet is send
+	} catch (std::exception e) {
+		return URZ_PACKET;
+	}
 }
 
 requestStruct PacketManager::get_request_struct() {

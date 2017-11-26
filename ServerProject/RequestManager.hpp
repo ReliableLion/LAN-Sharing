@@ -1,6 +1,6 @@
 #pragma once
 #include "stdafx.h"
-#include "Constant.hpp"
+#include "Constants.hpp"
 #include "Session.hpp"
 #include "DownloadManager.hpp"
 #include "ConcurrentQueue.hpp"

@@ -3,6 +3,7 @@
 #define MAXBUFL 1024
 #define CHUNK 1460
 #define UDP_PORT 1234
+#define DEFAULT_LISTEN_PORT 1500
 #define TIMEOUT 3
 #define BIG_FILE_THREADS 3
 #define SMALL_FILE_THREADS 2

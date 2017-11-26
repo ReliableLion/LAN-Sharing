@@ -44,13 +44,19 @@ void Message::Append(std::size_t s) {
 	Append((__int64)s);
 }
 
-void Message::getPacketType(char* packetType) {
-	memcpy((void*)packetType, (void*)&(*m_buffer.begin()), 4);
+void Message::getPacketType(char* packet_type) {
+	try {
+		memcpy(static_cast<void*>(packet_type), static_cast<void*>(&(*m_buffer.begin())), 4);
+		packet_type[4] = '\0';
+	}
+	catch (std::exception e) {
+		throw std::exception("Exception during packet type getting!");
+	}
 }
 
 RequestMessage::RequestMessage(__int64 fileSize, FILETIME fileTimestamp, std::string fileName) {
 
-	messageBody.append(MessageType::getMessageType(MessageType::SEND));
+	messageBody.append(MessageType::getMessageType(MessageType::send));
 
 	this->requestBody.fileSize = fileSize;
 	this->requestBody.fileTimestamp = fileTimestamp;
