@@ -1,36 +1,38 @@
 #include "Discovery.hpp"
 
-std::map<std::string, std::string> Discovery::findUsers() {
+std::map<string, std::string> Discovery::findUsers() {
 
-	//UDPClient udpClient;
-	map<std::string, std::string> users;
-	pair<std::string, std::string> userPair;
+	udp_service::udp_client udp_client;
 
 	discovery_message helloMessage = discovery_message(this->username);
 
-	//udpClient.sendBroadcastMessage(helloMessage.getMessageBody());
+	udp_client.send_broadcast();
 
-	//while (!((userPair = udpClient.receiveMessage()).first.empty()))
-		//users.insert(userPair);
-	// TO DO: ADD TIMER
-
-	return users;
+	this->online_users_ = udp_client.get_online_users();
+	return this->online_users_;
 }
 
-std::map<std::string, std::string> Discovery::findUser(string host, string port) {
+std::map<string, std::string> Discovery::find_user(std::string username) {
 
-	//UDPClient udpClient;
-	map<std::string, std::string> users;
-	pair<std::string, std::string> userPair;
+	udp_service::udp_client udp_client;
 
-	discovery_message helloMessage = discovery_message(this->username);
+	auto hello_message = discovery_message(this->username);
+	this->online_users_.find(username.c_str());
+	udp_client.get_server_info(this->online_users_.find(username)->second, std::to_string(UDP_PORT));
+	udp_client.send_datagram(hello_message.get_message_body());
 
-	//udpClient.sendMessage(host, port, helloMessage.getMessageBody());
+	auto user = udp_client.get_online_users();
 
-	//userPair = udpClient.receiveMessage();
-	users.insert(userPair);
+	if(user.size() > 1) {
+		if (user.find(username)->first == username)
+			return user;
+	} else if (user.size() == 1) {
+		if (user.find(username)->first == username)
+			return user;
+	}
 
-	return users;
+	user.clear();
+	return user;
 }
 
 void Discovery::startDiscoveryService() {

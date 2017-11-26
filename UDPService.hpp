@@ -20,9 +20,10 @@ namespace udp_service {
 		udp_client::udp_client();
 
 		void udp_client::get_server_info(std::string address, std::string port);
-		void udp_client::send_datagram(const struct sockaddr_in saddr) const;
-		int udp_client::receive_datagram(const struct sockaddr_in saddr);
+		void udp_client::send_datagram(std::string buff) const;
+		int udp_client::receive_datagram();
 		void udp_client::send_broadcast();
+		map<string, string> udp_client::get_online_users();
 
 		udp_client::~udp_client();
 
@@ -43,8 +44,6 @@ namespace udp_service {
 		void udp_server::send_datagram(char *buffer, const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
 		socklen_t udp_server::receive_datagram(char *buffer, const struct sockaddr_in *caddr, size_t len) const;
 		void udp_server::sendHello(const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
-
-		map<char*, string> get_online_users(const struct sockaddr_in saddr);
 
 		udp_server::~udp_server();
 

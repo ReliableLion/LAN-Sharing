@@ -85,11 +85,12 @@ public:
 
 	discovery_message() {
 		Append(DISCOVERY_MSG);
-		messageBody.append(endMessage);
+		Append(endMessage);
 	}
 
 	std::string discovery_message::getUsername(char* username);
 
 	std::string discovery_message::get_packet_type();
 
+	std::string discovery_message::get_message_body();
 };

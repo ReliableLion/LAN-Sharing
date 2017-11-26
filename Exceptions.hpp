@@ -14,6 +14,15 @@ namespace udp_exception {
 	};
 }
 
+class tcp_exception : public std::exception {
+	public:
+		explicit tcp_exception(const std::string str) : error_message_(str) {};
+		const char* what() const throw() override { return error_message_.c_str(); }
+
+	private:
+		std::string error_message_;
+	};
+
 class message_exception : public std::exception
 {
 public:

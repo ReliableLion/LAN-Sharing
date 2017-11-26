@@ -17,9 +17,10 @@ public:
 	bool isUserOnline(string userIp);
 
 	// Return a list of pairs (UserIP, Username)
-	std::map<std::string, std::string> findUsers();
-	std::map<std::string, std::string> findUser(string host, string port);
+	std::map<string, std::string> findUsers();
+	std::map<string, std::string> find_user(std::string username);
 
 private:
 	string username;
+	map<string, string> online_users_;
 };

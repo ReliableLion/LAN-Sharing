@@ -65,11 +65,11 @@ void udp_client::get_server_info(std::string address, std::string port) {
 
 }
 
-void udp_client::send_datagram(const struct sockaddr_in saddr) const {
+void udp_client::send_datagram(std::string buff) const {
 
 	/* send datagram */
 
-	sendto(sock, buffer_, strlen(buffer_), 0, reinterpret_cast<const struct sockaddr*>(&saddr), sizeof(saddr));
+	sendto(sock, buff.c_str(), buff.size(), 0, reinterpret_cast<const struct sockaddr*>(&server_address), sizeof(server_address));
 
 	cout << "(%s) --- Data has been sent!\n" << endl;
 }
@@ -87,7 +87,6 @@ void udp_client::send_broadcast() {
 		if (closesocket(sock) != 0)
 			throw udp_exception::udp_exception("--- Error closesocket() failed!\n");
 
-
 	// Broadcast data on the socket
 	if (sendto(sock, DISCOVERY_MSG, strlen(DISCOVERY_MSG) + 1, 0, reinterpret_cast<sockaddr *> (&broadcastAddress), sizeof(broadcastAddress)) < 0)
 		if (closesocket(sock) != 0)
@@ -100,11 +99,11 @@ void udp_client::send_broadcast() {
 
 }
 
-int udp_client::receive_datagram(const struct sockaddr_in saddr) {
+int udp_client::receive_datagram() {
 
 	struct timeval tval;
 	fd_set cset;
-	socklen_t address_len = sizeof(saddr);
+	socklen_t address_len = sizeof(server_address);
 	size_t n;
 
 	FD_ZERO(&cset);
@@ -124,7 +123,7 @@ int udp_client::receive_datagram(const struct sockaddr_in saddr) {
 		*/
 		buffer_[0] = 0;
 
-		n = recvfrom(sock, buffer_, MAXBUFL, 0, const_cast<struct sockaddr*>(reinterpret_cast<const struct sockaddr*>(&saddr)), &address_len);
+		n = recvfrom(sock, buffer_, MAXBUFL, 0, const_cast<struct sockaddr*>(reinterpret_cast<const struct sockaddr*>(&server_address)), &address_len);
 
 		cout << "--- Received string " << buffer_ << endl;
 
@@ -148,6 +147,77 @@ int udp_client::receive_datagram(const struct sockaddr_in saddr) {
 	}
 }
 
+map<string, string> udp_client::get_online_users() {
+
+	map<string, string> online_users;
+	char client_address[INET_ADDRSTRLEN];
+
+	struct timeval tval;
+	fd_set cset;
+	socklen_t address_len = sizeof(server_address);
+	size_t n;
+	char username[USERNAME_LENGTH];
+	discovery_message packet;
+
+	using namespace std::chrono;
+	const auto start = steady_clock::now();
+
+	do {
+		FD_ZERO(&cset);
+		FD_SET(sock, &cset);
+		tval.tv_sec = TIMEOUT;
+		tval.tv_usec = 0;
+
+		if ((n = select(sock + 1, &cset, nullptr, nullptr, &tval)) == -1)
+			throw udp_exception::udp_exception("--- Error select() failed\n");
+
+		if (n > 0) {
+
+			/*
+			* ****************
+			* SOCKET SELECTED
+			* ****************
+			*/
+			buffer_[0] = 0;
+
+			n = recvfrom(sock, buffer_, MAXBUFL, 0, const_cast<struct sockaddr*>(reinterpret_cast<const struct sockaddr*>(&server_address)), &address_len);
+
+			packet.Append(buffer_, strlen(buffer_));
+
+			if (!packet.get_packet_type().compare(nullptr) && packet.get_packet_type() == HELLO_MSG) {
+
+				cout << "--- Received string " << buffer_ << endl;
+
+				packet.getUsername(username);
+
+				inet_ntop(AF_INET, &(server_address.sin_addr), client_address, INET_ADDRSTRLEN);
+
+				online_users.insert(make_pair(string(username), client_address));
+			}
+
+			if (n > (MAXBUFL))
+				cout << "--- Some bytes lost!" << endl;
+		}
+		else {
+
+			if (n == 0) {
+
+				/*
+				* ********
+				* TIMEOUT
+				* ********
+				*/
+
+				return online_users;
+			}
+			if (n == SOCKET_ERROR) {
+				throw socket_exception(WSAGetLastError());
+			}
+		}
+	} while (duration_cast<chrono::seconds>(steady_clock::now() - start) < 3s);
+
+	return online_users;
+}
 
 udp_server::udp_server() {
 
@@ -201,78 +271,6 @@ void udp_server::sendHello(const struct sockaddr_in *saddr, const socklen_t addr
 
 }
 
-map<char*, string> udp_server::get_online_users(const struct sockaddr_in caddr) {
-
-	map<char*, string> online_users;
-	char client_address[INET_ADDRSTRLEN];
-
-	struct timeval tval;
-	fd_set cset;
-	socklen_t address_len = sizeof(caddr);
-	size_t n;
-	char username[USERNAME_LENGTH];
-	discovery_message packet;
-
-	using namespace std::chrono;
-	const auto start = steady_clock::now();
-
-	do {
-		FD_ZERO(&cset);
-		FD_SET(sock, &cset);
-		tval.tv_sec = TIMEOUT;
-		tval.tv_usec = 0;
-
-		if ((n = select(sock + 1, &cset, nullptr, nullptr, &tval)) == -1)
-			throw udp_exception::udp_exception("--- Error select() failed\n");
-
-		if (n > 0) {
-
-			/*
-			* ****************
-			* SOCKET SELECTED
-			* ****************
-			*/
-			buffer_[0] = 0;
-
-			n = recvfrom(sock, buffer_, MAXBUFL, 0, const_cast<struct sockaddr*>(reinterpret_cast<const struct sockaddr*>(&caddr)), &address_len);
-
-			packet.Append(buffer_, strlen(buffer_));
-
-			if (!packet.get_packet_type().compare(nullptr) && packet.get_packet_type() == HELLO_MSG) {
-
-				cout << "--- Received string " << buffer_ << endl;
-
-				packet.getUsername(username);
-
-				inet_ntop(AF_INET, &(caddr.sin_addr), client_address, INET_ADDRSTRLEN);
-
-				online_users.insert(make_pair(username, client_address));
-			}
-
-			if (n > (MAXBUFL))
-				cout << "--- Some bytes lost!" << endl;
-		}
-		else {
-
-			if (n == 0) {
-
-				/*
-				* ********
-				* TIMEOUT
-				* ********
-				*/
-
-				return online_users;
-			}
-			if (n == SOCKET_ERROR) {
-				throw socket_exception(WSAGetLastError());
-			}
-		}
-	} while (duration_cast<chrono::seconds>(steady_clock::now() - start) < 3s);
-
-		return online_users;
-}
-
 socklen_t udp_server::receive_datagram(char *buffer, const struct sockaddr_in *caddr, const size_t len) const {
 
 	socklen_t address_len = sizeof(caddr);
@@ -284,8 +282,6 @@ socklen_t udp_server::receive_datagram(char *buffer, const struct sockaddr_in *c
 
 	return address_len;
 }
-
-
 
 udp_client::~udp_client() {
 	closesocket(sock);

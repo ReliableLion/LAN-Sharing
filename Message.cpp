@@ -60,12 +60,19 @@ request_struct RequestMessage::get_request_data() {
 
 	const std::vector<int8_t>::const_iterator begin = m_buffer.begin() + 4;
 
+						/************************
+						 *  GETTING FILE SIZE	*
+						 ************************/
 	std::vector<int8_t>::const_iterator first = begin;
 	std::vector<int8_t>::const_iterator last = first + sizeof(__int64);
 	std::vector<int8_t> file_size(first, last);
 
 	memcpy(&requestBody.file_size, file_size.data(), file_size.size());
 	requestBody.file_size = ntohll(requestBody.file_size);
+
+						/****************************
+						*  GETTING FILE TIME STAMP	*
+						*****************************/
 	first = begin + sizeof(__int64);
 	last = begin + 2*sizeof(__int64);
 	std::vector<int8_t> file_time_stamp(first, last);
@@ -75,6 +82,9 @@ request_struct RequestMessage::get_request_data() {
 	this->requestBody.file_timestamp.dwLowDateTime = timeStamp.LowPart;
 	this->requestBody.file_timestamp.dwHighDateTime = timeStamp.HighPart;
 
+						/************************
+						*  GETTING FILE NAME	*
+						*************************/
 	first = begin + 2*sizeof(__int64);
 	last = m_buffer.end();
 	std::vector<int8_t> file_name(first, last);
@@ -138,11 +148,17 @@ std::string discovery_message::getUsername(char* username) {
 
 	memcpy(static_cast<void*>(packetType), static_cast<void*>(&(*m_buffer.begin())), strlen(HELLO_MSG));
 
-	if (packetType == HELLO_MSG)
+	if (packetType == HELLO_MSG) {
 		// HELLO_MSG is the smallest string within a discovery message packet
-		memcpy(static_cast<void*>(username), static_cast<void*>(&(m_buffer.at(strlen(HELLO_MSG)))), strlen(HELLO_MSG));
+		memcpy(static_cast<void*>(username), static_cast<void*>(&(m_buffer.at(strlen(HELLO_MSG)))), m_buffer.size() - strlen(HELLO_MSG));
+		username[m_buffer.size() - strlen(HELLO_MSG)] = '\0';
+	}
 	else
 		throw message_exception("packet is not an Hello Message!\n");
 
 	return nullptr;
+}
+
+std::string discovery_message::get_message_body() {
+	return std::string(reinterpret_cast<char*>(m_buffer.data()));
 }
