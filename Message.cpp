@@ -3,8 +3,7 @@
 
 #include <cstdint> //Required to use std::int32_t
 
-message::message(): messageSize(0)
-{
+message::message(): messageSize(0) {
 }
 
 message::message(const char * data_buffer, const int size) {
@@ -59,26 +58,30 @@ RequestMessage::RequestMessage(const __int64 file_size, const FILETIME file_time
 
 request_struct RequestMessage::get_request_data() {
 
-	std::vector<int8_t>::const_iterator first = m_buffer.begin();
-	std::vector<int8_t>::const_iterator last = m_buffer.begin() + sizeof(__int64);
+	const std::vector<int8_t>::const_iterator begin = m_buffer.begin() + 4;
+
+	std::vector<int8_t>::const_iterator first = begin;
+	std::vector<int8_t>::const_iterator last = first + sizeof(__int64);
 	std::vector<int8_t> file_size(first, last);
 
-	memcpy(reinterpret_cast<void *>(this->requestBody.file_size), static_cast<void*>(&(*m_buffer.begin())), sizeof(__int64));
-
-	first = m_buffer.begin() + sizeof(__int64);
-	last = m_buffer.begin() + sizeof(__int64) + sizeof(__int64);
+	memcpy(&requestBody.file_size, file_size.data(), file_size.size());
+	requestBody.file_size = ntohll(requestBody.file_size);
+	first = begin + sizeof(__int64);
+	last = begin + 2*sizeof(__int64);
 	std::vector<int8_t> file_time_stamp(first, last);
 
-	memcpy(reinterpret_cast<void *>(timeStamp.QuadPart), static_cast<void*>(&(*(m_buffer.begin() + sizeof(__int64)))), sizeof(__int64));
+	memcpy(&timeStamp.QuadPart, file_time_stamp.data(), file_time_stamp.size());
+	timeStamp.QuadPart = ntohll(timeStamp.QuadPart);
 	this->requestBody.file_timestamp.dwLowDateTime = timeStamp.LowPart;
 	this->requestBody.file_timestamp.dwHighDateTime = timeStamp.HighPart;
 
-	first = m_buffer.begin() + sizeof(__int64) + sizeof(__int64);
+	first = begin + 2*sizeof(__int64);
 	last = m_buffer.end();
 	std::vector<int8_t> file_name(first, last);
 
 	char name[256];
-	memcpy(static_cast<void *>(name), static_cast<void*>(&(*(m_buffer.begin() + sizeof(__int64) + sizeof(__int64)))), last - first);
+	memcpy(name, file_name.data(), file_name.size());
+	name[file_name.size()-2] = '\0'; // Needs to remove \r\n
 	this->requestBody.file_name = std::string(name);
 
 	return this->requestBody;
@@ -97,17 +100,22 @@ void RequestMessage::prepare_message() {
 	__int64 fileTimestamp = htonll(timeStamp.QuadPart);
 	Append(reinterpret_cast<const char*>(&fileTimestamp), sizeof(__int64));
 
-	Append(static_cast<const char*>(this->requestBody.file_name.c_str()), sizeof(this->requestBody.file_name.size()));
+	Append(static_cast<const char*>(this->requestBody.file_name.c_str()), this->requestBody.file_name.size());
 
 	Append(static_cast<const char*>(endMessage.c_str()));
 }
 
 void RequestMessage::get_packet_type(char* packet_type) {
-	memcpy(static_cast<void*>(packet_type), static_cast<void*>(&(*m_buffer.begin())), 4);
+
+	try {
+		memcpy(static_cast<void*>(packet_type), static_cast<void*>(&(*m_buffer.begin())), 4);
+		packet_type[4] = '\0';
+	} catch(std::exception e) {
+		throw std::exception("Exception during packet type getting!");
+	}
 }
 
-std::vector<int8_t> RequestMessage::get_packet_data() const
-{
+std::vector<int8_t> RequestMessage::get_packet_data() const {
 	return m_buffer;
 }
 

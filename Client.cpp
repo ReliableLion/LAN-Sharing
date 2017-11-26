@@ -1,47 +1,47 @@
 #include "Discovery.hpp"
+#include "Session.hpp"
 
 using namespace std;
 
 int main(int argc, char* argv[]){
 
-	try
-	{
+	try {
 
-		
-		//TCPClientConnection::connect()
+		//Winsock Startup
+		WSAData wsaData;
+		WORD DllVersion = MAKEWORD(2, 1);
+		if (WSAStartup(DllVersion, &wsaData) != 0) {
+			MessageBoxA(0, "Winsock startup failed", "Error", MB_OK | MB_ICONERROR);
+			exit(0);
+		}
 
-		/*
-		Discovery service = Discovery("prova");
+		session::TCPConnection connection;
+		cout << "Trying to connect" << endl;
+		if(connection.connect_to("192.168.1.14", DEFAULT_LISTEN_PORT)) {
 
-		cout << "Starting UDP server..." << endl;
+			cout << "Connected!" << endl;
 
-		service.startDiscoveryService();
+			FILETIME filetime;
+			filetime.dwLowDateTime = 1;
+			filetime.dwHighDateTime = 0;
 
-		cout << "UDP server started!" << endl << "Sending boradcast message..." << endl;*/
-		
-		/*auto temp = service.findUser("192.168.1.102", "1234");
+			RequestMessage message(1, filetime,"prova");
+			message.prepare_message();
 
-		cout << "Broadcast sent!" << endl;
+			request_struct structure = message.get_request_data();
 
-		auto iterator = temp.begin();
+			cout << "Message prepared! Trying to send it..." << endl;
+			connection.send_all(reinterpret_cast<const char*>(message.get_packet_data().data()), message.get_packet_data().size());
+			cout << "Message sent!" << endl;
 
-		cout << "This is the packet: " << (*iterator).first << endl;*/
+			connection.close_connection();
 
-		/*	if (argc != 2)
-		{
-		std::cerr << "Usage: ping <host>" << std::endl;
-		#if !defined(BOOST_WINDOWS)
-		std::cerr << "(You may need to run this program as root.)" << std::endl;
-		#endif
-		return 1;
-		}*/
+		} else
+			cout << "Connection error" << endl;
 
-		//boost::asio::io_service io_service;
-		//Pinger p(io_service, argv[1], 3);
-		//io_service.run();
+		return 0;
 	}
-	catch (std::exception& e)
-	{
+	catch (std::exception& e) {
 		std::cerr << "Exception: " << e.what() << std::endl;
 	}
 }

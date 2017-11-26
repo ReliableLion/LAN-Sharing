@@ -2,7 +2,6 @@
 
 PacketManager::PacketManager() {}
 
-
 /**
 * \brief
 * \param connection : TCP connection for data reading
@@ -58,11 +57,13 @@ bool PacketManager::sendReply(session::conn_ptr connection, protocol::MessageTyp
 * \param errorType
 * \return
 */
-bool PacketManager::sendReply(session::conn_ptr connection, protocol::MessageType::type msgType, protocol::MessageType::error_type errorType) {
+bool PacketManager::sendReply(session::conn_ptr connection, protocol::MessageType::error_type errorType) {
 	int sentByte;
 
 	/*msg.clear();
 	msg << protocol::MessageType::getMessageType(msgType);
 	return connection->sendall(msg.str().c_str(), msg.str().length(), sentByte);*/
+
+	//TODO Implement send reply based on TCPConnection::sendAll
 	return false;
 }

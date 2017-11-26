@@ -1,24 +1,32 @@
 #include "Session.hpp"
 #include "FileHandler.hpp"
-
+#include "Exceptions.hpp"
+#include <iostream> //for std::cout
+#include "Constants.hpp"
+#include <Ws2tcpip.h> //for inet_pton
 using namespace session;
 
 bool TCPConnection::connect_to(const char * ip, const int port) {
+
+	char server_address[INET_ADDRSTRLEN];
 
 	inet_pton(AF_INET, ip, &remote_address.sin_addr.s_addr); //Server Address [127.0.0.1] = localhost
 	remote_address.sin_port = htons(port); //Port 
 	remote_address.sin_family = AF_INET; //IPv4 Socket
 
-	sock = socket(AF_INET, SOCK_STREAM, 0); //Set Connection socket
+	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); //Set Connection socket
 	const int sizeofaddr = sizeof(remote_address);
-	if (connect(sock, reinterpret_cast<SOCKADDR*>(&remote_address), sizeofaddr) != 0) //If we are unable to connect...
-	{
-		std::cout << "Client failed to connect to: " << remote_address.sin_addr.s_addr << ":" << remote_address.sin_port << std::endl << std::endl;
+	inet_ntop(AF_INET, &(remote_address.sin_addr), server_address, INET_ADDRSTRLEN);
+
+	if (connect(sock, reinterpret_cast<SOCKADDR*>(&remote_address), sizeofaddr) != 0) {
+		std::cout << "ERROR CONNECT: " << std::to_string(WSAGetLastError()) << std::endl;
+
+		std::cout << "Client failed to connect to: " << server_address << ":" << ntohs(remote_address.sin_port) << std::endl << std::endl;
 
 		return false;
 	}
 
-	std::cout << "Client Connected to: " << remote_address.sin_addr.s_addr << ":" << remote_address.sin_port << std::endl << std::endl;
+	std::cout << "Client Connected to: " << server_address << ":" << ntohs(remote_address.sin_port) << std::endl << std::endl;
 
 	return true;
 }
@@ -96,6 +104,30 @@ bool TCPConnection::transmit_file_handler(const std::string file_name, const std
 	}
 
 	return false;
+}
+
+/*
+* Return values:
+*
+*  > 0   = # characters read
+*
+*  -1  = an error occured
+*/
+size_t TCPConnection::send_all(const char *ptr, const size_t nbytes) const {
+
+	size_t nleft;
+
+	for (nleft = nbytes; nleft>0;) {
+		const size_t nwritten = send(sock, ptr, nleft, 0);
+		if (nwritten == -1) /* Error */
+			return(nwritten);
+		else {
+			nleft -= nwritten;
+			ptr += nwritten;
+		}
+	}
+
+	return (nbytes - nleft);
 }
 
 bool TCPConnection::close_connection() const {
