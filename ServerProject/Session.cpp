@@ -3,9 +3,22 @@
 
 session::TCPConnection::TCPConnection() {}
 
-bool session::TCPConnection::accept_connection(const SOCKET s) {
+/**
+ * \brief acppt an incoming TCP connection 
+ * \param s receive the local socket used by the server 
+ * \return TRUE if the connection is established, FALSE otherwise
+ */
+bool session::TCPConnection::accept_connection(Listen_socket s) {
 	int addrlen = sizeof(remote_address);
-	sock = accept(s, (SOCKADDR*)&remote_address, &addrlen);
+	int sock_desc = s.getSocket();
+
+	if(sock_desc == SOCKET_ERROR)
+	{
+		std::cout << "impossible to accept a connection, the local socket is empty" << std::endl;
+		return false;
+	}
+
+	sock = accept(sock_desc, (SOCKADDR*)&remote_address, &addrlen);
 
 	if (sock ==  SOCKET_ERROR) {								// check if the scoket return an error
 		std::cout << "server refused the connection, error: " << std::to_string(WSAGetLastError()) << std::endl;
@@ -30,6 +43,9 @@ bool session::TCPConnection::close_connection() const {
 	return true;
 }
 
+/**
+ * \brief print on standard output the information about the remote endpoint assoicated with the TCP connection	
+ */
 void session::TCPConnection::print_endpoint_info() const {
 	char client_address[INET_ADDRSTRLEN];
 	inet_ntop(AF_INET, &(remote_address.sin_addr), client_address, INET_ADDRSTRLEN);

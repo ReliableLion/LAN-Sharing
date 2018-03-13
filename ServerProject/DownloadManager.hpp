@@ -10,18 +10,19 @@
 #include <mutex>
 #include <condition_variable>
 
-
+/*
+ * this struct definition contains the data requested and the connection pointer
+ */
 typedef struct {
-	requestStruct req;
+	request_struct req;
 	session::conn_ptr conn;
-} downloadStruct;
+} download_struct;
 
 class DownloadManager {
-private:
 	// thread & synchronization variables
 	const int maxThreadB = BIG_FILE_THREADS , maxThreadS = SMALL_FILE_THREADS;
 	std::vector<std::thread> threadPoolB, threadPoolS;
-	ConcurrentQueue<downloadStruct> bigFileQ, smallFileQ;
+	ConcurrentQueue<download_struct> bigFileQ, smallFileQ;
 	std::mutex mtxB, mtxS;
 	std::atomic<bool> is_terminated;
 	std::condition_variable cvB, cvS;
@@ -29,13 +30,14 @@ private:
 	// file variables
 	std::string path;
 	const std::string temp_path = TEMP_PATH;
-private:
+
+	// private methods
 	void processBigFile();
 	void processSmallFile();
-	void downloadFile(downloadStruct request);
+	void downloadFile(download_struct request);
 public:
 	DownloadManager();
 	~DownloadManager();
-	bool insertSmallFile(requestStruct request, session::conn_ptr connection);
-	bool insertBigFile(requestStruct request, session::conn_ptr connection);
+	bool insertSmallFile(request_struct request, session::conn_ptr connection);
+	bool insertBigFile(request_struct request, session::conn_ptr connection);
 };

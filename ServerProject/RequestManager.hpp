@@ -14,12 +14,17 @@
 #include <vector>
 #include "PacketManager.hpp"
 
+enum request_status
+{
+	FULL_QUEUE = 0,
+	TERM_SIGNAL
+};
+
 class RequestManager {
-private:
 	// thread & synchronization variables
 	const int maxThreads = REQUEST_THREADS;
 	const int fileThreshold = FILE_SIZE_THRESHOLD;
-	const int maxRequestAttempts = MAX_REQUEST_ATTEMPTS;
+	const int max_request_attempts = MAX_REQUEST_ATTEMPTS;
 	std::atomic<bool> is_terminated;
 	std::mutex mtx;
 	std::condition_variable cv;
@@ -30,13 +35,13 @@ private:
 
 	// download manager for the file download
 	DownloadManager download_manager;
-private: // private methods
+	// private methods
 	void extractConnection();
 	void receiveRequest(session::conn_ptr connection);
 	bool processRequest(PacketManager& packet_manager, session::conn_ptr connection);
-	bool sendReply(session::conn_ptr conn);
+	bool sendReply(session::conn_ptr connection);
 public:
 	RequestManager();
 	~RequestManager();
-	bool addConnection(session::conn_ptr newConnection);
+	bool addConnection(session::conn_ptr newConnection, request_status& status);
 };

@@ -1,5 +1,6 @@
 #pragma once
 #include "stdafx.h"
+#include "Listen_socket.h"
 #include "SocketException.h"
 #include "WinSock2.h"
 #include "WS2tcpip.h"
@@ -20,7 +21,7 @@ private:
 	size_t readline_unbuffered(char *vptr, size_t maxlen);
 public:
 	TCPConnection();
-	bool accept_connection(const SOCKET s);
+	bool accept_connection(Listen_socket s);
 	bool close_connection() const;
 	void print_endpoint_info() const;
 	bool recvall(char *data, const int totalBytes, int& totalReadBytes);

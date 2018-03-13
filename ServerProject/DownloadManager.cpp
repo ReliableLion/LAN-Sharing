@@ -26,8 +26,10 @@ DownloadManager::~DownloadManager() {
 	}
 }
 
-bool DownloadManager::insertBigFile(requestStruct request, session::conn_ptr connection) {
-	downloadStruct newRequest;
+bool DownloadManager::insertBigFile(request_struct request, session::conn_ptr connection) {
+	download_struct newRequest;
+
+	// fill the request struct with the date received by the client
 	newRequest.req = request;
 	newRequest.conn = connection;
 
@@ -37,8 +39,8 @@ bool DownloadManager::insertBigFile(requestStruct request, session::conn_ptr con
 	return true;
 }
 
-bool DownloadManager::insertSmallFile(requestStruct request, session::conn_ptr connection) {
-	downloadStruct newRequest;
+bool DownloadManager::insertSmallFile(request_struct request, session::conn_ptr connection) {
+	download_struct newRequest;
 	newRequest.req = request;
 	newRequest.conn = connection;
 
@@ -52,7 +54,7 @@ bool DownloadManager::insertSmallFile(requestStruct request, session::conn_ptr c
 
 void DownloadManager::processSmallFile() {
 	std::unique_lock<std::mutex> ul(mtxS, std::defer_lock);
-	downloadStruct smallFileReq;
+	download_struct smallFileReq;
 
 	while (true) {
 		ul.lock();
@@ -61,16 +63,18 @@ void DownloadManager::processSmallFile() {
 			return (!smallFileQ.isEmpty() || is_terminated.load());
 		});
 
-		if (!is_terminated.load()) break;
+		if (is_terminated.load()) break;
 		smallFileQ.popElement(smallFileReq);
 
 		// TODO insert here the function for the file download
+		//downloadFile(smallFileReq);
+		smallFileReq.conn->close_connection();
 	}
 }
 
 void DownloadManager::processBigFile() {
 	std::unique_lock<std::mutex> ul(mtxB, std::defer_lock);
-	downloadStruct bigFileReq;
+	download_struct bigFileReq;
 
 	while (true) {
 		ul.lock();
@@ -79,25 +83,51 @@ void DownloadManager::processBigFile() {
 			return (!bigFileQ.isEmpty() || is_terminated.load());
 		});
 
-		if (!is_terminated.load()) break;
+		if (is_terminated.load()) break;									// if receive a notify to stop the downlaod exit from the main loop
 		smallFileQ.popElement(bigFileReq);
 
+		// check if the connection os alive
+		// if not go to the next pending resource
+
+
+
 		// TODO insert here the function for the file download
+		//downloadFile(bigFileReq);
+		bigFileReq.conn->close_connection();
 	}
 }
 
-void DownloadManager::downloadFile(downloadStruct request) {
-	OutputFileHandler dest_file(request.req.fileName, path);
-	OutputFileHandler temp_file(request.req.fileName, temp_path);
-	int leftByte = request.req.fileSize;
-	
+void DownloadManager::downloadFile(download_struct request) {
+	OutputFileHandler dest_file(request.req.file_name, path);
+	OutputFileHandler temp_file(request.req.file_name, temp_path);
+	int leftByte = request.req.file_size;
+	int bytes_to_downlaod = 0, downloaded_bytes = 0;
+	char buffer[BUFF_LENGTH];
+
 	try {
 		temp_file.openFile();								// open the two files, if an exception is throw by the program then the file is closed by the destructor
 
 		while (leftByte != 0) {
-			// TODO	put here the code for the file download
-			//int readByte = request.conn->recvall()
+
+			if (leftByte >= BUFF_LENGTH) {					// if the remaining data are greater than the max size of the buffer then the bytes to download are max buff lenght
+				bytes_to_downlaod = BUFF_LENGTH;
+			}
+			else {
+				bytes_to_downlaod = leftByte;				// if the remaining data are smaller than the max, set the remaining bytes value
+			}
+
+			if (request.conn->recvall(buffer, bytes_to_downlaod, downloaded_bytes))			// check if the connection is 
+			{
+				leftByte -= downloaded_bytes;
+				temp_file.writeData(buffer, downloaded_bytes);
+			}
+			else
+			{
+				break;
+			}
 		}
+
+		request.conn->close_connection();					// close the connection 
 
 		dest_file.openFile();
 		if (dest_file.copyFile(temp_file)) {
@@ -108,11 +138,17 @@ void DownloadManager::downloadFile(downloadStruct request) {
 		else {
 			// TODO is not possible to copy the temp file into the destination file
 		}
-	}
+	} 
 	catch (SocketException &se) {
-			
+		std::cout << "server error: " << se.what() << std::endl;
+		request.conn->close_connection();
 	}
 	catch (FileWriteException &fwe) {
-
+		std::cout << "impossible to write the data into the specified file" << std::endl;
+		request.conn->close_connection();
+	} 
+	catch (TimeoutException &te) {
+		std::cout << "connection reached timeout, closing the connection" << std::endl;
+		request.conn->close_connection();
 	}
 }

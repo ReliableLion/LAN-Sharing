@@ -3,10 +3,9 @@
 //			PRIVATE METHODS
 
 
-
 //			PUBLIC METHODS
 
-Server::Server(int port) : request_manager() {
+Server::Server(): request_manager(), socket(DEFAULT_LISTEN_PORT) {
 	// when a new instance of Server is declared, a new listen socket is created  and binded to receive incoming request
 	// winsock startup
 	WSAData wsaData;
@@ -16,7 +15,7 @@ Server::Server(int port) : request_manager() {
 		exit(1);
 	}
 
-	local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	/*local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	local_addr.sin_port = htons(port);
 	local_addr.sin_family = AF_INET;
 
@@ -28,7 +27,9 @@ Server::Server(int port) : request_manager() {
 	if (listen(l_socket, SOMAXCONN) == SOCKET_ERROR) {
 		std::cout << "server cannot listen for incoming request, error: " << std::to_string(WSAGetLastError()) << std::endl;
 		exit(1);
-	}
+	}*/
+
+	
 }
 
 Server::~Server() {
@@ -38,23 +39,50 @@ Server::~Server() {
 void Server::listenNewConnection() {
 	session::TCPConnection newConn;
 	std::time_t timestamp;
-												
-	if (newConn.accept_connection(l_socket)) {				// accept an imcoming request
+									
+	// accept an imcoming request
+	if (newConn.accept_connection(socket)) {	
+		
+		// print some informations about the remote end-point, the time stamp when the connection has been accepted and more...
 		timestamp = std::time(0);
 		std::cout << "***************************************************" << std::endl;
 		std::cout << "(" << std::put_time(std::localtime(&timestamp), "%c") << ") ";
 		std::cout << "Server accepted an incoming request" << std::endl << "Client information: " << std::endl;
 		newConn.print_endpoint_info();
 		std::cout << "***************************************************" << std::endl;
-
-		request_manager.addConnection(std::make_shared<session::TCPConnection>(newConn));			// add the request inside the request manager
+		
+		// add the request inside the request manager
+		request_status status;
+		if (request_manager.addConnection(std::make_shared<session::TCPConnection>(newConn), status)) {
+			switch(status)
+			{
+			case FULL_QUEUE:
+				std::cout << "impossible to add the connection, the queue is full" << std::endl;
+				break;
+			case TERM_SIGNAL:
+				std::cout << "impossibleto add the connection becase the request manager hase reveived the shutdown request" << std::endl;
+				break;
+			}
+		}
 	}
 	else {
 		// TODO	notify to the user, via user interface, the connection problem
 	}
 }
 
+bool Server::changePort(int port)
+{
+	if (port >= 0 && port <= MAX_PORT)
+	{
+		// create a new listen socket with a new port
+		socket = Listen_socket(port);
+		return true;
+	}
+
+	return false;
+}
+
 void Server::closeServer()
 {
-	closesocket(l_socket);						// close the socket 
+	closesocket(socket.getSocket());						// close the socket 
 }

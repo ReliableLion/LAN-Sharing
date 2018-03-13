@@ -16,3 +16,26 @@
 #define BUFF_LENGTH 1024			// 1KB
 #define TIMEOUT_SEC 10				// 10 seconds
 #define TIMEOUT_USEC 0				// 0 milliseconds
+
+#define MAX_PORT 65535
+
+/* UDP SECTION */
+/**
+* \brief UDP port used to which the UDP server is listening to
+*/
+#define UDP_PORT 1234
+/**
+* \brief Timeout used by the SELECT() when listening for UDP Discovery Messages
+*/
+#define DISCOVERY_TIMEOUT 3
+/**
+* \brief Message appended within an Hello Message
+*/
+#define HELLO_MSG  "MYUSERNAME "
+/**
+* \brief Message appended within a Discovery Message
+*/
+#define DISCOVERY_MSG "LAN-SHARING LOOKINGFOR"
+
+#define USERNAME "Davide"
+#define USERNAME_LENGTH 255

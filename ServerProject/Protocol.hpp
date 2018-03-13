@@ -10,14 +10,14 @@ public:
 	int getErrorType(std::string msgType) { return 0; }
 
 public: // enumerator declaration
-	const enum TYPE {
+	const enum type {
 		send,
 		ok,
 		err,
 		undefined
 	};
 
-	const enum ERROR_TYPE {
+	const enum error_type {
 
 	};
 

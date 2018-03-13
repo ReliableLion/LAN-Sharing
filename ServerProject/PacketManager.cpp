@@ -15,37 +15,37 @@ packet_code PacketManager::receivePacket(session::conn_ptr connection) {
 
 	if (connection->readline(buffer, buffer_length, readBytes) == false) return CLD_CONN;
 	
-	message.Append(buffer);																		// set the buffer inside the PacketMessage instance
-	message.getPacketType(packetType);															// check the packet type	
+	message.Append(buffer, readBytes);																		// set the buffer inside the PacketMessage instance
+	message.get_packet_type(packetType);															// check the packet type	
 	try {
 		int msgType = protocol::MessageType::getMessageType(std::string(packetType));
 
-		if (msgType == protocol::MessageType::TYPE::undefined) return URZ_PACKET;				// if the packet is unrecognizedr
-		if (msgType == protocol::MessageType::TYPE::send) return READ_CORRECTLY;				// if the packet is send}
+		if (msgType == protocol::MessageType::type::undefined) return URZ_PACKET;				// if the packet is unrecognizedr
+		if (msgType == protocol::MessageType::type::send) return READ_CORRECTLY;				// if the packet is send}
 	
 	} catch (std::exception e) {
 		return URZ_PACKET;
 	}
 }
 
-requestStruct PacketManager::get_request_struct() {
-	return (request = message.getRequestData());											// set and return the request struct
+request_struct PacketManager::get_request_struct() {
+	return (request = message.get_request_data());											// set and return the request struct
 }
 
 /**
  * \brief : check the reqeust received
  * \return true if the request is ammissible, false otherwise
  */
-bool PacketManager::checkRequest() {
+bool PacketManager::check_request() {
 	
-	if (request.fileSize <= 0) return false;
-	if (request.fileName.length() > 256) return false;						// return false if the filename is too long
+	if (request.file_size <= 0) return false;
+	if (request.file_name.length() > 256) return false;						// return false if the filename is too long
 	//if (request.fileTimestamp)
 
 	return true;
 }
 
-bool PacketManager::sendReply(session::conn_ptr connection, protocol::MessageType::TYPE msgType) {
+bool PacketManager::send_reply(session::conn_ptr connection, protocol::MessageType::type msgType) {
 	int sentByte;
 
 	/*msg.clear();
@@ -61,7 +61,7 @@ bool PacketManager::sendReply(session::conn_ptr connection, protocol::MessageTyp
  * \param errorType 
  * \return 
  */
-bool PacketManager::sendReply(session::conn_ptr connection, protocol::MessageType::TYPE msgType, protocol::MessageType::ERROR_TYPE errorType) {
+bool PacketManager::send_reply(session::conn_ptr connection, protocol::MessageType::type msgType, protocol::MessageType::error_type errorType) {
 	int sentByte;
 
 	/*msg.clear();
