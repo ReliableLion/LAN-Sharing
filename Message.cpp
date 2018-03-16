@@ -1,6 +1,5 @@
 #include "Message.hpp"
 #include "Exceptions.hpp"
-
 #include <cstdint> //Required to use std::int32_t
 
 message::message(): messageSize(0) {
@@ -63,8 +62,8 @@ request_struct RequestMessage::get_request_data() {
 						/************************
 						 *  GETTING FILE SIZE	*
 						 ************************/
-	std::vector<int8_t>::const_iterator first = begin;
-	std::vector<int8_t>::const_iterator last = first + sizeof(__int64);
+	auto first = begin;
+	auto last = first + sizeof(__int64);
 	std::vector<int8_t> file_size(first, last);
 
 	memcpy(&requestBody.file_size, file_size.data(), file_size.size());

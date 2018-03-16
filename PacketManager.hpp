@@ -21,6 +21,6 @@ public:
 	request_struct get_request_struct();
 	bool checkRequest();
 	bool sendReply(session::conn_ptr connection, protocol::MessageType::type msgType);			// used to send an ok message
-	bool sendReply(session::conn_ptr connection, protocol::MessageType::error_type errorType);		// used to send an error message
+	static bool sendReply(session::conn_ptr connection, protocol::MessageType::error_type errorType);		// used to send an error message
 
 };

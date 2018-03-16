@@ -7,7 +7,7 @@ PacketManager::PacketManager() {}
 * \param connection : TCP connection for data reading
 * \return false if the connection has been closed or if the packet is n
 */
-packet_code PacketManager::receivePacket(session::conn_ptr connection) {
+packet_code PacketManager::receivePacket(const session::conn_ptr connection) {
 	char buffer[MAXBUFL];
 	char packetType[4];
 	int readBytes = 0;
@@ -16,10 +16,10 @@ packet_code PacketManager::receivePacket(session::conn_ptr connection) {
 
 	message.Append(buffer);																		// set the buffer inside the PacketMessage instance
 	message.get_packet_type(packetType);															// check the packet type	
-	int msgType = protocol::MessageType::getMessageType(std::string(packetType));
+	const auto msg_type = protocol::MessageType::getMessageType(std::string(packetType));
 
-	if (msgType == protocol::MessageType::type::undefined) return URZ_PACKET;				// if the packet is unrecognizedr
-	if (msgType == protocol::MessageType::type::send) return READ_CORRECTLY;				// if the packet is send
+	if (msg_type == protocol::MessageType::type::undefined) return URZ_PACKET;				// if the packet is unrecognizedr
+	if (msg_type == protocol::MessageType::type::send) return READ_CORRECTLY;				// if the packet is send
 	
 	return URZ_PACKET;
 }
@@ -29,7 +29,7 @@ request_struct PacketManager::get_request_struct() {
 }
 
 /**
-* \brief : check the reqeust received
+* \brief : check the request received
 * \return true if the request is ammissible, false otherwise
 */
 bool PacketManager::checkRequest() {
@@ -58,7 +58,7 @@ bool PacketManager::sendReply(session::conn_ptr connection, protocol::MessageTyp
 * \return
 */
 bool PacketManager::sendReply(session::conn_ptr connection, protocol::MessageType::error_type errorType) {
-	int sentByte;
+	int sent_byte;
 
 	/*msg.clear();
 	msg << protocol::MessageType::getMessageType(msgType);

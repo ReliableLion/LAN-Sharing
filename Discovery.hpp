@@ -8,19 +8,19 @@ class Discovery {
 
 public:
 	Discovery(string username){
-		Discovery::username = username;
+		Discovery::username_ = username;
 	}
 
-	void startDiscoveryService();
+	void start_discovery_service();
 
 	// Check if a user is still online
-	bool isUserOnline(string userIp);
+	bool is_user_online(string user_ip);
 
 	// Return a list of pairs (UserIP, Username)
-	std::map<string, std::string> findUsers();
+	std::map<string, std::string> find_users();
 	std::map<string, std::string> find_user(std::string username);
 
 private:
-	string username;
+	string username_;
 	map<string, string> online_users_;
 };

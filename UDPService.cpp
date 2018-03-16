@@ -7,16 +7,16 @@ using namespace udp_service;
 
 udp_client::udp_client(): sock(0), server_port_(0) {
 	//Set broadcast address
-	broadcastAddress.sin_family = AF_INET;
-	broadcastAddress.sin_addr.s_addr = htonl(0xffffffff); //broadcast address
-	broadcastAddress.sin_port = htons(UDP_PORT);
+	broadcast_address_.sin_family = AF_INET;
+	broadcast_address_.sin_addr.s_addr = htonl(0xffffffff); //broadcast address
+	broadcast_address_.sin_port = htons(UDP_PORT);
 }
 
 void udp_client::get_server_info(std::string address, std::string port) {
 
 	struct addrinfo hints, *res, *res0;
 
-	memset(&server_address, 0, sizeof(server_address));
+	memset(&server_address_struct_, 0, sizeof(server_address_struct_));
 
 	/*******************************************************************************************/
 
@@ -36,28 +36,29 @@ void udp_client::get_server_info(std::string address, std::string port) {
 	sock = -1;
 	for (res = res0; res != nullptr; res = res->ai_next) {
 
-		switch (res->ai_family) {
+		sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 
-			case AF_INET:
-				sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-
-				if (socket < nullptr)
-					throw udp_exception::udp_exception("--- Error socket() failed!\n");
-
-				cout << "--- Socket created, fd number: " << socket << endl;
-				break;
-			default: 
-				break;
+		if (socket < nullptr) {
+			cout << "--- Error socket() failed!\n" << endl;
+			continue;
 		}
+
+		cout << "--- Socket created, fd number: " << socket << endl;
+		break;
+
 	}
 
-	if (res != nullptr)
-		server_address = *(reinterpret_cast<const sockaddr_in*>(res->ai_addr));
-	else 
-		throw udp_exception::udp_exception("- Error couldn't connect! No server found!");
+	if (res != nullptr) {
+		server_address_struct_ = *(reinterpret_cast<const sockaddr_in*>(res->ai_addr));
+	}
+	else {
+		cout << "NULL: " << WSAGetLastError() << endl;
 
-	inet_ntop(AF_INET, &(server_address.sin_addr), server_address_, INET_ADDRSTRLEN);
-	server_port_ = ntohs(server_address.sin_port);
+		throw udp_exception::udp_exception("- Error couldn't connect! No server found!");
+	}
+
+	inet_ntop(AF_INET, &(server_address_struct_.sin_addr), server_address_, INET_ADDRSTRLEN);
+	server_port_ = ntohs(server_address_struct_.sin_port);
 
 	freeaddrinfo(res0);
 
@@ -69,41 +70,16 @@ void udp_client::send_datagram(std::string buff) const {
 
 	/* send datagram */
 
-	sendto(sock, buff.c_str(), buff.size(), 0, reinterpret_cast<const struct sockaddr*>(&server_address), sizeof(server_address));
+	sendto(sock, buff.c_str(), buff.size(), 0, reinterpret_cast<const struct sockaddr*>(&server_address_struct_), sizeof(server_address_struct_));
 
 	cout << "(%s) --- Data has been sent!\n" << endl;
-}
-
-void udp_client::send_broadcast() {
-	
-	auto broadcast = 1;
-
-	// Create a UDP socket
-	if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
-		throw udp_exception::udp_exception("--- Error socket() failed!\n");
-
-	// Set socket options to broadcast
-	if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, reinterpret_cast<char *>(&broadcast), sizeof(broadcast)) < 0)
-		if (closesocket(sock) != 0)
-			throw udp_exception::udp_exception("--- Error closesocket() failed!\n");
-
-	// Broadcast data on the socket
-	if (sendto(sock, DISCOVERY_MSG, strlen(DISCOVERY_MSG) + 1, 0, reinterpret_cast<sockaddr *> (&broadcastAddress), sizeof(broadcastAddress)) < 0)
-		if (closesocket(sock) != 0)
-			throw udp_exception::udp_exception("--- Error closesocket() failed!\n");
-
-	cout << "(%s) --- Broadcast packet has been sent!\n" << endl;
-
-	if (closesocket(sock) != 0)
-		throw udp_exception::udp_exception("--- Error closesocket() failed!\n");
-
 }
 
 int udp_client::receive_datagram() {
 
 	struct timeval tval;
 	fd_set cset;
-	socklen_t address_len = sizeof(server_address);
+	socklen_t address_len = sizeof(server_address_struct_);
 	size_t n;
 
 	FD_ZERO(&cset);
@@ -123,7 +99,7 @@ int udp_client::receive_datagram() {
 		*/
 		buffer_[0] = 0;
 
-		n = recvfrom(sock, buffer_, MAXBUFL, 0, const_cast<struct sockaddr*>(reinterpret_cast<const struct sockaddr*>(&server_address)), &address_len);
+		n = recvfrom(sock, buffer_, MAXBUFL, 0, const_cast<struct sockaddr*>(reinterpret_cast<const struct sockaddr*>(&server_address_struct_)), &address_len);
 
 		cout << "--- Received string " << buffer_ << endl;
 
@@ -141,12 +117,38 @@ int udp_client::receive_datagram() {
 		* ********
 		*/
 
-		cout <<"No response after " << TIMEOUT << " seconds!" << endl; // tval is reset by select
+		cout << "No response after " << TIMEOUT << " seconds!" << endl; // tval is reset by select
 
 		return 1;
 	}
 }
 
+void udp_client::send_broadcast() {
+	
+	auto broadcast = 1;
+
+	// Create a UDP socket
+	if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
+		throw udp_exception::udp_exception("--- Error socket() failed!\n");
+
+	// Set socket options to broadcast
+	if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, reinterpret_cast<char *>(&broadcast), sizeof(broadcast)) < 0)
+		if (closesocket(sock) != 0)
+			throw udp_exception::udp_exception("--- Error closesocket() failed!\n");
+
+	// Broadcast data on the socket
+	if (sendto(sock, DISCOVERY_MSG, strlen(DISCOVERY_MSG) + 1, 0, reinterpret_cast<sockaddr *> (&broadcast_address_), sizeof(broadcast_address_)) < 0)
+		if (closesocket(sock) != 0)
+			throw udp_exception::udp_exception("--- Error closesocket() failed!\n");
+
+	cout << "(%s) --- Broadcast packet has been sent!\n" << endl;
+
+	if (closesocket(sock) != 0)
+		throw udp_exception::udp_exception("--- Error closesocket() failed!\n");
+
+}
+
+//Todo Move this method to Discovery.cpp
 map<string, string> udp_client::get_online_users() {
 
 	map<string, string> online_users;
@@ -154,7 +156,7 @@ map<string, string> udp_client::get_online_users() {
 
 	struct timeval tval;
 	fd_set cset;
-	socklen_t address_len = sizeof(server_address);
+	socklen_t address_len = sizeof(server_address_struct_);
 	size_t n;
 	char username[USERNAME_LENGTH];
 	discovery_message packet;
@@ -180,7 +182,7 @@ map<string, string> udp_client::get_online_users() {
 			*/
 			buffer_[0] = 0;
 
-			n = recvfrom(sock, buffer_, MAXBUFL, 0, const_cast<struct sockaddr*>(reinterpret_cast<const struct sockaddr*>(&server_address)), &address_len);
+			n = recvfrom(sock, buffer_, MAXBUFL, 0, const_cast<struct sockaddr*>(reinterpret_cast<const struct sockaddr*>(&server_address_struct_)), &address_len);
 
 			packet.Append(buffer_, strlen(buffer_));
 
@@ -190,7 +192,7 @@ map<string, string> udp_client::get_online_users() {
 
 				packet.getUsername(username);
 
-				inet_ntop(AF_INET, &(server_address.sin_addr), client_address, INET_ADDRSTRLEN);
+				inet_ntop(AF_INET, &(server_address_struct_.sin_addr), client_address, INET_ADDRSTRLEN);
 
 				online_users.insert(make_pair(string(username), client_address));
 			}
@@ -221,31 +223,29 @@ map<string, string> udp_client::get_online_users() {
 
 udp_server::udp_server() {
 
-	struct sockaddr_in* server_address, client_address;
+	struct sockaddr_in server_address, client_address;
 	discovery_message packet;
 
 	const auto client_address_ptr = &client_address;
 	ZeroMemory(&client_address, sizeof(client_address));
 
 	/* create socket */
-	sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	server_sock_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
 	/* specify address to bind to */
 	memset(&server_address, 0, sizeof(server_address));
-	server_address->sin_family = AF_INET;
-	server_address->sin_port = htons(uint16_t(UDP_PORT));
-	server_address->sin_addr.s_addr = htonl(INADDR_ANY);
+	server_address.sin_family = AF_INET;
+	server_address.sin_port = htons(uint16_t(UDP_PORT));
+	server_address.sin_addr.s_addr = INADDR_ANY;
 
-	bind(sock, reinterpret_cast<sockaddr*>(&server_address), sizeof(server_address));
+	bind(server_sock_, (sockaddr*)(&server_address), sizeof(server_address));
 
-	cout << "--- Socket created!" << endl;
+	inet_ntop(AF_INET, &(server_address.sin_addr), server_address_, INET_ADDRSTRLEN);
 
+	cout << "--- Listening on " << server_address_ << ":" << ntohs(server_address.sin_port) << endl;
 
+	/*Todo Move this block to Discovery.cpp
 	while (true) {
-
-		inet_ntop(AF_INET, &(server_address->sin_addr), server_address_, INET_ADDRSTRLEN);
-
-		cout << "--- Listening on " << server_address_ << ":" << ntohs(server_address->sin_port) << endl;
 
 		const auto address_len = receive_datagram(buffer_, client_address_ptr, MAXBUFL);
 
@@ -254,30 +254,43 @@ udp_server::udp_server() {
 		if(!packet.get_packet_type().compare(nullptr) && packet.get_packet_type() == HELLO_MSG)
 			send_datagram(buffer_, client_address_ptr, address_len, strlen(buffer_));
 	}
+	*/
 }
 
 void udp_server::send_datagram(char *buffer, const struct sockaddr_in *saddr, const socklen_t addr_len, const size_t len) const {
 
-	sendto(sock, buffer, len, 0, reinterpret_cast<const struct sockaddr*>(saddr), addr_len); // strlen(buffer) because I want to send just the valid characters.
+	char server_addr_[INET_ADDRSTRLEN];
 
-	cout << "--- Data has been sent!" << endl;
+	sendto(server_sock_, buffer, len, 0, reinterpret_cast<const struct sockaddr*>(saddr), addr_len); // strlen(buffer) because I want to send just the valid characters.
+
+	inet_ntop(AF_INET, &(saddr->sin_addr), server_addr_, INET_ADDRSTRLEN);
+
+
+	cout << "--- Server has responded at: " << server_addr_ << endl;
 }
 
-void udp_server::sendHello(const struct sockaddr_in *saddr, const socklen_t addr_len, size_t len) const {
+void udp_server::send_hello(const struct sockaddr_in *saddr, const socklen_t addr_len, size_t len) const {
 
-	sendto(sock, HELLO_MSG, strlen(HELLO_MSG), 0, reinterpret_cast<const struct sockaddr*>(saddr), addr_len); // strlen(buffer) because I want to send just the valid characters.
+	sendto(server_sock_, HELLO_MSG, strlen(HELLO_MSG), 0, reinterpret_cast<const struct sockaddr*>(saddr), addr_len); // strlen(buffer) because I want to send just the valid characters.
 
 	cout << "--- Data has been sent!" << endl;
 
 }
 
-socklen_t udp_server::receive_datagram(char *buffer, const struct sockaddr_in *caddr, const size_t len) const {
+socklen_t udp_server::receive_datagram(char *buffer, const struct sockaddr_in *caddr, const size_t length) const {
 
-	socklen_t address_len = sizeof(caddr);
+	socklen_t address_len = sizeof(struct sockaddr_in);
 
-	const size_t n = recvfrom(sock, buffer, len, 0, const_cast<struct sockaddr*>(reinterpret_cast<const struct sockaddr*>(caddr)), &address_len);
+	const size_t n = recvfrom(server_sock_, buffer, length, 0, (struct sockaddr*)caddr, &address_len);
 
-	if (n > (len))
+	char addr_string_[INET_ADDRSTRLEN];
+
+
+	inet_ntop(AF_INET, &(caddr->sin_addr), addr_string_, INET_ADDRSTRLEN);
+
+	cout << "Server received a message from: " << addr_string_ << endl;
+
+	if (n > (length))
 		cout << "--- Some bytes lost!" << endl;
 
 	return address_len;
@@ -288,5 +301,5 @@ udp_client::~udp_client() {
 }
 
 udp_server::~udp_server() {
-	closesocket(sock);
+	closesocket(server_sock_);
 }

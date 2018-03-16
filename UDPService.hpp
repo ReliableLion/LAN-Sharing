@@ -32,7 +32,7 @@ namespace udp_service {
 		char buffer_[MAXBUFL] = "";
 		char server_address_[INET_ADDRSTRLEN];
 		int server_port_;
-		struct sockaddr_in broadcastAddress, server_address;
+		struct sockaddr_in broadcast_address_, server_address_struct_;
 
 	};
 
@@ -43,12 +43,12 @@ namespace udp_service {
 
 		void udp_server::send_datagram(char *buffer, const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
 		socklen_t udp_server::receive_datagram(char *buffer, const struct sockaddr_in *caddr, size_t len) const;
-		void udp_server::sendHello(const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
+		void udp_server::send_hello(const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
 
 		udp_server::~udp_server();
 
 	private:
-		int sock;
+		int server_sock_;
 		char buffer_[MAXBUFL] = "";
 		char server_address_[INET_ADDRSTRLEN];
 

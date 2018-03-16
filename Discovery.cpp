@@ -1,10 +1,10 @@
 #include "Discovery.hpp"
 
-std::map<string, std::string> Discovery::findUsers() {
+std::map<string, std::string> Discovery::find_users() {
 
 	udp_service::udp_client udp_client;
 
-	discovery_message helloMessage = discovery_message(this->username);
+	auto hello_message = discovery_message(this->username_);
 
 	udp_client.send_broadcast();
 
@@ -16,7 +16,7 @@ std::map<string, std::string> Discovery::find_user(std::string username) {
 
 	udp_service::udp_client udp_client;
 
-	auto hello_message = discovery_message(this->username);
+	auto hello_message = discovery_message(this->username_);
 	this->online_users_.find(username.c_str());
 	udp_client.get_server_info(this->online_users_.find(username)->second, std::to_string(UDP_PORT));
 	udp_client.send_datagram(hello_message.get_message_body());
@@ -35,9 +35,9 @@ std::map<string, std::string> Discovery::find_user(std::string username) {
 	return user;
 }
 
-void Discovery::startDiscoveryService() {
+void Discovery::start_discovery_service() {
 
-	discovery_message helloMessage = discovery_message(this->username);
+	discovery_message helloMessage = discovery_message(this->username_);
 
 	//UDPServer udpServer(io_service, helloMessage.getMessageBody());
 

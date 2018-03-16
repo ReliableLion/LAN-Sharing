@@ -1,7 +1,34 @@
+#include "UDPService.hpp"
 #include "Discovery.hpp"
 #include "Session.hpp"
+#include <future>
+#include <iostream>     //for using cout
+#include <stdlib.h>     //for using the function sleep
 
 using namespace std;
+
+
+void start_server() {
+
+	udp_service::udp_server server;
+
+	cout << "Started server" << endl;
+
+	char buffer[MAXBUFL] = "";
+	char addr_string_[INET_ADDRSTRLEN];
+	struct sockaddr_in server_address, client_address, *client_address_ptr;
+
+	client_address_ptr = &client_address;
+	memset(&client_address, 0, sizeof(client_address));
+
+	const auto address_len = server.receive_datagram(buffer, client_address_ptr, sizeof(buffer));
+
+	inet_ntop(AF_INET, &(client_address_ptr->sin_addr), addr_string_, INET_ADDRSTRLEN);
+
+	cout << "Here the message: " << buffer << "from: " << addr_string_ << endl;
+
+	server.send_datagram(buffer, &client_address, address_len, strlen(buffer));
+}
 
 int main(int argc, char* argv[]){
 
@@ -15,6 +42,20 @@ int main(int argc, char* argv[]){
 			exit(0);
 		}
 
+		auto f1 = std::async(start_server);
+		Sleep(2000);         //make the programme waiting for 5 seconds
+		cout << "Started client" << endl;
+
+		udp_service::udp_client client;
+
+		client.get_server_info("192.168.1.102", std::to_string(UDP_PORT));
+
+		client.send_datagram("prova");
+		cout << "Datagram sent" << endl;
+
+		client.receive_datagram();
+
+		/*
 		session::TCPConnection connection;
 		cout << "Trying to connect" << endl;
 		if(connection.connect_to("192.168.1.14", DEFAULT_LISTEN_PORT)) {
@@ -38,6 +79,8 @@ int main(int argc, char* argv[]){
 
 		} else
 			cout << "Connection error" << endl;
+
+		*/
 
 		return 0;
 	}
