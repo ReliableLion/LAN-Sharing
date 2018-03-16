@@ -13,7 +13,7 @@ enum packet_code {
 
 class PacketManager {
 	const int buffer_length = BUFF_LENGTH;
-	RequestMessage message;
+	RequestMessage message_handler;
 	request_struct request;
 public:
 	PacketManager();

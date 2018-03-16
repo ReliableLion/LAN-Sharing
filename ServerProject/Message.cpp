@@ -38,8 +38,11 @@ void message::Append(const __int64 int64) {
 }
 
 void message::Append(const MessageType::type mt) {
+	std::string res_code_msg = MessageType::getMessageType(mt);
 
-	Append(static_cast<std::string>(MessageType::getMessageType(mt)));
+	if(res_code_msg.empty()) 
+		Append(static_cast<std::string>(res_code_msg));
+		// TODO check if should be raised an exception
 }
 
 void message::Append(const std::size_t s) {
@@ -47,6 +50,18 @@ void message::Append(const std::size_t s) {
 	Append(static_cast<__int64>(s));
 }
 
+/*
+ *				Request Message implementation
+ */
+
+
+
+/**
+ * \brief this constructor create a new request message
+ * \param file_size: size of the file 
+ * \param file_timestamp: last modified timestamp
+ * \param file_name: name of the file
+ */
 RequestMessage::RequestMessage(const __int64 file_size, const FILETIME file_timestamp, const std::string file_name) {
 
 	messageBody.append(MessageType::getMessageType(MessageType::send));
@@ -106,12 +121,12 @@ void RequestMessage::prepare_message() {
 }
 
 void RequestMessage::get_packet_type(char* packet_type) {
-
 	try {
 		memcpy(static_cast<void*>(packet_type), static_cast<void*>(&(*m_buffer.begin())), 4);
 		packet_type[4] = '\0';
 	}
 	catch (std::exception e) {
+		packet_type[0] = '\0';
 		throw std::exception("Exception during packet type getting!");
 	}
 }
@@ -119,6 +134,11 @@ void RequestMessage::get_packet_type(char* packet_type) {
 std::vector<int8_t> RequestMessage::get_packet_data() const {
 	return m_buffer;
 }
+
+
+/*
+ *			Discovery Message implementation
+ */
 
 std::string discovery_message::get_packet_type() {
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "stdafx.h"
 #include "Constants.hpp"
-#include "Session.hpp"
+#include "Connection.hpp"
 #include "DownloadManager.hpp"
 #include "ConcurrentQueue.hpp"
 #include "FileHandler.hpp"
@@ -25,23 +25,29 @@ class RequestManager {
 	const int maxThreads = REQUEST_THREADS;
 	const int fileThreshold = FILE_SIZE_THRESHOLD;
 	const int max_request_attempts = MAX_REQUEST_ATTEMPTS;
+
+	// synchronization variable decalration
 	std::atomic<bool> is_terminated;
 	std::mutex mtx;
 	std::condition_variable cv;
 	std::vector<std::thread> threadPool;
 	
 	// connection variables
-	ConcurrentQueue<session::conn_ptr> connectionQueue;
+	ConcurrentQueue<connection::conn_ptr> connectionQueue;
 
-	// download manager for the file download
-	DownloadManager download_manager;
+	// use two different packet manager: one for the request and one for the response
+	PacketManager res_packet;
+	PacketManager req_packet;
+
+	std::shared_ptr<DownloadManager> dwload_manager;
+
 	// private methods
-	void extractConnection();
-	void receiveRequest(session::conn_ptr connection);
-	bool processRequest(PacketManager& packet_manager, session::conn_ptr connection);
-	bool sendReply(session::conn_ptr connection);
+	void extract_next_connection();
+	void receiveRequest(connection::conn_ptr connection);
+	bool processRequest(PacketManager& req_packet_manager,connection::conn_ptr connection);
+	bool sendResponse(PacketManager& res_packet_manager, connection::conn_ptr connection);
 public:
-	RequestManager();
+	RequestManager(std::shared_ptr<DownloadManager>);
 	~RequestManager();
-	bool addConnection(session::conn_ptr newConnection, request_status& status);
+	bool addConnection(connection::conn_ptr newConnection, request_status& status);
 };

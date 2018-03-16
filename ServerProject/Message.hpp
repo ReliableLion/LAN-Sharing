@@ -33,6 +33,7 @@ public:
 	std::vector<int8_t> m_buffer; //Message Packet Buffer
 
 protected:
+	std::string messageHeader = "";
 	std::string messageBody = "";
 	std::stringstream stream;
 	const std::string endMessage = "\r\n";

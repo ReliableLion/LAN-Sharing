@@ -5,31 +5,38 @@ PacketManager::PacketManager() {}
 
 /**
  * \brief 
- * \param connection : TCP connection for data reading 
+ * \param connection : TCP connection used to transfer byte
  * \return false if the connection has been closed or if the packet is n
  */
 packet_code PacketManager::receivePacket(session::conn_ptr connection) {
 	char buffer[BUFF_LENGTH];
-	char packetType[5];
+	char packetType[PCK_TYPE_LENGTH + 1];
 	int readBytes = 0;
 
-	if (connection->readline(buffer, buffer_length, readBytes) == false) return CLD_CONN;
-	
-	message.Append(buffer, readBytes);																		// set the buffer inside the PacketMessage instance
-	message.get_packet_type(packetType);															// check the packet type	
 	try {
+		if (connection->readline(buffer, buffer_length, readBytes) == false) return CLSD_CONN;
+
+		message_handler.Append(buffer, readBytes);																		// set the buffer inside the PacketMessage instance
+		message_handler.get_packet_type(packetType);															// check the packet type	
+
 		int msgType = protocol::MessageType::getMessageType(std::string(packetType));
 
-		if (msgType == protocol::MessageType::type::undefined) return URZ_PACKET;				// if the packet is unrecognizedr
-		if (msgType == protocol::MessageType::type::send) return READ_CORRECTLY;				// if the packet is send}
-	
-	} catch (std::exception e) {
-		return URZ_PACKET;
+		if (msgType == protocol::MessageType::type::undefined) return PACKET_ERR;				// if the packet is unrecognizedr
+		if (msgType == protocol::MessageType::type::send) return READ_OK;						// if the packet is send
+	} catch(std::exception &e)
+	{
+		// the message parser raised an exception; return a packet error
+		return PACKET_ERR;
 	}
 }
 
+
+/**
+ * \brief 
+ * \return the request struct associated to thee request received by the server 
+ */
 request_struct PacketManager::get_request_struct() {
-	return (request = message.get_request_data());											// set and return the request struct
+	return (request = message_handler.get_request_data());											// set and return the request struct
 }
 
 /**
@@ -40,7 +47,6 @@ bool PacketManager::check_request() {
 	
 	if (request.file_size <= 0) return false;
 	if (request.file_name.length() > 256) return false;						// return false if the filename is too long
-	//if (request.fileTimestamp)
 
 	return true;
 }

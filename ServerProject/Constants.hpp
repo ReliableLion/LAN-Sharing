@@ -39,3 +39,7 @@
 
 #define USERNAME "Davide"
 #define USERNAME_LENGTH 255
+
+
+// 
+#define PCK_TYPE_LENGTH 4

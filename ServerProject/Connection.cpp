@@ -1,14 +1,16 @@
-#include "Session.hpp" 
+#include "Connection.hpp" 
 #include "stdafx.h"
 
-session::TCPConnection::TCPConnection() {}
+using namespace connection;
+
+TCPConnection::TCPConnection() {}
 
 /**
  * \brief acppt an incoming TCP connection 
  * \param s receive the local socket used by the server 
  * \return TRUE if the connection is established, FALSE otherwise
  */
-bool session::TCPConnection::accept_connection(Listen_socket s) {
+bool TCPConnection::accept_connection(Listen_socket s) {
 	int addrlen = sizeof(remote_address);
 	int sock_desc = s.getSocket();
 
@@ -20,7 +22,8 @@ bool session::TCPConnection::accept_connection(Listen_socket s) {
 
 	sock = accept(sock_desc, (SOCKADDR*)&remote_address, &addrlen);
 
-	if (sock ==  SOCKET_ERROR) {								// check if the scoket return an error
+	// check if the scoket return an error
+	if (sock ==  SOCKET_ERROR) {								
 		std::cout << "server refused the connection, error: " << std::to_string(WSAGetLastError()) << std::endl;
 		return false;
 	}
@@ -28,7 +31,7 @@ bool session::TCPConnection::accept_connection(Listen_socket s) {
 	return true;
 }
 
-bool session::TCPConnection::close_connection() const {
+bool TCPConnection::close_connection() const {
 
 	if (closesocket(sock) == SOCKET_ERROR)
 	{
@@ -46,7 +49,7 @@ bool session::TCPConnection::close_connection() const {
 /**
  * \brief print on standard output the information about the remote endpoint assoicated with the TCP connection	
  */
-void session::TCPConnection::print_endpoint_info() const {
+void TCPConnection::print_endpoint_info() const {
 	char client_address[INET_ADDRSTRLEN];
 	inet_ntop(AF_INET, &(remote_address.sin_addr), client_address, INET_ADDRSTRLEN);
 
@@ -66,7 +69,7 @@ void session::TCPConnection::print_endpoint_info() const {
  * \param totalReadByte : number of Bytes really read
  * \return false if the connection has been closed by peer, otherside true
  */
-bool session::TCPConnection::recvall(char *data, int totalBytes, int& totalReadBytes) {
+bool TCPConnection::recvall(char *data, int totalBytes, int& totalReadBytes) {
 	struct timeval time;
 	int byteReceived = 0;
 	FD_SET read_sock;
@@ -116,7 +119,7 @@ bool session::TCPConnection::recvall(char *data, int totalBytes, int& totalReadB
  * \param totalSentByte : reference type, total number of bytes really sent
  * \return false if the connection has been closed by peer, true if the data has been sent correctly
  */
-bool session::TCPConnection::sendall(const char* data, const int totalBytes, int& totalSentBytes) {
+bool TCPConnection::sendall(const char* data, const int totalBytes, int& totalSentBytes) {
 	int uploadedBytes = 0;
 	
 	while (uploadedBytes < totalBytes) {
@@ -139,7 +142,7 @@ bool session::TCPConnection::sendall(const char* data, const int totalBytes, int
  * \param maxByte : max # of Bytes that can be read
  * \return false if the connection has been closed by peer, true if the data are read correclty
  */
-bool session::TCPConnection::readline(char *data, const int maxBytes, int& readBytes) {
+bool TCPConnection::readline(char *data, const int maxBytes, int& readBytes) {
 	int rByte = readline_unbuffered(data, (size_t)maxBytes);
 
 	if (rByte == 0) {
@@ -156,7 +159,7 @@ bool session::TCPConnection::readline(char *data, const int maxBytes, int& readB
 
 //					PRIVATE METHODS
 
-size_t session::TCPConnection::readline_unbuffered(char *vptr, size_t maxlen) {
+size_t TCPConnection::readline_unbuffered(char *vptr, size_t maxlen) {
 
 	size_t n, rc;
 	char c, *ptr;

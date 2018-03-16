@@ -4,21 +4,21 @@ int protocol::MessageType::getMessageType(std::string msgType) {
 
 	if (messageType.at(msgType) == send)
 		return send;
-	else if (messageType.at(msgType) == ok)
+	if (messageType.at(msgType) == ok)
 		return ok;
-	else if (messageType.at(msgType) == err)
+	if (messageType.at(msgType) == err)
 		return err;
-	else
-		return undefined;
+	
+	return undefined;
 }
 
 std::string protocol::MessageType::getMessageType(int msgType) {
 
-	for (auto it = messageType.begin(); it != messageType.end(); ++it)
+	for (auto it = std::begin(messageType); it != std::end(messageType); ++it)
 		if (it->second == msgType)
 			return it->first;
 
-	return NULL;
+	return std::string("");
 }
 
 const std::map<std::string, int> protocol::MessageType::messageType = {

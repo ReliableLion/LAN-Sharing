@@ -3,12 +3,13 @@
 
 //		PUBLIC METHODS
 
-RequestManager::RequestManager() : download_manager() {
+RequestManager::RequestManager(std::shared_ptr<DownloadManager> dwload_manager) {
 	is_terminated.store(false);
+	this->dwload_manager = dwload_manager;
 
-	// instantiate all the threads that are used to manage the request that the server receives
+	// instantiate all the threads that are used to manage all the incoming requests
 	for (int i = 0; i < maxThreads; i++) {
-		threadPool.push_back(std::thread(&RequestManager::extractConnection, this));
+		threadPool.push_back(std::thread(&RequestManager::extract_next_connection, this));
 	}
 }
 
@@ -17,7 +18,7 @@ RequestManager::RequestManager() : download_manager() {
  */
 RequestManager::~RequestManager() {
 	is_terminated.store(true);						// this flag is used to stop the threads computation
-	session::conn_ptr connection;		
+	connection::conn_ptr connection;		
 
 	while (!connectionQueue.isEmpty()) {			// iterate the entire queue and close the pending connections
 		connectionQueue.popElement(connection);
@@ -35,7 +36,9 @@ RequestManager::~RequestManager() {
  * \param newConnection 
  * \return TRUE if the is possible to add the new connection into the queue, FALSE if isn't possible to add the connction either if the queue is full or the server should be closed
  */
-bool RequestManager::addConnection(session::conn_ptr newConnection, request_status& status) {
+bool RequestManager::addConnection(connection::conn_ptr newConnection, request_status& status) {
+
+	// it is possible to add the connection into the queue of the requestManager only if the variable is terminated is true
 	if (!is_terminated.load()) {
 		std::lock_guard<std::mutex> l(mtx);
 
@@ -54,8 +57,8 @@ bool RequestManager::addConnection(session::conn_ptr newConnection, request_stat
 
 //		PRIVATE METHODS
 
-void RequestManager::extractConnection() {
-	session::conn_ptr newConnection;
+void RequestManager::extract_next_connection() {
+	connection::conn_ptr newConnection;
 	std::unique_lock<std::mutex> ul(mtx, std::defer_lock);
 
 	while (true) {
@@ -80,8 +83,8 @@ void RequestManager::extractConnection() {
  * \brief process every pending request received by the server
  * \param connection 
  */
-void RequestManager::receiveRequest(session::conn_ptr connection) {
-	PacketManager packet_manager;
+void RequestManager::receiveRequest(connection::conn_ptr connection) {
+	PacketManager req_packet_manager;
 	bool exit, received_correctly;
 	int i = 0;
 
@@ -99,7 +102,7 @@ void RequestManager::receiveRequest(session::conn_ptr connection) {
 			-if the connection is closed, write a message
 			*/
 
-			switch (packet_manager.receivePacket(connection)) {
+			switch (req_packet_manager.receivePacket(connection)) {
 				
 				// connection closed
 				case (CLSD_CONN): {
@@ -119,7 +122,7 @@ void RequestManager::receiveRequest(session::conn_ptr connection) {
 				// packet read correctly
 				case (READ_OK): {							
 
-					if (processRequest(packet_manager, connection)) {
+					if (processRequest(req_packet_manager, connection)) {
 						exit = true;
 						received_correctly = true;
 						// TODO send an error
@@ -162,19 +165,19 @@ void RequestManager::receiveRequest(session::conn_ptr connection) {
 	}
 }
 
-bool RequestManager::sendReply(session::conn_ptr connection) {
+bool RequestManager::sendResponse(PacketManager& res_packet_manager, connection::conn_ptr connection) {
 	return true;
 }
 
-bool RequestManager::processRequest(PacketManager& packet_manager, session::conn_ptr connection) {
-	request_struct request = packet_manager.get_request_struct();
+bool RequestManager::processRequest(PacketManager& req_packet_manager, connection::conn_ptr connection) {
+	request_struct request = req_packet_manager.get_request_struct();
 
-	if (!packet_manager.check_request()) return false;
+	if (!req_packet_manager.check_request()) return false;
 	
 	if (request.file_size >= fileThreshold) {
-		download_manager.insertBigFile(request, connection);
+		dwload_manager.insertBigFile(request, connection);
 	} else {
-		download_manager.insertSmallFile(request, connection);
+		dwload_manager.insertSmallFile(request, connection);
 	}
 
 	return true;
