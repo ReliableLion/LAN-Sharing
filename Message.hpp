@@ -83,10 +83,7 @@ public:
 		Append(endMessage);
 	}
 
-	discovery_message() {
-		Append(DISCOVERY_MSG);
-		Append(endMessage);
-	}
+	discovery_message();
 
 	std::string discovery_message::getUsername(char* username);
 

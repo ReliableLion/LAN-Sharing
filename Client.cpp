@@ -15,19 +15,17 @@ void start_server() {
 	cout << "Started server" << endl;
 
 	char buffer[MAXBUFL] = "";
-	char addr_string_[INET_ADDRSTRLEN];
-	struct sockaddr_in server_address, client_address, *client_address_ptr;
+	struct sockaddr_in server_address, client_address;
 
-	client_address_ptr = &client_address;
+	const auto client_address_ptr = &client_address;
 	memset(&client_address, 0, sizeof(client_address));
 
-	const auto address_len = server.receive_datagram(buffer, client_address_ptr, sizeof(buffer));
+	server.start_discovery_listening();
+	//const auto address_len = server.receive_datagram(buffer, client_address_ptr, sizeof(buffer));
 
-	inet_ntop(AF_INET, &(client_address_ptr->sin_addr), addr_string_, INET_ADDRSTRLEN);
+	//cout << "Here the message: " << buffer << " from: " << udp_service::get_client_address(client_address_ptr) << endl;
 
-	cout << "Here the message: " << buffer << "from: " << addr_string_ << endl;
-
-	server.send_datagram(buffer, &client_address, address_len, strlen(buffer));
+	//server.send_datagram(buffer, &client_address, address_len, strlen(buffer));
 }
 
 int main(int argc, char* argv[]){
@@ -35,9 +33,9 @@ int main(int argc, char* argv[]){
 	try {
 
 		//Winsock Startup
-		WSAData wsaData;
-		WORD DllVersion = MAKEWORD(2, 1);
-		if (WSAStartup(DllVersion, &wsaData) != 0) {
+		WSAData wsa_data;
+		const WORD dll_version = MAKEWORD(2, 1);
+		if (WSAStartup(dll_version, &wsa_data) != 0) {
 			MessageBoxA(0, "Winsock startup failed", "Error", MB_OK | MB_ICONERROR);
 			exit(0);
 		}
@@ -50,10 +48,11 @@ int main(int argc, char* argv[]){
 
 		client.get_server_info("192.168.1.102", std::to_string(UDP_PORT));
 
-		client.send_datagram("prova");
+		//client.send_datagram("prova");
+		client.send_broadcast();
 		cout << "Datagram sent" << endl;
 
-		client.receive_datagram();
+		//client.receive_datagram();
 
 		/*
 		session::TCPConnection connection;

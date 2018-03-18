@@ -13,14 +13,17 @@ using namespace std;
 
 namespace udp_service {
 
+	std::string get_client_address(struct sockaddr_in *client_address_ptr);
+
 	class udp_client {
 
 	public:
 
 		udp_client::udp_client();
+		bool get_adapter();
 
 		void udp_client::get_server_info(std::string address, std::string port);
-		void udp_client::send_datagram(std::string buff) const;
+		int udp_client::send_datagram(std::string buff) const;
 		int udp_client::receive_datagram();
 		void udp_client::send_broadcast();
 		map<string, string> udp_client::get_online_users();
@@ -31,6 +34,7 @@ namespace udp_service {
 		int sock;
 		char buffer_[MAXBUFL] = "";
 		char server_address_[INET_ADDRSTRLEN];
+		char client_address_[INET_ADDRSTRLEN] = "";
 		int server_port_;
 		struct sockaddr_in broadcast_address_, server_address_struct_;
 
@@ -41,9 +45,10 @@ namespace udp_service {
 	public:
 		udp_server::udp_server();
 
-		void udp_server::send_datagram(char *buffer, const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
+		int udp_server::send_datagram(char *buffer, const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
 		socklen_t udp_server::receive_datagram(char *buffer, const struct sockaddr_in *caddr, size_t len) const;
-		void udp_server::send_hello(const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
+		int udp_server::send_hello(const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
+		void udp_server::start_discovery_listening();
 
 		udp_server::~udp_server();
 

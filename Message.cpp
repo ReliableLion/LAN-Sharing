@@ -1,6 +1,7 @@
 #include "Message.hpp"
 #include "Exceptions.hpp"
 #include <cstdint> //Required to use std::int32_t
+#include <iostream>
 
 message::message(): messageSize(0) {
 }
@@ -128,26 +129,25 @@ std::vector<int8_t> RequestMessage::get_packet_data() const {
 	return m_buffer;
 }
 
+discovery_message::discovery_message() : message() {
+}
 std::string discovery_message::get_packet_type() {
 
-	const auto message = reinterpret_cast<char*>((m_buffer.data()));
+	const auto temp = reinterpret_cast<char*>((m_buffer.data()));
+	auto message = std::string(temp, m_buffer.size());
 
-	if (strlen(message) >= strlen(HELLO_MSG) && strncmp(message, HELLO_MSG, strlen(HELLO_MSG)) == 0)
+	if (strlen(message.c_str()) >= strlen(HELLO_MSG) && strncmp(message.c_str(), HELLO_MSG, strlen(HELLO_MSG)) == 0)
 		return HELLO_MSG;
 	
-	if (strlen(message) >= strlen(DISCOVERY_MSG) && strncmp(message, DISCOVERY_MSG, strlen(DISCOVERY_MSG)) == 0)
+	if (strlen(message.c_str()) >= strlen(DISCOVERY_MSG) && strncmp(message.c_str(), DISCOVERY_MSG, strlen(DISCOVERY_MSG)) == 0)
 		return DISCOVERY_MSG;
 	
-	return nullptr;
+	return "";
 }
 
 std::string discovery_message::getUsername(char* username) {
 
-	char packetType[] = HELLO_MSG;
-
-	memcpy(static_cast<void*>(packetType), static_cast<void*>(&(*m_buffer.begin())), strlen(HELLO_MSG));
-
-	if (packetType == HELLO_MSG) {
+	if (get_packet_type() == HELLO_MSG) {
 		// HELLO_MSG is the smallest string within a discovery message packet
 		memcpy(static_cast<void*>(username), static_cast<void*>(&(m_buffer.at(strlen(HELLO_MSG)))), m_buffer.size() - strlen(HELLO_MSG));
 		username[m_buffer.size() - strlen(HELLO_MSG)] = '\0';
@@ -155,7 +155,7 @@ std::string discovery_message::getUsername(char* username) {
 	else
 		throw message_exception("packet is not an Hello Message!\n");
 
-	return nullptr;
+	return "";
 }
 
 std::string discovery_message::get_message_body() {

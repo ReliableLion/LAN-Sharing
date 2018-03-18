@@ -2,14 +2,86 @@
 #include "Exceptions.hpp"
 #include "Message.hpp"
 #include <chrono>
+#include <iphlpapi.h>
+#pragma comment(lib, "IPHLPAPI.lib")
+
+#define MALLOC(x) HeapAlloc(GetProcessHeap(), 0, (x))
+#define FREE(x) HeapFree(GetProcessHeap(), 0, (x))
 
 using namespace udp_service;
+
+std::string udp_service::get_client_address(struct sockaddr_in *client_address_ptr) {
+
+	char addr_string[INET_ADDRSTRLEN];
+
+	inet_ntop(AF_INET, &(client_address_ptr->sin_addr), addr_string, INET_ADDRSTRLEN);
+
+	return addr_string;
+}
 
 udp_client::udp_client(): sock(0), server_port_(0) {
 	//Set broadcast address
 	broadcast_address_.sin_family = AF_INET;
 	broadcast_address_.sin_addr.s_addr = htonl(0xffffffff); //broadcast address
 	broadcast_address_.sin_port = htons(UDP_PORT);
+
+	if (!get_adapter())
+		throw udp_exception::udp_exception("Cannot start UDP Client!");
+}
+
+bool udp_client::get_adapter()
+{
+	// It is possible for an adapter to have multiple
+	// IPv4 addresses, gateways, and secondary WINS servers
+	// assigned to the adapter. 
+	//
+	// Note that this sample code only prints out the 
+	// first entry for the IP address/mask, and gateway, and
+	// the primary and secondary WINS server for each adapter. 
+
+	PIP_ADAPTER_INFO p_adapter_info;
+	PIP_ADAPTER_INFO pAdapter = nullptr;
+	DWORD dw_ret_val = 0;
+	UINT i;
+
+	ULONG ul_out_buf_len = sizeof(IP_ADAPTER_INFO);
+	p_adapter_info = static_cast<IP_ADAPTER_INFO *>(MALLOC(sizeof(IP_ADAPTER_INFO)));
+	if (p_adapter_info == nullptr) {
+		printf("Error allocating memory needed to call GetAdaptersinfo\n");
+		return false;
+	}
+
+	// Make an initial call to GetAdaptersInfo to get
+	// the necessary size into the ulOutBufLen variable
+	if (GetAdaptersInfo(p_adapter_info, &ul_out_buf_len) == ERROR_BUFFER_OVERFLOW) {
+		FREE(p_adapter_info);
+		p_adapter_info = static_cast<IP_ADAPTER_INFO *>(MALLOC(ul_out_buf_len));
+		if (p_adapter_info == nullptr) {
+			printf("Error allocating memory needed to call GetAdaptersinfo\n");
+			return false;
+		}
+	}
+
+	if ((dw_ret_val = GetAdaptersInfo(p_adapter_info, &ul_out_buf_len)) == NO_ERROR) {
+		pAdapter = p_adapter_info;
+
+		while (pAdapter) {
+			//printf("\tAdapter Name: \t%s\n", pAdapter->AdapterName);
+
+			//printf("\tIP Address: \t%s\n", pAdapter->IpAddressList.IpAddress.String);
+
+			if (std::strcmp(pAdapter->AdapterName, NETWORK_ADAPTER_NAME) == 0) {
+				strcpy_s(client_address_, sizeof(pAdapter->IpAddressList.IpAddress.String), pAdapter->IpAddressList.IpAddress.String);
+			}
+
+			pAdapter = pAdapter->Next;
+		}
+	}
+
+	if (p_adapter_info)
+		FREE(p_adapter_info);
+
+	return true;
 }
 
 void udp_client::get_server_info(std::string address, std::string port) {
@@ -30,7 +102,7 @@ void udp_client::get_server_info(std::string address, std::string port) {
 	hints.ai_protocol = IPPROTO_UDP;
 
 	if (getaddrinfo(address.c_str(), port.c_str(), &hints, &res0) != 0) {
-		throw udp_exception::udp_exception("--- Error getaddrinfo!\n");
+		throw udp_exception::udp_exception("Getaddrinfo error: "+std::to_string(WSAGetLastError()) + "\n");
 	}
 
 	sock = -1;
@@ -39,23 +111,16 @@ void udp_client::get_server_info(std::string address, std::string port) {
 		sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 
 		if (socket < nullptr) {
-			cout << "--- Error socket() failed!\n" << endl;
+			cout << "Socket() failed! Error: " << WSAGetLastError() << endl;
 			continue;
 		}
-
-		cout << "--- Socket created, fd number: " << socket << endl;
 		break;
-
 	}
 
-	if (res != nullptr) {
+	if (res != nullptr)
 		server_address_struct_ = *(reinterpret_cast<const sockaddr_in*>(res->ai_addr));
-	}
-	else {
-		cout << "NULL: " << WSAGetLastError() << endl;
-
+	else
 		throw udp_exception::udp_exception("- Error couldn't connect! No server found!");
-	}
 
 	inet_ntop(AF_INET, &(server_address_struct_.sin_addr), server_address_, INET_ADDRSTRLEN);
 	server_port_ = ntohs(server_address_struct_.sin_port);
@@ -63,16 +128,19 @@ void udp_client::get_server_info(std::string address, std::string port) {
 	freeaddrinfo(res0);
 
 	/*******************************************************************************************/
-
 }
 
-void udp_client::send_datagram(std::string buff) const {
+int udp_client::send_datagram(std::string buff) const {
+
+	int n;
 
 	/* send datagram */
+	if ((n = sendto(sock, buff.c_str(), buff.size(), 0, reinterpret_cast<const struct sockaddr*>(&server_address_struct_), sizeof(server_address_struct_)) == SOCKET_ERROR)) {
+		cout << "Sendto failed! Error: " << WSAGetLastError() << endl;
+		throw udp_exception::udp_exception("Sendto error: " + std::to_string(WSAGetLastError()) + "\n");
+	}
 
-	sendto(sock, buff.c_str(), buff.size(), 0, reinterpret_cast<const struct sockaddr*>(&server_address_struct_), sizeof(server_address_struct_));
-
-	cout << "(%s) --- Data has been sent!\n" << endl;
+	return n;
 }
 
 int udp_client::receive_datagram() {
@@ -88,7 +156,7 @@ int udp_client::receive_datagram() {
 	tval.tv_usec = 0;
 
 	if ((n = select(sock + 1, &cset, nullptr, nullptr, &tval)) == -1)
-		throw udp_exception::udp_exception("--- Error select() failed\n");
+		throw udp_exception::udp_exception("Select error: " + std::to_string(WSAGetLastError()) + "\n");
 
 	if (n > 0) {
 
@@ -101,51 +169,53 @@ int udp_client::receive_datagram() {
 
 		n = recvfrom(sock, buffer_, MAXBUFL, 0, const_cast<struct sockaddr*>(reinterpret_cast<const struct sockaddr*>(&server_address_struct_)), &address_len);
 
-		cout << "--- Received string " << buffer_ << endl;
-
 		if (n > (MAXBUFL))
 			cout << "--- Some bytes lost!" << endl;
 
-		return 0;
-
+		return n;
 	}
-	else {
-
-		/*
+	/*
 		* ********
 		* TIMEOUT
 		* ********
 		*/
 
-		cout << "No response after " << TIMEOUT << " seconds!" << endl; // tval is reset by select
+	cout << "No response after " << TIMEOUT << " seconds!" << endl; // tval is reset by select
 
-		return 1;
-	}
+	return 1;
 }
 
 void udp_client::send_broadcast() {
 	
 	auto broadcast = 1;
+	struct sockaddr_in source_address;
 
 	// Create a UDP socket
 	if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
-		throw udp_exception::udp_exception("--- Error socket() failed!\n");
+		throw udp_exception::udp_exception("Socket error: " + std::to_string(WSAGetLastError()) + "\n");
+
+	/* specify address to bind to */
+	memset(&source_address, 0, sizeof(source_address));
+	source_address.sin_family = AF_INET;
+	source_address.sin_port = htons(uint16_t(UDP_PORT));
+	inet_pton(AF_INET, client_address_, &(source_address.sin_addr));
+
+	bind(sock, reinterpret_cast<sockaddr*>(&source_address), sizeof(source_address));
 
 	// Set socket options to broadcast
 	if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, reinterpret_cast<char *>(&broadcast), sizeof(broadcast)) < 0)
 		if (closesocket(sock) != 0)
-			throw udp_exception::udp_exception("--- Error closesocket() failed!\n");
+			throw udp_exception::udp_exception("Closesocket error: " + std::to_string(WSAGetLastError()) + "\n");
 
 	// Broadcast data on the socket
 	if (sendto(sock, DISCOVERY_MSG, strlen(DISCOVERY_MSG) + 1, 0, reinterpret_cast<sockaddr *> (&broadcast_address_), sizeof(broadcast_address_)) < 0)
 		if (closesocket(sock) != 0)
-			throw udp_exception::udp_exception("--- Error closesocket() failed!\n");
+			throw udp_exception::udp_exception("Closesocket error: " + std::to_string(WSAGetLastError()) + "\n");
 
-	cout << "(%s) --- Broadcast packet has been sent!\n" << endl;
+	cout << "Broadcast packet has been sent!\n" << endl;
 
 	if (closesocket(sock) != 0)
-		throw udp_exception::udp_exception("--- Error closesocket() failed!\n");
-
+		throw udp_exception::udp_exception("Closesocket error: " + std::to_string(WSAGetLastError()) + "\n");
 }
 
 //Todo Move this method to Discovery.cpp
@@ -224,7 +294,6 @@ map<string, string> udp_client::get_online_users() {
 udp_server::udp_server() {
 
 	struct sockaddr_in server_address, client_address;
-	discovery_message packet;
 
 	const auto client_address_ptr = &client_address;
 	ZeroMemory(&client_address, sizeof(client_address));
@@ -238,57 +307,67 @@ udp_server::udp_server() {
 	server_address.sin_port = htons(uint16_t(UDP_PORT));
 	server_address.sin_addr.s_addr = INADDR_ANY;
 
-	bind(server_sock_, (sockaddr*)(&server_address), sizeof(server_address));
+	bind(server_sock_, reinterpret_cast<sockaddr*>(&server_address), sizeof(server_address));
 
 	inet_ntop(AF_INET, &(server_address.sin_addr), server_address_, INET_ADDRSTRLEN);
 
 	cout << "--- Listening on " << server_address_ << ":" << ntohs(server_address.sin_port) << endl;
+}
 
-	/*Todo Move this block to Discovery.cpp
-	while (true) {
+void udp_server::start_discovery_listening() {
 
-		const auto address_len = receive_datagram(buffer_, client_address_ptr, MAXBUFL);
+	discovery_message packet;
+	struct sockaddr_in server_address, client_address;
 
-		packet.Append(buffer_, strlen(buffer_));
+	const auto client_address_ptr = &client_address;
+	ZeroMemory(&client_address, sizeof(client_address));
+	/*Todo Move this block to Discovery.cpp*/
+	//while (true) {
 
-		if(!packet.get_packet_type().compare(nullptr) && packet.get_packet_type() == HELLO_MSG)
-			send_datagram(buffer_, client_address_ptr, address_len, strlen(buffer_));
+	const auto address_len = receive_datagram(buffer_, client_address_ptr, MAXBUFL);
+
+	packet.Append(buffer_, strlen(buffer_));
+
+	if(packet.get_packet_type() == DISCOVERY_MSG)
+		cout << "HERE THE DISCOVERY RECEIVED: " << buffer_ << endl;
+	else if(packet.get_packet_type() == HELLO_MSG)
+		cout << "HERE THE HELLO RECEIVED: " << buffer_ << endl;
+	else
+		cout << "IT WASN'T A DISCOVERY MESSAGE!" << endl;
+
+		//send_datagram(buffer_, client_address_ptr, address_len, strlen(buffer_));
+	//}
+}
+
+int udp_server::send_datagram(char *buffer, const struct sockaddr_in *saddr, const socklen_t addr_len, const size_t len) const {
+
+	int n;
+
+	if ((n = sendto(server_sock_, buffer, len, 0, reinterpret_cast<const struct sockaddr*>(saddr), addr_len)) == SOCKET_ERROR) { // strlen(buffer) because I want to send just the valid characters.
+		cout << "Sendto failed! Error: " << WSAGetLastError() << endl;
+		throw udp_exception::udp_exception("Sendto error: " + std::to_string(WSAGetLastError()) + "\n");
 	}
-	*/
+
+	return n;
 }
 
-void udp_server::send_datagram(char *buffer, const struct sockaddr_in *saddr, const socklen_t addr_len, const size_t len) const {
+int udp_server::send_hello(const struct sockaddr_in *saddr, const socklen_t addr_len, size_t len) const {
 
-	char server_addr_[INET_ADDRSTRLEN];
+	int n;
 
-	sendto(server_sock_, buffer, len, 0, reinterpret_cast<const struct sockaddr*>(saddr), addr_len); // strlen(buffer) because I want to send just the valid characters.
+	if((n = sendto(server_sock_, HELLO_MSG, strlen(HELLO_MSG), 0, reinterpret_cast<const struct sockaddr*>(saddr), addr_len) == SOCKET_ERROR)){ // strlen(buffer) because I want to send just the valid characters.
+		cout << "Sendto failed! Error: " << WSAGetLastError() << endl;
+		throw udp_exception::udp_exception("Sendto error: " + std::to_string(WSAGetLastError()) + "\n");
+	}
 
-	inet_ntop(AF_INET, &(saddr->sin_addr), server_addr_, INET_ADDRSTRLEN);
-
-
-	cout << "--- Server has responded at: " << server_addr_ << endl;
-}
-
-void udp_server::send_hello(const struct sockaddr_in *saddr, const socklen_t addr_len, size_t len) const {
-
-	sendto(server_sock_, HELLO_MSG, strlen(HELLO_MSG), 0, reinterpret_cast<const struct sockaddr*>(saddr), addr_len); // strlen(buffer) because I want to send just the valid characters.
-
-	cout << "--- Data has been sent!" << endl;
-
+	return n;
 }
 
 socklen_t udp_server::receive_datagram(char *buffer, const struct sockaddr_in *caddr, const size_t length) const {
 
-	socklen_t address_len = sizeof(struct sockaddr_in);
+	socklen_t address_len = sizeof(*caddr);
 
-	const size_t n = recvfrom(server_sock_, buffer, length, 0, (struct sockaddr*)caddr, &address_len);
-
-	char addr_string_[INET_ADDRSTRLEN];
-
-
-	inet_ntop(AF_INET, &(caddr->sin_addr), addr_string_, INET_ADDRSTRLEN);
-
-	cout << "Server received a message from: " << addr_string_ << endl;
+	const size_t n = recvfrom(server_sock_, buffer, length, 0, const_cast<struct sockaddr*>(reinterpret_cast<const struct sockaddr*>(caddr)), &address_len);
 
 	if (n > (length))
 		cout << "--- Some bytes lost!" << endl;

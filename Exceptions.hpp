@@ -3,10 +3,10 @@
 #include <sstream>
 
 namespace udp_exception {
-	class udp_exception: public std::exception
+	class udp_exception: public std::runtime_error
 	{
 	public:
-		explicit udp_exception(const std::string str) : error_message_(str) {};
+		explicit udp_exception(const std::string str) : runtime_error("UDP Service Exception"), error_message_(str) {};
 		const char* what() const throw() override { return error_message_.c_str(); }
 
 	private:

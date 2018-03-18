@@ -29,7 +29,11 @@
 /**
  * \brief Message appended within a Discovery Message
  */
-#define DISCOVERY_MSG "LAN-SHARING LOOKINGFOR"
+#define DISCOVERY_MSG "LAN-SHARING LOOKING FOR"
+/**
+ * \brief Network adapter name used to send datagram
+ */
+#define NETWORK_ADAPTER_NAME "{4B80AC2C-32A7-4C94-B45A-D714A8EA5B76}"
 
 #define USERNAME "Davide"
 #define USERNAME_LENGTH 255
