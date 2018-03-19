@@ -4,23 +4,25 @@
 
 using namespace std;
 
-class Discovery {
+class discovery {
 
 public:
-	Discovery(string username){
-		Discovery::username_ = username;
+	explicit discovery(const string username){
+		my_username_ = username;
 	}
 
 	void start_discovery_service();
 
-	// Check if a user is still online
-	bool is_user_online(string user_ip);
-
+	void send_hello();
 	// Return a list of pairs (UserIP, Username)
-	std::map<string, std::string> find_users();
+	void find_users();
+	// Check if a user is still online
 	std::map<string, std::string> find_user(std::string username);
 
 private:
-	string username_;
+	string my_username_;
 	map<string, string> online_users_;
+
+	udp_service::udp_server udp_server_;
+	udp_service::udp_client udp_client_;
 };

@@ -185,7 +185,7 @@ int udp_client::receive_datagram() {
 	return 1;
 }
 
-void udp_client::send_broadcast() {
+void udp_client::send_broadcast(const char* message) {
 	
 	auto broadcast = 1;
 	struct sockaddr_in source_address;
@@ -208,7 +208,7 @@ void udp_client::send_broadcast() {
 			throw udp_exception::udp_exception("Closesocket error: " + std::to_string(WSAGetLastError()) + "\n");
 
 	// Broadcast data on the socket
-	if (sendto(sock, DISCOVERY_MSG, strlen(DISCOVERY_MSG) + 1, 0, reinterpret_cast<sockaddr *> (&broadcast_address_), sizeof(broadcast_address_)) < 0)
+	if (sendto(sock, message, strlen(message) + 1, 0, reinterpret_cast<sockaddr *> (&broadcast_address_), sizeof(broadcast_address_)) < 0)
 		if (closesocket(sock) != 0)
 			throw udp_exception::udp_exception("Closesocket error: " + std::to_string(WSAGetLastError()) + "\n");
 
@@ -256,7 +256,7 @@ map<string, string> udp_client::get_online_users() {
 
 			packet.Append(buffer_, strlen(buffer_));
 
-			if (!packet.get_packet_type().compare(nullptr) && packet.get_packet_type() == HELLO_MSG) {
+			if (packet.get_packet_type() == HELLO_MSG) {
 
 				cout << "--- Received string " << buffer_ << endl;
 
@@ -314,48 +314,11 @@ udp_server::udp_server() {
 	cout << "--- Listening on " << server_address_ << ":" << ntohs(server_address.sin_port) << endl;
 }
 
-void udp_server::start_discovery_listening() {
-
-	discovery_message packet;
-	struct sockaddr_in server_address, client_address;
-
-	const auto client_address_ptr = &client_address;
-	ZeroMemory(&client_address, sizeof(client_address));
-	/*Todo Move this block to Discovery.cpp*/
-	//while (true) {
-
-	const auto address_len = receive_datagram(buffer_, client_address_ptr, MAXBUFL);
-
-	packet.Append(buffer_, strlen(buffer_));
-
-	if(packet.get_packet_type() == DISCOVERY_MSG)
-		cout << "HERE THE DISCOVERY RECEIVED: " << buffer_ << endl;
-	else if(packet.get_packet_type() == HELLO_MSG)
-		cout << "HERE THE HELLO RECEIVED: " << buffer_ << endl;
-	else
-		cout << "IT WASN'T A DISCOVERY MESSAGE!" << endl;
-
-		//send_datagram(buffer_, client_address_ptr, address_len, strlen(buffer_));
-	//}
-}
-
 int udp_server::send_datagram(char *buffer, const struct sockaddr_in *saddr, const socklen_t addr_len, const size_t len) const {
 
 	int n;
 
 	if ((n = sendto(server_sock_, buffer, len, 0, reinterpret_cast<const struct sockaddr*>(saddr), addr_len)) == SOCKET_ERROR) { // strlen(buffer) because I want to send just the valid characters.
-		cout << "Sendto failed! Error: " << WSAGetLastError() << endl;
-		throw udp_exception::udp_exception("Sendto error: " + std::to_string(WSAGetLastError()) + "\n");
-	}
-
-	return n;
-}
-
-int udp_server::send_hello(const struct sockaddr_in *saddr, const socklen_t addr_len, size_t len) const {
-
-	int n;
-
-	if((n = sendto(server_sock_, HELLO_MSG, strlen(HELLO_MSG), 0, reinterpret_cast<const struct sockaddr*>(saddr), addr_len) == SOCKET_ERROR)){ // strlen(buffer) because I want to send just the valid characters.
 		cout << "Sendto failed! Error: " << WSAGetLastError() << endl;
 		throw udp_exception::udp_exception("Sendto error: " + std::to_string(WSAGetLastError()) + "\n");
 	}

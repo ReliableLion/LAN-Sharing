@@ -1,22 +1,27 @@
 #include "Discovery.hpp"
 
-std::map<string, std::string> Discovery::find_users() {
+void discovery::find_users() {
 
-	udp_service::udp_client udp_client;
+	udp_client_.send_broadcast(DISCOVERY_MSG);
 
-	auto hello_message = discovery_message(this->username_);
+	//this->online_users_ = udp_client_.get_online_users();
 
-	udp_client.send_broadcast();
-
-	this->online_users_ = udp_client.get_online_users();
-	return this->online_users_;
+	//return this->online_users_;
 }
 
-std::map<string, std::string> Discovery::find_user(std::string username) {
+void discovery::send_hello(){
+
+	auto hello_message = discovery_message(this->my_username_);
+
+	udp_client_.send_broadcast(hello_message.get_message_body().c_str());
+}
+
+
+std::map<string, std::string> discovery::find_user(std::string username) {
 
 	udp_service::udp_client udp_client;
 
-	auto hello_message = discovery_message(this->username_);
+	auto hello_message = discovery_message(this->my_username_);
 	this->online_users_.find(username.c_str());
 	udp_client.get_server_info(this->online_users_.find(username)->second, std::to_string(UDP_PORT));
 	udp_client.send_datagram(hello_message.get_message_body());
@@ -35,11 +40,28 @@ std::map<string, std::string> Discovery::find_user(std::string username) {
 	return user;
 }
 
-void Discovery::start_discovery_service() {
+void discovery::start_discovery_service() {
 
-	discovery_message helloMessage = discovery_message(this->username_);
+	char buffer[MAXBUFL] = "";
+	discovery_message packet;
+	struct sockaddr_in server_address, client_address;
 
-	//UDPServer udpServer(io_service, helloMessage.getMessageBody());
+	const auto client_address_ptr = &client_address;
+	ZeroMemory(&client_address, sizeof(client_address));
 
-	//udpServer.startServer();
+	//while (true) {
+
+	const auto address_len = udp_server_.receive_datagram(buffer, client_address_ptr, MAXBUFL);
+
+	packet.Append(buffer, strlen(buffer));
+
+	if (packet.get_packet_type() == DISCOVERY_MSG)
+		cout << "HERE THE DISCOVERY RECEIVED: " << buffer << endl;
+	else if (packet.get_packet_type() == HELLO_MSG)
+		cout << "HERE THE HELLO RECEIVED: " << buffer << endl;
+	else
+		cout << "IT WASN'T A DISCOVERY MESSAGE!" << endl;
+
+	//send_datagram(buffer_, client_address_ptr, address_len, strlen(buffer_));
+	//}
 }
