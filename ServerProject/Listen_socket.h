@@ -1,6 +1,11 @@
 #pragma once
-#include <WinSock2.h>
-#include "Constants.hpp"
+
+#include "WinSock2.h"
+
+#include <iostream>
+#include <string>
+
+#pragma comment(lib,"ws2_32.lib") //Required for WinSock
 
 class Listen_socket
 {

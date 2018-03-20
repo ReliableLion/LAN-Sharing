@@ -1,3 +1,5 @@
+#include "stdafx.h"
+
 #include "Message.hpp"
 #include <cstdint> //Required to use std::int32_t
 
@@ -222,7 +224,7 @@ std::vector<int8_t> ProtocolMessage::get_packet_data() const {
  *					DISCOVERY MESSAGE IMPLEMENTATION			
  */
 
-std::string discovery_message::get_packet_type() {
+/*std::string discovery_message::get_packet_type() {
 
 	const auto message = reinterpret_cast<char*>((m_buffer.data()));
 
@@ -248,4 +250,4 @@ std::string discovery_message::getUsername(char* username) {
 		throw message_exception("packet is not an Hello Message!\n");
 
 	return nullptr;
-}
+}*/

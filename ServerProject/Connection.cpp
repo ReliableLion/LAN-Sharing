@@ -1,5 +1,4 @@
 #include "Connection.hpp" 
-#include "stdafx.h"
 
 using namespace connection;
 
@@ -143,14 +142,14 @@ bool TCPConnection::sendall(const char* data, const int totalBytes, int& totalSe
  * \return false if the connection has been closed by peer, true if the data are read correclty
  */
 bool TCPConnection::readline(char *data, const int maxBytes, int& readBytes) {
-	int rByte = readline_unbuffered(data, (size_t)maxBytes);
+	int rByte = readline_unbuffered(data, (size_t) maxBytes);
 
 	if (rByte == 0) {
 		return false;
-	}  
+	}  else
 	if (rByte < 0) {
 		throw SocketException(WSAGetLastError());
-	}  
+	}  else
 	if (rByte > 0) {
 		readBytes = rByte;
 		return true;

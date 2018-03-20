@@ -1,7 +1,9 @@
 #pragma once
-#include "Constants.hpp"
+
 #include <queue>
 #include <mutex>
+
+#include "Constants.hpp"
 
 template <typename T>
 class ConcurrentQueue {

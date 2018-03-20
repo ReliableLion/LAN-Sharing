@@ -17,8 +17,17 @@ RequestManager::RequestManager(std::shared_ptr<DownloadManager> dwload_manager) 
  * this destructor close all the pending connections that are accepted by the server, but that are waiting a thread to elaborate the request
  */
 RequestManager::~RequestManager() {
+	terminateService();
+}
+
+
+/**
+ * \brief extracts and close all pending connections, then join all the threads
+ */
+void RequestManager::terminateService() {
+	connection::conn_ptr connection;
+
 	is_terminated.store(true);						// this flag is used to stop the threads computation
-	connection::conn_ptr connection;		
 
 	while (!connectionQueue.isEmpty()) {			// iterate the entire queue and close the pending connections
 		connectionQueue.popElement(connection);
@@ -29,6 +38,7 @@ RequestManager::~RequestManager() {
 		cv.notify_all();
 		threadPool[i].join();						// "unlock" the threads that wait on the condition variable
 	}
+
 }
 
 /**
@@ -84,9 +94,10 @@ void RequestManager::extract_next_connection() {
  * \param connection 
  */
 void RequestManager::receiveRequest(connection::conn_ptr connection) {
-	PacketManager req_packet_manager;
 	bool exit, received_correctly;
 	int i = 0;
+
+	PacketManager packet_manager;
 
 	// TODO declare here the requestManager and ReplyManager
 	try {
@@ -102,10 +113,10 @@ void RequestManager::receiveRequest(connection::conn_ptr connection) {
 			-if the connection is closed, write a message
 			*/
 
-			switch (req_packet_manager.receivePacket(connection)) {
-				
-				// connection closed
-				case (CLSD_CONN): {
+			switch (packet_manager.receivePacket(connection)) 
+			{
+				case CLSD_CONN:
+				{
 					// exit from the internal while but before close the connction
 					exit = true;
 					connection->close_connection();
@@ -113,26 +124,27 @@ void RequestManager::receiveRequest(connection::conn_ptr connection) {
 				} break;
 
 				// packet not recognized
-				case (PACKET_ERR): {							
+				case PACKET_ERR:
+				{							
 					exit = false;
 					i++;
-					// TODO send an error
+					packet_manager.send_error();
 				} break;
 
 				// packet read correctly
-				case (READ_OK): {							
-
-					if (processRequest(req_packet_manager, connection)) {
+				case READ_OK: 
+				{							
+					if (processRequest(packet_manager, connection)) 
+					{
 						exit = true;
 						received_correctly = true;
-						// TODO send an error
-					} else {
+						packet_manager.send_reply();
+					} else 
+					{
 						exit = false;
 						i++;										// increment the bad-request counter
-
-						//std::cout << "impossible to recognize the request format " << std::endl;
-
-						// TODO send an error
+						std::cout << "impossible to recognize the request format " << std::endl;
+						packet_manager.send_error();
 					}
 					
 				} break;
@@ -144,40 +156,61 @@ void RequestManager::receiveRequest(connection::conn_ptr connection) {
 		} while (!exit && i < max_request_attempts);
 
 		// check if the packet is received correctly
-		if (received_correctly) {										
+		if (received_correctly) 
+		{										
 			std::cout << "request received correclty" << std::endl;
-		} else
-		
-		// close the connection if the server reach the max connection attempts
-		if (i == max_request_attempts) {
+		} else if (i == max_request_attempts) 
+		{
+			packet_manager.send_error();
 			connection->close_connection();
 			std::cout << "max attempts reached by the server, close the connection" << std::endl;
 		}
 
 	}
-	catch (TimeoutException &e) {
+	catch (TimeoutException &e) 
+	{
 		std::cout << "server reached the timeout, close the connection" << std::endl;
+		packet_manager.send_error();
 		connection->close_connection();
 	}
-	catch (SocketException &e) {
+	catch (SocketException &e)
+	{
 		std::cout << "server encourred in a socket exception, close the connection" << std::endl;
+		packet_manager.send_error();
 		connection->close_connection();
 	}
 }
 
-bool RequestManager::sendResponse(PacketManager& res_packet_manager, connection::conn_ptr connection) {
-	return true;
-}
 
+/**
+ * \brief return false only if there is a packet error, if there is a server error (service terminated) return true
+ * \param req_packet_manager 
+ * \param connection 
+ * \return 
+ */
 bool RequestManager::processRequest(PacketManager& req_packet_manager, connection::conn_ptr connection) {
-	request_struct request = req_packet_manager.get_request_struct();
+	request_struct request = req_packet_manager.get_request();
 
-	if (!req_packet_manager.check_request()) return false;
-	
+	if (request.file_size <= 0)
+	{
+		req_packet_manager.send_error();
+		return false;
+	}
+	if (request.file_name.length() > 256)
+	{
+		req_packet_manager.send_error();
+		return false;
+	}
+								
+	// if is not possible to inset the data into the queue return an error
 	if (request.file_size >= fileThreshold) {
-		dwload_manager.insertBigFile(request, connection);
+		if(!dwload_manager->insertBigFile(request, connection)) {
+			req_packet_manager.send_error();
+		}
 	} else {
-		dwload_manager.insertSmallFile(request, connection);
+		if(dwload_manager->insertSmallFile(request, connection)) {
+			req_packet_manager.send_error();
+		}
 	}
 
 	return true;

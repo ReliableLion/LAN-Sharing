@@ -11,14 +11,14 @@ namespace protocol {
 	public:
 		// enumerator declaration
 		const enum message_code {
-			SEND,						// code used to send the request to the server
-			OK,							// code to responde affermatively to the request
-			ERR,						// code that specify a error 
-			UNDEFINED					// message code not recognized
+			SEND,
+			OK,
+			ERR,
+			UNDEFINED
 		};
 
 		const enum error_code {
-			ERR_1						
+			ERR_1
 		};
 
 		static protocol::MessageType::message_code getMessageType(std::string msgType);

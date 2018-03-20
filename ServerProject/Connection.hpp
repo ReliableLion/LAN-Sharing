@@ -1,15 +1,19 @@
 #pragma once
-#include "stdafx.h"
-#include "Listen_socket.h"
-#include "SocketException.h"
-#include "WinSock2.h"
-#include "WS2tcpip.h"
-#include "TimeoutException.hpp"
 
+#include "stdafx.h"
+
+#include <Ws2tcpip.h> 
+#include <iostream>
 #include <memory>
 #include <iomanip>
 #include <ctime>
 #include <list>
+
+#include "Listen_socket.h"
+#include "SocketException.h"
+#include "TimeoutException.hpp"
+
+#pragma comment(lib,"ws2_32.lib") //Required for WinSock
 
 namespace connection {
 

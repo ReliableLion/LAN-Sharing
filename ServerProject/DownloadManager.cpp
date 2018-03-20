@@ -13,6 +13,10 @@ DownloadManager::DownloadManager() {
 }
 
 DownloadManager::~DownloadManager() {
+	terminateService();
+}
+
+void DownloadManager::terminateService() {
 	is_terminated.store(true);								// set is terminated true in order to stop the threds execution
 
 	for (int i = 0; i < maxThreadS; i++) {					// join all the threads
@@ -26,28 +30,57 @@ DownloadManager::~DownloadManager() {
 	}
 }
 
-bool DownloadManager::insertBigFile(request_struct request, session::conn_ptr connection) {
+
+/**
+ * \brief 
+ * \param request this is the request struct that is used for the data download
+ * \param connection pointer to the TCP connection
+ * \return TRUE if the file is insert correctly, FALSE if the queue is full of possible elemnts
+ */
+bool DownloadManager::insertBigFile(request_struct request, connection::conn_ptr connection) {
 	download_struct newRequest;
+	bool queue_insertion_res;
 
 	// fill the request struct with the date received by the client
 	newRequest.req = request;
 	newRequest.conn = connection;
 
 	std::unique_lock<std::mutex> ul(mtxB);
-	bigFileQ.insertElement(newRequest);
-	cvB.notify_all();
-	return true;
+	queue_insertion_res = bigFileQ.insertElement(newRequest);
+
+	if(queue_insertion_res)										// if the connection is insert correctly into the queue notify it to the threads and then return true otherwise return false;
+	{
+		cvB.notify_all();
+		return true;
+	}
+	
+	return false;
 }
 
-bool DownloadManager::insertSmallFile(request_struct request, session::conn_ptr connection) {
+/**
+ * \brief 
+ * \param request : struct that contains the informations about the file that the client requests
+ * \param connection : connection 
+ * \return 
+ */
+bool DownloadManager::insertSmallFile(request_struct request, connection::conn_ptr connection) {
 	download_struct newRequest;
+	bool queue_insertion_res;
+
+
 	newRequest.req = request;
 	newRequest.conn = connection;
 
 	std::unique_lock<std::mutex> ul(mtxS);
-	smallFileQ.insertElement(newRequest);
-	cvS.notify_all();
-	return true;
+	queue_insertion_res = smallFileQ.insertElement(newRequest);
+
+	if(queue_insertion_res)
+	{
+		cvS.notify_all();
+		return true;
+	}
+
+	return false;
 }
 
 //				PRIVATE METHODS	
@@ -67,7 +100,7 @@ void DownloadManager::processSmallFile() {
 		smallFileQ.popElement(smallFileReq);
 
 		// TODO insert here the function for the file download
-		//downloadFile(smallFileReq);
+		downloadFile(smallFileReq);
 		smallFileReq.conn->close_connection();
 	}
 }
@@ -92,7 +125,7 @@ void DownloadManager::processBigFile() {
 
 
 		// TODO insert here the function for the file download
-		//downloadFile(bigFileReq);
+		downloadFile(bigFileReq);
 		bigFileReq.conn->close_connection();
 	}
 }

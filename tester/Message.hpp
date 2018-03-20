@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 
+#include <Ws2tcpip.h> 
 #include <sstream>
 #include <vector>
 #include <windows.h>
@@ -73,20 +74,18 @@ public:
 		return this->requestBody.file_name;
 	}*/
 
-	bool ProtocolMessage::get_packet_type();
-
 	void ProtocolMessage::prepare_outgoing_packet();
+	bool ProtocolMessage::convert_incoming_packet();
+
 	std::vector<int8_t> get_packet_data() const;
 
-	// this method is used to convert the buffer receive into a reuqest
-	bool ProtocolMessage::convert_incoming_packet();
+	bool ProtocolMessage::get_packet_type();
 
 	request_struct get_message_request() { return requestBody; };
 	protocol::MessageType::message_code get_message_code() { return messageCode; };
-	protocol::MessageType::error_code get_error_code() { return errorCode; }
 };
 
-class discovery_message : public Message {
+/*class discovery_message : public Message {
 
 public:
 	explicit discovery_message(const std::string username) {
@@ -104,4 +103,4 @@ public:
 
 	std::string discovery_message::get_packet_type();
 
-};
+};*/

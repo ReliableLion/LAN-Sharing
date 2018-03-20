@@ -1,7 +1,4 @@
 #include "Listen_socket.h"
-#include <iostream>
-#include <string>
-
 
 /*
  * this constructor create a new non connected socket used by the server to accept the incoming tcp connection

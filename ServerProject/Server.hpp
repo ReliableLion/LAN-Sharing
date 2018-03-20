@@ -1,34 +1,46 @@
 #pragma once
+
 #include "stdafx.h"
+
+#include <ctime>
+#include <thread>
+#include <mutex>
+
 #include "Connection.hpp"
 #include "RequestManager.hpp"
-#include "Constants.hpp"
-#include <ctime>
 
 enum server_state_type
 {
 	CREATED,
+	PAUSED,
 	STOPPED,
 	RUNNING
 };
 
 
 class Server {
-	// TODO request manager instance
-	// TODO download manager isntance
-
-
-	server_state_type server_state;
+	std::thread server_main_thread;
 
 	Listen_socket socket;
 	std::shared_ptr<RequestManager> request_manager;
 	std::shared_ptr<DownloadManager> download_manager;
-	
+
+	std::condition_variable cv;
+	std::mutex mtx;
+
+	bool  isPaused, isStopped;
+	server_state_type server_state;
+
+	// private methods
+	void listenNewConnection();
+	void runServer();
 public:
 	Server();
 	~Server();
 	bool changePort(int port);
-	void listenNewConnection();
-	void runServer();
-	void closeServer();					// TODO check if this method in necessary or not
+	void startServer();
+	void restartServer();
+	void pauseServer();
+	void rerunServer();
+	void closeServer();	
 };

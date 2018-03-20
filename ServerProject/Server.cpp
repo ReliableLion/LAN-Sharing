@@ -1,21 +1,24 @@
 #include "Server.hpp"
 
-
 /*
  * this constructor create a new socket that is setted on the defaul port 1500;
  * if you want to change it is possible to call the method change port and pass the new port number, t
  */
-Server::Server() : socket(DEFAULT_LISTEN_PORT) {
+Server::Server() : socket(DEFAULT_LISTEN_PORT)
+{
 	// when a new instance of Server is declared, a new listen socket is created  and binded to receive incoming request
 	// winsock startup
 	WSAData wsaData;
 	WORD DllVersion = MAKEWORD(2, 1);
-	if (WSAStartup(DllVersion, &wsaData) != 0) {
+	if (WSAStartup(DllVersion, &wsaData) != 0)
+	{
 		std::cout << "WinSock startup fail" << std::endl;
 		exit(1);
 	}
 
 	server_state = CREATED;
+	isPaused = false;
+	isStopped = false;
 
 	// create an instance of the download and request manager
 	download_manager = std::shared_ptr<DownloadManager>(new DownloadManager());
@@ -37,47 +40,44 @@ Server::Server() : socket(DEFAULT_LISTEN_PORT) {
 
 }
 
-Server::~Server() {
+Server::~Server()
+{
 	closeServer();
 }
 
-void Server::runServer() {
-	bool signal_exit = true;
+void Server::runServer() 
+{
 
-	if(server_state == STOPPED)
-	{
-		// re-instantiate the request manager and the download manager
-		download_manager = std::shared_ptr<DownloadManager>(new DownloadManager());
-		request_manager = std::shared_ptr<RequestManager>(new RequestManager(download_manager));
-		server_state = RUNNING;
-	} 
-	
-	server_state = RUNNING;
-	std::cout << "the server is running" << std::endl;
-
-	// TODO important: create a communication mechanism between UI and server thread 
-	while (signal_exit)
-	{
-		listenNewConnection();
+	if(server_state != CREATED) {
+		return;
 	}
+	
+	while (!isStopped) {
+		server_state == RUNNING;
+		std::cout << "the server is running" << std::endl;
 
+		while (!isPaused || !isStopped) {
+			listenNewConnection();
+		}
+
+		server_state = PAUSED;
+		std::cout << "the server is paused" << std::endl;
+		std::unique_lock<std::mutex> ul(mtx);
+		cv.wait(ul);
+	}
+		
 	server_state = STOPPED;
-	std::cout << "the server has been stopped by an external signal" << std::endl;
-
-	// delete the pointer to the old managers
-	// since the request manager has associated a pointer to the downlaod manager, should be resetted first the request manager pointer 
-	// and then the download manager, otherwise the shared pointer is pointed two times and the instance is never destructed correctly
-	request_manager.reset();
-	download_manager.reset();
+	std::cout << "the server is stopped" << std::endl;
 }
 
-void Server::listenNewConnection() {
+void Server::listenNewConnection() 
+{
 	connection::TCPConnection newConn;
 	std::time_t timestamp;
 			
 	// accept an imcoming request
-	if (newConn.accept_connection(socket)) {	
-		
+	if (newConn.accept_connection(socket))
+	{	
 		// print some informations about the remote end-point, the time stamp when the connection has been accepted and more...
 		timestamp = std::time(0);
 		std::cout << "***************************************************" << std::endl;
@@ -88,7 +88,8 @@ void Server::listenNewConnection() {
 		
 		// add the request inside the request manager
 		request_status status;
-		if (request_manager->addConnection(std::make_shared<connection::TCPConnection>(newConn), status)) {
+		if (request_manager->addConnection(std::make_shared<connection::TCPConnection>(newConn), status)) 
+		{
 			switch(status)
 			{
 			case FULL_QUEUE:
@@ -100,16 +101,17 @@ void Server::listenNewConnection() {
 			}
 		}
 	}
-	else {
+	else 
+	{
 		// TODO	notify to the user, via user interface, the connection problem
 	}
 }
 
 bool Server::changePort(int port)
 {
-	if (port >= 0 && port <= MAX_PORT)
+	// create a new instance of the listen_socket only if the server is
+	if (port >= 0 && port <= MAX_PORT && server_state == CREATED)
 	{
-		// create a new listen socket with a new port
 		socket = Listen_socket(port);
 		return true;
 	}
@@ -117,7 +119,67 @@ bool Server::changePort(int port)
 	return false;
 }
 
+void Server::startServer() 
+{
+	// re-instantiate the request manager and the download manager
+	download_manager = std::shared_ptr<DownloadManager>(new DownloadManager());
+	request_manager = std::shared_ptr<RequestManager>(new RequestManager(download_manager));
+	
+	// start a new thread
+	server_main_thread = std::thread(&Server::runServer, this);
+}
+
+void Server::restartServer() 
+{
+	closeServer();
+	server_state = CREATED;
+	isPaused = false;
+	isStopped = false;
+	startServer();
+}
+
+void Server::pauseServer()
+{
+	if(server_state == RUNNING)
+	{
+		isPaused = true;
+	}
+}
+
+void Server::rerunServer()
+{
+	if(server_state == PAUSED)
+	{
+		isPaused = false;
+		std::lock_guard<std::mutex> lock_guard(mtx);
+		cv.notify_all();
+	}
+
+	if (server_state == STOPPED)
+	{
+		std::cout << "the server is stopped, is not possible to stop it" << std::endl;
+	}
+}
+
 void Server::closeServer()
 {
-	closesocket(socket.getSocket());						// close the socket 
+	if(server_state == RUNNING || server_state == PAUSED)
+	{
+		isStopped = true;
+		std::lock_guard<std::mutex> lock_guard(mtx);
+		cv.notify_all();
+	}
+
+	closesocket(socket.getSocket());
+
+	if(server_state == STOPPED)
+	{
+		server_main_thread.join();
+	}
+
+	// delete the pointer to the old managers
+	// since the request manager has associated a pointer to the downlaod manager, should be resetted first the request manager pointer 
+	// and then the download manager, otherwise the shared pointer is pointed two times and the instance is never destructed correctly
+	request_manager.reset();
+	download_manager.reset();
 }

@@ -1,21 +1,21 @@
 #pragma once
+
 #include "stdafx.h"
-#include "ConcurrentQueue.hpp"
-#include "FileHandler.hpp"
-#include "Session.hpp"
-#include "Message.hpp"
-#include "windows.h"
+
+#include <windows.h>
 #include <atomic>
 #include <thread>
 #include <mutex>
 #include <condition_variable>
 
-/*
- * this struct definition contains the data requested and the connection pointer
- */
+#include "ConcurrentQueue.hpp"
+#include "FileHandler.hpp"
+#include "Connection.hpp"
+#include "Message.hpp"
+
 typedef struct {
 	request_struct req;
-	session::conn_ptr conn;
+	connection::conn_ptr conn;
 } download_struct;
 
 class DownloadManager {
@@ -34,10 +34,12 @@ class DownloadManager {
 	// private methods
 	void processBigFile();
 	void processSmallFile();
+	void manageDownload(download_struct req_struct);
 	void downloadFile(download_struct request);
 public:
 	DownloadManager();
 	~DownloadManager();
-	bool insertSmallFile(request_struct request, session::conn_ptr connection);
-	bool insertBigFile(request_struct request, session::conn_ptr connection);
+	void terminateService();
+	bool insertSmallFile(request_struct request, connection::conn_ptr connection);
+	bool insertBigFile(request_struct request, connection::conn_ptr connection);
 };

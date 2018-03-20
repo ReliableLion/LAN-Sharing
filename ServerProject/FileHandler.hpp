@@ -1,9 +1,12 @@
 #pragma once
+
 #include "stdafx.h"
-#include "FileOpenException.h"
-#include "FileWriteException.h"
+
 #include <fstream>
 #include <string>
+
+#include "FileOpenException.h"
+#include "FileWriteException.h"
 
 class FileHandler {
 protected:

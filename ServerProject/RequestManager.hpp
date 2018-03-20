@@ -1,18 +1,19 @@
 #pragma once
-#include "stdafx.h"
+
 #include "Constants.hpp"
 #include "Connection.hpp"
 #include "DownloadManager.hpp"
 #include "ConcurrentQueue.hpp"
+#include "PacketManager.hpp"
 #include "FileHandler.hpp"
 #include "SocketException.h"
 #include "TimeoutException.hpp"
+
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
 #include <thread>
 #include <vector>
-#include "PacketManager.hpp"
 
 enum request_status
 {
@@ -35,10 +36,6 @@ class RequestManager {
 	// connection variables
 	ConcurrentQueue<connection::conn_ptr> connectionQueue;
 
-	// use two different packet manager: one for the request and one for the response
-	PacketManager res_packet;
-	PacketManager req_packet;
-
 	std::shared_ptr<DownloadManager> dwload_manager;
 
 	// private methods
@@ -49,5 +46,6 @@ class RequestManager {
 public:
 	RequestManager(std::shared_ptr<DownloadManager>);
 	~RequestManager();
+	void terminateService();
 	bool addConnection(connection::conn_ptr newConnection, request_status& status);
 };

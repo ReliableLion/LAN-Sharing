@@ -1,28 +1,56 @@
 #include "PacketManager.hpp"
 
+// this class has only a default constructor
 PacketManager::PacketManager() {}
-
 
 /**
  * \brief 
  * \param connection : TCP connection used to transfer byte
  * \return false if the connection has been closed or if the packet is n
  */
-packet_code PacketManager::receivePacket(session::conn_ptr connection) {
+packet_code PacketManager::receivePacket(connection::conn_ptr connection) 
+{
 	char buffer[BUFF_LENGTH];
-	char packetType[PCK_TYPE_LENGTH + 1];
 	int readBytes = 0;
+	ProtocolMessage req_packet;
 
-	try {
+	this->connection = connection;
+
+	try 
+	{
 		if (connection->readline(buffer, buffer_length, readBytes) == false) return CLSD_CONN;
-
-		message_handler.Append(buffer, readBytes);																		// set the buffer inside the PacketMessage instance
-		message_handler.get_packet_type(packetType);															// check the packet type	
-
-		int msgType = protocol::MessageType::getMessageType(std::string(packetType));
-
-		if (msgType == protocol::MessageType::type::undefined) return PACKET_ERR;				// if the packet is unrecognizedr
-		if (msgType == protocol::MessageType::type::send) return READ_OK;						// if the packet is send
+		req_packet.append(buffer, readBytes);					// set the buffer inside the PacketMessage instance
+		
+		// check the packet type
+		if (req_packet.get_packet_type())
+		{
+			switch (last_message_code = req_packet.get_message_code())
+			{
+			case protocol::MessageType::UNDEFINED:
+				{
+				return PACKET_ERR;
+				}
+			case protocol::MessageType::ERR:
+				{
+					switch (req_packet.get_error_code())
+					{
+					case MessageType::ERR_1:
+						{
+							return PACKET_ERR;
+						}
+					}
+				} break;
+			case protocol::MessageType::SEND:
+				{
+					request = req_packet.get_message_request();
+					return READ_OK;					// if the packet is sent
+				}
+			default:
+				{
+				return PACKET_ERR;
+				}
+			}
+		}
 	} catch(std::exception &e)
 	{
 		// the message parser raised an exception; return a packet error
@@ -35,28 +63,15 @@ packet_code PacketManager::receivePacket(session::conn_ptr connection) {
  * \brief 
  * \return the request struct associated to thee request received by the server 
  */
-request_struct PacketManager::get_request_struct() {
-	return (request = message_handler.get_request_data());											// set and return the request struct
+request_struct PacketManager::get_request() {
+	return 	request;
 }
 
-/**
- * \brief : check the reqeust received
- * \return true if the request is ammissible, false otherwise
- */
-bool PacketManager::check_request() {
-	
-	if (request.file_size <= 0) return false;
-	if (request.file_name.length() > 256) return false;						// return false if the filename is too long
+bool PacketManager::send_reply(connection::conn_ptr connection, protocol::MessageType::message_code msgType) {
+	ProtocolMessage res_packet(msgType);
 
-	return true;
-}
-
-bool PacketManager::send_reply(session::conn_ptr connection, protocol::MessageType::type msgType) {
-	int sentByte;
-
-	/*msg.clear();
-	msg << protocol::MessageType::getMessageType(msgType);
-	return connection->sendall(msg.str().c_str(), msg.str().length(), sentByte);*/
+	res_packet.prepare_outgoing_packet();
+	// TODO in this part the class must forward the packet to the end point
 	return false;
 }
 
@@ -67,11 +82,10 @@ bool PacketManager::send_reply(session::conn_ptr connection, protocol::MessageTy
  * \param errorType 
  * \return 
  */
-bool PacketManager::send_reply(session::conn_ptr connection, protocol::MessageType::type msgType, protocol::MessageType::error_type errorType) {
+bool PacketManager::send_error(connection::conn_ptr connection, protocol::MessageType::error_code errorType) {
 	int sentByte;
+	ProtocolMessage res_packet(errorType);
 
-	/*msg.clear();
-	msg << protocol::MessageType::getMessageType(msgType);
-	return connection->sendall(msg.str().c_str(), msg.str().length(), sentByte);*/
+	// TODO in this part the class must forward the packet to the end point
 	return false;
 }
