@@ -45,7 +45,7 @@ namespace udp_service {
 	public:
 		udp_server::udp_server();
 
-		int udp_server::send_datagram(char *buffer, const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
+		int udp_server::send_datagram(const char *buffer, const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
 		socklen_t udp_server::receive_datagram(char *buffer, const struct sockaddr_in *caddr, size_t len) const;
 
 		udp_server::~udp_server();

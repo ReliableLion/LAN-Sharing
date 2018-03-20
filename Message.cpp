@@ -11,6 +11,10 @@ message::message(const char * data_buffer, const int size) {
 		Append(data_buffer, size);
 	}
 
+void message::clear(){
+	m_buffer.clear();
+}
+
 message::message(const MessageType::type pt) {
 
 		Append(pt);
@@ -145,7 +149,7 @@ std::string discovery_message::get_packet_type() {
 	return "";
 }
 
-std::string discovery_message::getUsername(char* username) {
+std::string discovery_message::get_username(char* username) {
 
 	if (get_packet_type() == HELLO_MSG) {
 		// HELLO_MSG is the smallest string within a discovery message packet

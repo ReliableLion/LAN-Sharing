@@ -28,6 +28,7 @@ public:
 	void Append(const message & m);
 	void Append(const std::string & str);
 	void Append(const char * buffer, const int size); //Will use existing allocated buffer and create packet from it
+	void clear();
 
 
 	std::vector<int8_t> m_buffer; //Message Packet Buffer
@@ -85,7 +86,7 @@ public:
 
 	discovery_message();
 
-	std::string discovery_message::getUsername(char* username);
+	std::string discovery_message::get_username(char* username);
 
 	std::string discovery_message::get_packet_type();
 

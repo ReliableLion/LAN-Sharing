@@ -7,7 +7,7 @@ using namespace std;
 class discovery {
 
 public:
-	explicit discovery(const string username){
+	explicit discovery(const string username): hello_message_(this->my_username_) {
 		my_username_ = username;
 	}
 
@@ -16,11 +16,10 @@ public:
 	void send_hello();
 	// Return a list of pairs (UserIP, Username)
 	void find_users();
-	// Check if a user is still online
-	std::map<string, std::string> find_user(std::string username);
 
 private:
 	string my_username_;
+	discovery_message hello_message_;
 	map<string, string> online_users_;
 
 	udp_service::udp_server udp_server_;

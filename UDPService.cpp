@@ -20,6 +20,9 @@ std::string udp_service::get_client_address(struct sockaddr_in *client_address_p
 }
 
 udp_client::udp_client(): sock(0), server_port_(0) {
+
+	struct sockaddr_in source_address;
+
 	//Set broadcast address
 	broadcast_address_.sin_family = AF_INET;
 	broadcast_address_.sin_addr.s_addr = htonl(0xffffffff); //broadcast address
@@ -27,6 +30,14 @@ udp_client::udp_client(): sock(0), server_port_(0) {
 
 	if (!get_adapter())
 		throw udp_exception::udp_exception("Cannot start UDP Client!");
+
+	/* specify address to bind to */
+	memset(&source_address, 0, sizeof(source_address));
+	source_address.sin_family = AF_INET;
+	source_address.sin_port = htons(uint16_t(UDP_PORT));
+	inet_pton(AF_INET, client_address_, &(source_address.sin_addr));
+
+	bind(sock, reinterpret_cast<sockaddr*>(&source_address), sizeof(source_address));
 }
 
 bool udp_client::get_adapter()
@@ -40,7 +51,7 @@ bool udp_client::get_adapter()
 	// the primary and secondary WINS server for each adapter. 
 
 	PIP_ADAPTER_INFO p_adapter_info;
-	PIP_ADAPTER_INFO pAdapter = nullptr;
+	PIP_ADAPTER_INFO p_adapter = nullptr;
 	DWORD dw_ret_val = 0;
 	UINT i;
 
@@ -63,18 +74,18 @@ bool udp_client::get_adapter()
 	}
 
 	if ((dw_ret_val = GetAdaptersInfo(p_adapter_info, &ul_out_buf_len)) == NO_ERROR) {
-		pAdapter = p_adapter_info;
+		p_adapter = p_adapter_info;
 
-		while (pAdapter) {
+		while (p_adapter) {
 			//printf("\tAdapter Name: \t%s\n", pAdapter->AdapterName);
 
 			//printf("\tIP Address: \t%s\n", pAdapter->IpAddressList.IpAddress.String);
 
-			if (std::strcmp(pAdapter->AdapterName, NETWORK_ADAPTER_NAME) == 0) {
-				strcpy_s(client_address_, sizeof(pAdapter->IpAddressList.IpAddress.String), pAdapter->IpAddressList.IpAddress.String);
+			if (std::strcmp(p_adapter->AdapterName, NETWORK_ADAPTER_NAME) == 0) {
+				strcpy_s(client_address_, sizeof(p_adapter->IpAddressList.IpAddress.String), p_adapter->IpAddressList.IpAddress.String);
 			}
 
-			pAdapter = pAdapter->Next;
+			p_adapter = p_adapter->Next;
 		}
 	}
 
@@ -260,7 +271,7 @@ map<string, string> udp_client::get_online_users() {
 
 				cout << "--- Received string " << buffer_ << endl;
 
-				packet.getUsername(username);
+				packet.get_username(username);
 
 				inet_ntop(AF_INET, &(server_address_struct_.sin_addr), client_address, INET_ADDRSTRLEN);
 
@@ -314,7 +325,7 @@ udp_server::udp_server() {
 	cout << "--- Listening on " << server_address_ << ":" << ntohs(server_address.sin_port) << endl;
 }
 
-int udp_server::send_datagram(char *buffer, const struct sockaddr_in *saddr, const socklen_t addr_len, const size_t len) const {
+int udp_server::send_datagram(const char *buffer, const struct sockaddr_in *saddr, const socklen_t addr_len, const size_t len) const {
 
 	int n;
 
