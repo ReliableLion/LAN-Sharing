@@ -52,11 +52,13 @@ void Server::runServer()
 		return;
 	}
 	
-	while (!isStopped) {
-		server_state == RUNNING;
+	while (!isStopped) 
+	{
+		server_state = RUNNING;
 		std::cout << "the server is running" << std::endl;
 
-		while (!isPaused || !isStopped) {
+		while (!isPaused || !isStopped)
+		{
 			listenNewConnection();
 		}
 

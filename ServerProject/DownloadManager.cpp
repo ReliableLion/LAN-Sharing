@@ -1,30 +1,37 @@
 #include "DownloadManager.hpp"
 
-DownloadManager::DownloadManager() {
+DownloadManager::DownloadManager() 
+{
 	is_terminated.store(false);
 
-	for (int i = 0; i < maxThreadB; i++) {												// threads declarations for the big file download
+	for (int i = 0; i < maxThreadB; i++)
+	{												// threads declarations for the big file download
 		threadPoolB.push_back(std::thread(&DownloadManager::processBigFile, this));		// pass to these threads the process big file methods
 	}
 
-	for (int i = 0; i < maxThreadS; i++) {												// threads declarations for the small file download
+	for (int i = 0; i < maxThreadS; i++)
+	{												// threads declarations for the small file download
 		threadPoolS.push_back(std::thread(&DownloadManager::processSmallFile, this));	// pass to these threads the process small file methods
 	}
 }
 
-DownloadManager::~DownloadManager() {
+DownloadManager::~DownloadManager()
+{
 	terminateService();
 }
 
-void DownloadManager::terminateService() {
+void DownloadManager::terminateService()
+{
 	is_terminated.store(true);								// set is terminated true in order to stop the threds execution
 
-	for (int i = 0; i < maxThreadS; i++) {					// join all the threads
+	for (int i = 0; i < maxThreadS; i++)
+	{	// join all the threads
 		cvS.notify_all();									// "unlock" all the threads that waits on the condition variable
 		threadPoolS[i].join();
 	}
 
-	for (int i = 0; i < maxThreadB; i++) {					// join all the threads
+	for (int i = 0; i < maxThreadB; i++) 
+	{	// join all the threads
 		cvB.notify_all();									// "unlock" all the threads that waits on the condition variable
 		threadPoolB[i].join();
 	}
@@ -37,7 +44,8 @@ void DownloadManager::terminateService() {
  * \param connection pointer to the TCP connection
  * \return TRUE if the file is insert correctly, FALSE if the queue is full of possible elemnts
  */
-bool DownloadManager::insertBigFile(request_struct request, connection::conn_ptr connection) {
+bool DownloadManager::insertBigFile(request_struct request, connection::conn_ptr connection)
+{
 	download_struct newRequest;
 	bool queue_insertion_res;
 
@@ -63,10 +71,10 @@ bool DownloadManager::insertBigFile(request_struct request, connection::conn_ptr
  * \param connection : connection 
  * \return 
  */
-bool DownloadManager::insertSmallFile(request_struct request, connection::conn_ptr connection) {
+bool DownloadManager::insertSmallFile(request_struct request, connection::conn_ptr connection)
+{
 	download_struct newRequest;
 	bool queue_insertion_res;
-
 
 	newRequest.req = request;
 	newRequest.conn = connection;
@@ -85,18 +93,21 @@ bool DownloadManager::insertSmallFile(request_struct request, connection::conn_p
 
 //				PRIVATE METHODS	
 
-void DownloadManager::processSmallFile() {
+void DownloadManager::processSmallFile()
+{
 	std::unique_lock<std::mutex> ul(mtxS, std::defer_lock);
 	download_struct smallFileReq;
+	bool exit = false;
 
-	while (true) {
+	while (exit)
+	{
 		ul.lock();
 
 		cvS.wait(ul, [this] {
-			return (!smallFileQ.isEmpty() || is_terminated.load());
+			return (!smallFileQ.isEmpty() && !is_terminated.load());
 		});
 
-		if (is_terminated.load()) break;
+		if (is_terminated.load()) exit = true;
 		smallFileQ.popElement(smallFileReq);
 
 		// TODO insert here the function for the file download
@@ -105,49 +116,50 @@ void DownloadManager::processSmallFile() {
 	}
 }
 
-void DownloadManager::processBigFile() {
+void DownloadManager::processBigFile()
+{
 	std::unique_lock<std::mutex> ul(mtxB, std::defer_lock);
 	download_struct bigFileReq;
+	bool exit = false;
 
-	while (true) {
+	while (exit)
+	{
 		ul.lock();
 
 		cvB.wait(ul, [this] {
-			return (!bigFileQ.isEmpty() || is_terminated.load());
+			return (!bigFileQ.isEmpty() && !is_terminated.load());
 		});
 
-		if (is_terminated.load()) break;									// if receive a notify to stop the downlaod exit from the main loop
+		if (is_terminated.load()) exit = true;									// if receive a notify to stop the downlaod exit from the main loop
 		smallFileQ.popElement(bigFileReq);
 
 		// check if the connection os alive
 		// if not go to the next pending resource
-
-
-
 		// TODO insert here the function for the file download
 		downloadFile(bigFileReq);
-		bigFileReq.conn->close_connection();
+		
 	}
 }
 
-void DownloadManager::downloadFile(download_struct request) {
-	OutputFileHandler dest_file(request.req.file_name, path);
-	OutputFileHandler temp_file(request.req.file_name, temp_path);
+void DownloadManager::downloadFile(download_struct request)
+{
+	//FileHandler dest_file(request.req.file_name, path);
+	TemporaryFile temp_file(request.req.file_name, temp_path);
 	int leftByte = request.req.file_size;
 	int bytes_to_downlaod = 0, downloaded_bytes = 0;
 	char buffer[BUFF_LENGTH];
+	bool connection_closed;
 
-	try {
+	try 
+	{
 		temp_file.openFile();								// open the two files, if an exception is throw by the program then the file is closed by the destructor
 
-		while (leftByte != 0) {
-
-			if (leftByte >= BUFF_LENGTH) {					// if the remaining data are greater than the max size of the buffer then the bytes to download are max buff lenght
+		while (leftByte != 0 && !connection_closed)
+		{
+			if (leftByte >= BUFF_LENGTH)					// if the remaining data are greater than the max size of the buffer then the bytes to download are max buff lenght
 				bytes_to_downlaod = BUFF_LENGTH;
-			}
-			else {
+			else
 				bytes_to_downlaod = leftByte;				// if the remaining data are smaller than the max, set the remaining bytes value
-			}
 
 			if (request.conn->recvall(buffer, bytes_to_downlaod, downloaded_bytes))			// check if the connection is 
 			{
@@ -155,32 +167,37 @@ void DownloadManager::downloadFile(download_struct request) {
 				temp_file.writeData(buffer, downloaded_bytes);
 			}
 			else
-			{
-				break;
-			}
+				connection_closed = true;
 		}
 
-		request.conn->close_connection();					// close the connection 
 
-		dest_file.openFile();
-		if (dest_file.copyFile(temp_file)) {
+		FileHandler destination_file(request.req.file_name, path);
+		destination_file.openFile();
+
+		if (destination_file.copyFile(temp_file))
+		{
 			temp_file.closeFile();
-			temp_file.removeFile();
-			dest_file.closeFile();
+			destination_file.closeFile();
 		}
-		else {
+		else
+		{
 			// TODO is not possible to copy the temp file into the destination file
 		}
+
+		request.conn->close_connection();
 	} 
-	catch (SocketException &se) {
+	catch (SocketException &se)
+	{
 		std::cout << "server error: " << se.what() << std::endl;
 		request.conn->close_connection();
 	}
-	catch (FileWriteException &fwe) {
+	catch (FileWriteException &fwe)
+	{
 		std::cout << "impossible to write the data into the specified file" << std::endl;
 		request.conn->close_connection();
 	} 
-	catch (TimeoutException &te) {
+	catch (TimeoutException &te)
+	{
 		std::cout << "connection reached timeout, closing the connection" << std::endl;
 		request.conn->close_connection();
 	}

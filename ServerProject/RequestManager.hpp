@@ -21,7 +21,8 @@ enum request_status
 	TERM_SIGNAL
 };
 
-class RequestManager {
+class RequestManager
+{
 	// thread & synchronization variables
 	const int maxThreads = REQUEST_THREADS;
 	const int fileThreshold = FILE_SIZE_THRESHOLD;
@@ -33,9 +34,8 @@ class RequestManager {
 	std::condition_variable cv;
 	std::vector<std::thread> threadPool;
 	
-	// connection variables
+	// connection and download variable 
 	ConcurrentQueue<connection::conn_ptr> connectionQueue;
-
 	std::shared_ptr<DownloadManager> dwload_manager;
 
 	// private methods

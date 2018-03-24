@@ -3,12 +3,14 @@
 
 //		PUBLIC METHODS
 
-RequestManager::RequestManager(std::shared_ptr<DownloadManager> dwload_manager) {
+RequestManager::RequestManager(std::shared_ptr<DownloadManager> dwload_manager)
+{
 	is_terminated.store(false);
 	this->dwload_manager = dwload_manager;
 
 	// instantiate all the threads that are used to manage all the incoming requests
-	for (int i = 0; i < maxThreads; i++) {
+	for (int i = 0; i < maxThreads; i++)
+	{
 		threadPool.push_back(std::thread(&RequestManager::extract_next_connection, this));
 	}
 }
@@ -16,7 +18,8 @@ RequestManager::RequestManager(std::shared_ptr<DownloadManager> dwload_manager) 
 /*
  * this destructor close all the pending connections that are accepted by the server, but that are waiting a thread to elaborate the request
  */
-RequestManager::~RequestManager() {
+RequestManager::~RequestManager() 
+{
 	terminateService();
 }
 
@@ -24,17 +27,19 @@ RequestManager::~RequestManager() {
 /**
  * \brief extracts and close all pending connections, then join all the threads
  */
-void RequestManager::terminateService() {
+void RequestManager::terminateService()
+{
 	connection::conn_ptr connection;
-
 	is_terminated.store(true);						// this flag is used to stop the threads computation
 
-	while (!connectionQueue.isEmpty()) {			// iterate the entire queue and close the pending connections
+	while (!connectionQueue.isEmpty()) 
+	{			// iterate the entire queue and close the pending connections
 		connectionQueue.popElement(connection);
 		connection->close_connection();
 	}
 
-	for (auto i = 0; i < maxThreads; i++) {			// close all threads
+	for (auto i = 0; i < maxThreads; i++)
+	{			// close all threads
 		cv.notify_all();
 		threadPool[i].join();						// "unlock" the threads that wait on the condition variable
 	}
@@ -46,13 +51,15 @@ void RequestManager::terminateService() {
  * \param newConnection 
  * \return TRUE if the is possible to add the new connection into the queue, FALSE if isn't possible to add the connction either if the queue is full or the server should be closed
  */
-bool RequestManager::addConnection(connection::conn_ptr newConnection, request_status& status) {
-
+bool RequestManager::addConnection(connection::conn_ptr newConnection, request_status& status)
+{
 	// it is possible to add the connection into the queue of the requestManager only if the variable is terminated is true
-	if (!is_terminated.load()) {
+	if (!is_terminated.load())
+	{
 		std::lock_guard<std::mutex> l(mtx);
 
-		if (!connectionQueue.insertElement(newConnection)) {
+		if (!connectionQueue.insertElement(newConnection)) 
+		{
 			status = FULL_QUEUE;
 			return false;			// the queue has reached the max number of element
 		}
@@ -67,24 +74,25 @@ bool RequestManager::addConnection(connection::conn_ptr newConnection, request_s
 
 //		PRIVATE METHODS
 
-void RequestManager::extract_next_connection() {
+void RequestManager::extract_next_connection()
+{
 	connection::conn_ptr newConnection;
 	std::unique_lock<std::mutex> ul(mtx, std::defer_lock);
+	bool exit = false;
 
-	while (true) {
+	while (!exit) 
+	{
 		ul.lock();
 
 		cv.wait(ul, [this]() {														// wait on the condition varaible
-			return (!connectionQueue.isEmpty() || is_terminated.load());			// unlock the condition variable only if the queue is not empty or the server has been closed
+			return (!connectionQueue.isEmpty() && !is_terminated.load());			// unlock the condition variable only if the queue is not empty or the server has been closed
 		});
 		
-		if (is_terminated.load()) break;											// if the server has been closed this method must return in order to join the threads
+		if (is_terminated.load()) exit = true;										// if the server has been closed this method must return in order to join the threads
 		
 		// get the connection from the queue and then release the lock 
 		connectionQueue.popElement(newConnection);	
 		ul.unlock();
-
-		// permorm the operation to the new connection that has been extracted from the queue
 		receiveRequest(newConnection);
 	}
 }
@@ -93,7 +101,8 @@ void RequestManager::extract_next_connection() {
  * \brief process every pending request received by the server
  * \param connection 
  */
-void RequestManager::receiveRequest(connection::conn_ptr connection) {
+void RequestManager::receiveRequest(connection::conn_ptr connection) 
+{
 	bool exit, received_correctly;
 	int i = 0;
 
@@ -146,7 +155,6 @@ void RequestManager::receiveRequest(connection::conn_ptr connection) {
 						std::cout << "impossible to recognize the request format " << std::endl;
 						packet_manager.send_error();
 					}
-					
 				} break;
 
 				default: 
@@ -188,7 +196,8 @@ void RequestManager::receiveRequest(connection::conn_ptr connection) {
  * \param connection 
  * \return 
  */
-bool RequestManager::processRequest(PacketManager& req_packet_manager, connection::conn_ptr connection) {
+bool RequestManager::processRequest(PacketManager& req_packet_manager, connection::conn_ptr connection)
+{
 	request_struct request = req_packet_manager.get_request();
 
 	if (request.file_size <= 0)
@@ -203,12 +212,16 @@ bool RequestManager::processRequest(PacketManager& req_packet_manager, connectio
 	}
 								
 	// if is not possible to inset the data into the queue return an error
-	if (request.file_size >= fileThreshold) {
-		if(!dwload_manager->insertBigFile(request, connection)) {
+	if (request.file_size >= fileThreshold)
+	{
+		if(!dwload_manager->insertBigFile(request, connection))
+		{
 			req_packet_manager.send_error();
 		}
-	} else {
-		if(dwload_manager->insertSmallFile(request, connection)) {
+	} else
+	{
+		if(dwload_manager->insertSmallFile(request, connection))
+		{
 			req_packet_manager.send_error();
 		}
 	}

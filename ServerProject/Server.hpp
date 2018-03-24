@@ -18,7 +18,8 @@ enum server_state_type
 };
 
 
-class Server {
+class Server
+{
 	std::thread server_main_thread;
 
 	Listen_socket socket;

@@ -1,75 +1,77 @@
 #include "Message.hpp"
 #include <cstdint> //Required to use std::int32_t
 
-Message::Message() : messageSize(0) {
-}
+Message::Message() : messageSize(0) {}
 
-Message::Message(const char * data_buffer, const int size) {
+Message::Message(const char * data_buffer, const int size)
+{
 
 	append(data_buffer, size);
 }
 
-Message::Message(const MessageType::message_code message_code) {
+Message::Message(const MessageType::message_code message_code)
+{
 
 	append(message_code);
 }
 
-Message::Message(const MessageType::error_code error) {
+Message::Message(const MessageType::error_code error)
+{
 	
 	append(error);
 }
 
 
-void Message::append(const char * data_buffer, const int size) {
+void Message::append(const char * data_buffer, const int size)
+{
 
 	m_buffer.insert(m_buffer.end(), data_buffer, data_buffer + size);
 }
 
-void Message::append(const std::string & str) {
+void Message::append(const std::string & str)
+{
 
 	append(str.c_str(), str.size());
 }
 
-void Message::append(const Message & p) { //Allocate new block for buffer
-
+void Message::append(const Message & p)
+{ 
+	//Allocate new block for buffer
 	append(reinterpret_cast<const char*>(&p.m_buffer), p.m_buffer.size());
 }
 
-void Message::append(const __int64 int64) {
-
+void Message::append(const __int64 int64)
+{
 	__int64 val = htonll(int64);
 	append(reinterpret_cast<const char*>(&val), sizeof(__int64));
 }
 
-void Message::append(const MessageType::message_code mt) {
+void Message::append(const MessageType::message_code mt)
+{
 	std::string res_code_msg = MessageType::getMessageType(mt);
 
 	if(res_code_msg.empty()) 
 		append(static_cast<std::string>(res_code_msg));
-		// TODO check if should be raised an exception
 }
 
-void Message::append(const MessageType::error_code mt) {
+void Message::append(const MessageType::error_code mt) 
+{
 	std::string res_code_msg = MessageType::getErrorType(mt);
 
 	if (res_code_msg.empty())
 		append(static_cast<std::string>(res_code_msg));
+
 	// TODO check if should be raised an exception
 }
 
-void Message::append(const std::size_t s) {
-
+void Message::append(const std::size_t s) 
+{
 	append(static_cast<__int64>(s));
 }
-
-
-
-
 
 /*
  *					REQUEST MESSAGE IMPLEMENTATION
  */
-
 
 
 /**
@@ -78,8 +80,8 @@ void Message::append(const std::size_t s) {
  * \param file_timestamp: last modified timestamp
  * \param file_name: name of the file
  */
-ProtocolMessage::ProtocolMessage(const __int64 file_size, const FILETIME file_timestamp, const std::string file_name) {
-
+ProtocolMessage::ProtocolMessage(const __int64 file_size, const FILETIME file_timestamp, const std::string file_name)
+{
 	// first append the type of the message
 	this->messageCode = MessageType::SEND;
 
@@ -89,11 +91,13 @@ ProtocolMessage::ProtocolMessage(const __int64 file_size, const FILETIME file_ti
 	this->requestBody.file_name = file_name;
 }
 
-ProtocolMessage::ProtocolMessage(protocol::MessageType::message_code message_code) {
+ProtocolMessage::ProtocolMessage(protocol::MessageType::message_code message_code) 
+{
 	this->messageCode = message_code;
 }
 
-ProtocolMessage::ProtocolMessage(protocol::MessageType::error_code error) {
+ProtocolMessage::ProtocolMessage(protocol::MessageType::error_code error)
+{
 	this->messageCode = MessageType::ERR;
 	this->errorCode = error;
 }
@@ -102,8 +106,8 @@ ProtocolMessage::ProtocolMessage(protocol::MessageType::error_code error) {
  * \brief 
  * \return 
  */
-bool ProtocolMessage::convert_incoming_packet() {
-
+bool ProtocolMessage::convert_incoming_packet()
+{
 	// TODO check if the buffer contain the exact size of data
 	if(m_buffer.size() < _min_size_request_  ||  
 		m_buffer.size() > _max_size_request_)
@@ -143,37 +147,35 @@ bool ProtocolMessage::convert_incoming_packet() {
 /**
  * \brief this method prepare a protocol message and using all the information that has been passed with the constructor
  */
-void ProtocolMessage::prepare_outgoing_packet() {
-
+void ProtocolMessage::prepare_outgoing_packet()
+{ 
 	switch(messageCode)
 	{
 	case MessageType::SEND:
 		{
+			append(protocol::MessageType::SEND);
 			prepare_send_message();
 		}
 		break;
 	case MessageType::OK:
 		{	
-		
+			append(protocol::MessageType::OK);
 		}
 		break;
 	case MessageType::ERR:
 		{
 			// append the error and the error code 
-			append(messageCode);
+			append(protocol::MessageType::ERR);
 			append(errorCode);
 		}
 		break;
 	default: 
-		{
-	
-		}break;
+		break;
 	}
 }
 
-void ProtocolMessage::prepare_send_message(){
-
-	append(protocol::MessageType::getMessageType(MessageType::SEND));
+void ProtocolMessage::prepare_send_message()
+{
 	append(static_cast<const char*>(messageBody.c_str()));
 
 	__int64 fileSize = htonll(this->requestBody.file_size);
@@ -190,10 +192,12 @@ void ProtocolMessage::prepare_send_message(){
 	append(static_cast<const char*>(endMessage.c_str()));
 }
 
-bool ProtocolMessage::get_packet_type() {
+bool ProtocolMessage::get_packet_type()
+{
 	char packet_type[5];
 	
-	try {
+	try 
+	{
 		if(m_buffer.empty())
 		{
 			messageCode = MessageType::UNDEFINED;
@@ -207,13 +211,15 @@ bool ProtocolMessage::get_packet_type() {
 		messageCode = protocol::MessageType::getMessageType(std::string(packet_type));
 		return true;
 	}
-	catch (std::exception e) {
+	catch (std::exception e)
+	{
 		messageCode = MessageType::UNDEFINED;
 		return false;
 	}
 }
 
-std::vector<int8_t> ProtocolMessage::get_packet_data() const {
+std::vector<int8_t> ProtocolMessage::get_packet_data() const 
+{
 	return m_buffer;
 }
 
@@ -222,7 +228,8 @@ std::vector<int8_t> ProtocolMessage::get_packet_data() const {
  *					DISCOVERY MESSAGE IMPLEMENTATION			
  */
 
-std::string discovery_message::get_packet_type() {
+std::string discovery_message::get_packet_type()
+{
 
 	const auto message = reinterpret_cast<char*>((m_buffer.data()));
 
@@ -235,8 +242,8 @@ std::string discovery_message::get_packet_type() {
 	return nullptr;
 }
 
-std::string discovery_message::getUsername(char* username) {
-
+std::string discovery_message::getUsername(char* username)
+{
 	char packetType[] = HELLO_MSG;
 
 	memcpy(static_cast<void*>(packetType), static_cast<void*>(&(*m_buffer.begin())), strlen(HELLO_MSG));

@@ -13,13 +13,15 @@
 
 using namespace protocol;
 
-typedef struct {
+typedef struct 
+{
 	__int64 file_size;
 	FILETIME file_timestamp;
 	std::string file_name;
 } request_struct;
 
-class Message {
+class Message
+{
 protected:
 	std::string messageBody = "";
 	std::stringstream stream;
@@ -44,7 +46,8 @@ public:
 	void append(const char * buffer, const int size); //Will use existing allocated buffer and create packet from it
 };
 
-class ProtocolMessage : public Message {
+class ProtocolMessage : public Message
+{
 	protocol::MessageType::message_code messageCode;
 	protocol::MessageType::error_code errorCode;
 	request_struct requestBody;
@@ -86,22 +89,23 @@ public:
 	protocol::MessageType::error_code get_error_code() { return errorCode; }
 };
 
-class discovery_message : public Message {
+class discovery_message : public Message
+{
 
 public:
-	explicit discovery_message(const std::string username) {
+	explicit discovery_message(const std::string username)
+	{
 		append(HELLO_MSG);
 		append(username);
 		append(endMessage);
 	}
 
-	discovery_message() {
+	discovery_message()
+	{
 		append(DISCOVERY_MSG);
 		messageBody.append(endMessage);
 	}
 
 	std::string discovery_message::getUsername(char* username);
-
 	std::string discovery_message::get_packet_type();
-
 };

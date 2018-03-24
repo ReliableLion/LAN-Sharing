@@ -3,6 +3,8 @@
 // this class has only a default constructor
 PacketManager::PacketManager() {}
 
+PacketManager::~PacketManager() {}
+
 /**
  * \brief 
  * \param connection : TCP connection used to transfer byte
@@ -63,11 +65,13 @@ packet_code PacketManager::receivePacket(connection::conn_ptr connection)
  * \brief 
  * \return the request struct associated to thee request received by the server 
  */
-request_struct PacketManager::get_request() {
+request_struct PacketManager::get_request()
+{
 	return 	request;
 }
 
-bool PacketManager::send_reply(connection::conn_ptr connection, protocol::MessageType::message_code msgType) {
+bool PacketManager::send_reply(connection::conn_ptr connection, protocol::MessageType::message_code msgType)
+{
 	ProtocolMessage res_packet(msgType);
 
 	res_packet.prepare_outgoing_packet();
@@ -82,7 +86,8 @@ bool PacketManager::send_reply(connection::conn_ptr connection, protocol::Messag
  * \param errorType 
  * \return 
  */
-bool PacketManager::send_error(connection::conn_ptr connection, protocol::MessageType::error_code errorType) {
+bool PacketManager::send_error(connection::conn_ptr connection, protocol::MessageType::error_code errorType)
+{
 	int sentByte;
 	ProtocolMessage res_packet(errorType);
 
