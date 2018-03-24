@@ -56,7 +56,4 @@ namespace udp_service {
 		char server_address_[INET_ADDRSTRLEN];
 
 	};
-
-
-
 }

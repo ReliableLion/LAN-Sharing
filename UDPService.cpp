@@ -271,7 +271,7 @@ map<string, string> udp_client::get_online_users() {
 
 				cout << "--- Received string " << buffer_ << endl;
 
-				packet.get_username(username);
+				packet.get_username();
 
 				inet_ntop(AF_INET, &(server_address_struct_.sin_addr), client_address, INET_ADDRSTRLEN);
 
@@ -310,7 +310,10 @@ udp_server::udp_server() {
 	ZeroMemory(&client_address, sizeof(client_address));
 
 	/* create socket */
-	server_sock_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if((server_sock_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == INVALID_SOCKET) {
+		cout << "Error while creating the socket " << WSAGetLastError() << endl;
+		throw udp_exception::udp_exception("Error while creating the socket " + std::to_string(WSAGetLastError()) + "\n");
+	}
 
 	/* specify address to bind to */
 	memset(&server_address, 0, sizeof(server_address));
@@ -345,6 +348,8 @@ socklen_t udp_server::receive_datagram(char *buffer, const struct sockaddr_in *c
 
 	if (n > (length))
 		cout << "--- Some bytes lost!" << endl;
+	else
+		buffer[n] = '\0';
 
 	return address_len;
 }

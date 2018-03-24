@@ -5,6 +5,7 @@
 #include "Protocol.hpp"
 #include <vector>
 #include "Constants.hpp"
+#include <iostream>
 
 using namespace protocol;
 
@@ -86,7 +87,7 @@ public:
 
 	discovery_message();
 
-	std::string discovery_message::get_username(char* username);
+	std::string discovery_message::get_username();
 
 	std::string discovery_message::get_packet_type();
 

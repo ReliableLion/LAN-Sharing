@@ -1,15 +1,14 @@
 #pragma once
 #include "UDPService.hpp"
 #include "Message.hpp"
+#include <future>
 
 using namespace std;
 
 class discovery {
 
 public:
-	explicit discovery(const string username): hello_message_(this->my_username_) {
-		my_username_ = username;
-	}
+	explicit discovery(const string username): hello_message_(username){}
 
 	void start_discovery_service();
 
@@ -18,10 +17,11 @@ public:
 	void find_users();
 
 private:
-	string my_username_;
+	void start_listening();
+
 	discovery_message hello_message_;
 	map<string, string> online_users_;
+	future<void> server_thread_;
 
-	udp_service::udp_server udp_server_;
 	udp_service::udp_client udp_client_;
 };

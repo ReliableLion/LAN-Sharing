@@ -149,8 +149,10 @@ std::string discovery_message::get_packet_type() {
 	return "";
 }
 
-std::string discovery_message::get_username(char* username) {
-
+std::string discovery_message::get_username() {
+	
+	char username[USERNAME_LENGTH] = "";
+	
 	if (get_packet_type() == HELLO_MSG) {
 		// HELLO_MSG is the smallest string within a discovery message packet
 		memcpy(static_cast<void*>(username), static_cast<void*>(&(m_buffer.at(strlen(HELLO_MSG)))), m_buffer.size() - strlen(HELLO_MSG));
@@ -159,9 +161,11 @@ std::string discovery_message::get_username(char* username) {
 	else
 		throw message_exception("packet is not an Hello Message!\n");
 
-	return "";
+	const auto temp = reinterpret_cast<char*>(username);
+	return std::string(temp, strlen(username));
 }
 
 std::string discovery_message::get_message_body() {
-	return std::string(reinterpret_cast<char*>(m_buffer.data()));
+	const auto temp = reinterpret_cast<char*>((m_buffer.data()));
+	return std::string(temp, m_buffer.size());
 }

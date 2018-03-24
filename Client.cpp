@@ -21,11 +21,11 @@ void start_server() {
 	memset(&client_address, 0, sizeof(client_address));
 
 	//server.start_discovery_listening();
-	//const auto address_len = server.receive_datagram(buffer, client_address_ptr, sizeof(buffer));
+	const auto address_len = server.receive_datagram(buffer, client_address_ptr, sizeof(buffer));
 
-	//cout << "Here the message: " << buffer << " from: " << udp_service::get_client_address(client_address_ptr) << endl;
+	cout << "Here the message: " << buffer << " from: " << udp_service::get_client_address(client_address_ptr) << endl;
 
-	//server.send_datagram(buffer, &client_address, address_len, strlen(buffer));
+	server.send_datagram(buffer, &client_address, address_len, strlen(buffer));
 }
 
 int main(int argc, char* argv[]){
@@ -39,8 +39,25 @@ int main(int argc, char* argv[]){
 			MessageBoxA(0, "Winsock startup failed", "Error", MB_OK | MB_ICONERROR);
 			exit(0);
 		}
+		
+		discovery discovery_service = discovery("davide");
 
+		cout << "Starting discovery service" << endl;
+
+		discovery_service.start_discovery_service();
+
+		cout << "Discovery service started" << endl;
+
+		Sleep(3000);
+
+		cout << "Sending discovery..." << endl;
+
+		discovery_service.find_users();
+
+		cout << "Discovery sent!" << endl; 
+		/*
 		auto f1 = std::async(start_server);
+
 		Sleep(2000);         //make the programme waiting for 5 seconds
 		cout << "Started client" << endl;
 
@@ -53,6 +70,8 @@ int main(int argc, char* argv[]){
 		cout << "Datagram sent" << endl;
 
 		//client.receive_datagram();
+
+		*/
 
 		/*
 		session::TCPConnection connection;
