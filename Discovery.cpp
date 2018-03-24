@@ -41,9 +41,14 @@ void discovery::start_listening() {
 		else if (packet.get_packet_type() == HELLO_MSG) {
 			cout << "HERE THE HELLO RECEIVED: " << packet.get_message_body() << "The username obviously is: " << packet.get_username() << endl;
 			
-			if (online_users_.find(udp_service::get_client_address(client_address_ptr))->second == packet.get_username())
-				continue;
-			//online_users_.insert(udp_service::get_client_address(client_address_ptr), packet.get_username(username));
+			if (online_users_.size() > 0) {
+				if (online_users_.find(udp_service::get_client_address(client_address_ptr))->second == packet.get_username())
+					continue;
+				
+				online_users_.insert(make_pair(udp_service::get_client_address(client_address_ptr), packet.get_username()));
+
+			} else
+				online_users_.insert(make_pair(udp_service::get_client_address(client_address_ptr), packet.get_username()));
 		}
 		else
 			cout << "IT WASN'T A DISCOVERY MESSAGE!" << endl;
