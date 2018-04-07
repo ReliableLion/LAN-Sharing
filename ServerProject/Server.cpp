@@ -4,7 +4,7 @@
  * this constructor create a new socket that is setted on the defaul port 1500;
  * if you want to change it is possible to call the method change port and pass the new port number, t
  */
-Server::Server() : socket(DEFAULT_LISTEN_PORT)
+Server::Server() : socket_(DEFAULT_LISTEN_PORT)
 {
 	// when a new instance of Server is declared, a new listen socket is created  and binded to receive incoming request
 	// winsock startup
@@ -16,9 +16,9 @@ Server::Server() : socket(DEFAULT_LISTEN_PORT)
 		exit(1);
 	}
 
-	server_status = CREATED;
-	isPaused = false;
-	isStopped = false;
+	server_status_ = CREATED;
+	is_paused_ = false;
+	is_stopped_ = false;
 
 	// create an instance of the download and request manager
 	/*download_manager = std::shared_ptr<DownloadManager>(new DownloadManager());
@@ -42,41 +42,41 @@ Server::Server() : socket(DEFAULT_LISTEN_PORT)
 
 Server::~Server()
 {
-	closeServer();
+	close_server();
 }
 
-void Server::runServer() 
+void Server::run_server() 
 {
 
-	if(server_status != CREATED) 
+	if(server_status_ != CREATED) 
 		return;
 	
-	while (!isStopped) 
+	while (!is_stopped_) 
 	{
-		server_status = RUNNING;
+		server_status_ = RUNNING;
 		std::cout << "the server is running" << std::endl;
 
-		while (!isPaused || !isStopped)
-		listenNewConnection();
+		while (!is_paused_ || !is_stopped_)
+		listen_new_connection();
 		
 
-		server_status = PAUSED;
+		server_status_ = PAUSED;
 		std::cout << "the server is paused" << std::endl;
-		std::unique_lock<std::mutex> ul(mtx);
-		cv.wait(ul);
+		std::unique_lock<std::mutex> ul(mtx_);
+		cv_.wait(ul);
 	}
 		
-	server_status = STOPPED;
+	server_status_ = STOPPED;
 	std::cout << "the server is stopped" << std::endl;
 }
 
-void Server::listenNewConnection() 
+void Server::listen_new_connection() 
 {
 	connection::TCPConnection newConn;
 	std::time_t timestamp;
 			
 	// accept an imcoming request
-	if (newConn.accept_connection(socket))
+	if (newConn.accept_connection(socket_))
 	{	
 		// print some informations about the remote end-point, the time stamp when the connection has been accepted and more...
 		timestamp = std::time(0);
@@ -88,7 +88,7 @@ void Server::listenNewConnection()
 		
 		// add the request inside the request manager
 		request_status status;
-		if (request_manager->addConnection(std::make_shared<connection::TCPConnection>(newConn), status)) 
+		if (request_manager_->add_connection(std::make_shared<connection::TCPConnection>(newConn), status)) 
 		{
 			switch(status)
 			{
@@ -107,74 +107,74 @@ void Server::listenNewConnection()
 	}
 }
 
-bool Server::changePort(int port)
+bool Server::change_port(int port)
 {
 	// create a new instance of the listen_socket only if the server is
-	if (port >= 0 && port <= MAX_PORT && server_status == CREATED)
+	if (port >= 0 && port <= MAX_PORT && server_status_ == CREATED)
 	{
-		socket = Listen_socket(port);
+		socket_ = Listen_socket(port);
 		return true;
 	}
 
 	return false;
 }
 
-void Server::startServer() 
+void Server::start_server() 
 {
 	// re-instantiate the request manager and the download manager
-	download_manager = std::shared_ptr<DownloadManager>(new DownloadManager());
-	request_manager = std::shared_ptr<RequestManager>(new RequestManager(download_manager));
+	download_manager_ = std::shared_ptr<DownloadManager>(new DownloadManager());
+	request_manager_ = std::shared_ptr<RequestManager>(new RequestManager(download_manager_));
 	
 	// start a new thread
-	server_main_thread = std::thread(&Server::runServer, this);
+	server_main_thread_ = std::thread(&Server::run_server, this);
 }
 
-void Server::restartServer() 
+void Server::restart_server() 
 {
-	closeServer();
-	server_status = CREATED;
-	isPaused = false;
-	isStopped = false;
-	startServer();
+	close_server();
+	server_status_ = CREATED;
+	is_paused_ = false;
+	is_stopped_ = false;
+	start_server();
 }
 
-void Server::pauseServer()
+void Server::pause_server()
 {
-	if(server_status == RUNNING)
-		isPaused = true;
+	if(server_status_ == RUNNING)
+		is_paused_ = true;
 }
 
-void Server::rerunServer()
+void Server::rerun_server()
 {
-	if(server_status == PAUSED)
+	if(server_status_ == PAUSED)
 	{
-		isPaused = false;
-		std::lock_guard<std::mutex> lock_guard(mtx);
-		cv.notify_all();
+		is_paused_ = false;
+		std::lock_guard<std::mutex> lock_guard(mtx_);
+		cv_.notify_all();
 	}
 
-	if (server_status == STOPPED)
+	if (server_status_ == STOPPED)
 		std::cout << "the server is stopped" << std::endl;
 }
 
-void Server::closeServer()
+void Server::close_server()
 {
 	// if the server is in the RUNNING or PAUSED state, the boolean variable is set to true and the server is stopped 
-	if(server_status == RUNNING || server_status == PAUSED)
+	if(server_status_ == RUNNING || server_status_ == PAUSED)
 	{
-		isStopped = true;
-		std::lock_guard<std::mutex> lock_guard(mtx);
-		cv.notify_all();
+		is_stopped_ = true;
+		std::lock_guard<std::mutex> lock_guard(mtx_);
+		cv_.notify_all();
 	}
 
-	closesocket(socket.getSocket());
+	closesocket(socket_.get_socket());
 
-	if(server_status == STOPPED)
-		server_main_thread.join();
+	if(server_status_ == STOPPED)
+		server_main_thread_.join();
 
 	// delete the pointer to the old managers
 	// since the request manager has associated a pointer to the downlaod manager, should be resetted first the request manager pointer 
 	// and then the download manager, otherwise the shared pointer is pointed two times and the instance is never destructed correctly
-	request_manager.reset();
-	download_manager.reset();
+	request_manager_.reset();
+	download_manager_.reset();
 }

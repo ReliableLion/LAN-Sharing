@@ -6,8 +6,7 @@
 #include "ConcurrentQueue.hpp"
 #include "PacketManager.hpp"
 #include "FileHandler.hpp"
-#include "SocketException.h"
-#include "TimeoutException.hpp"
+#include "Exceptions.hpp"
 
 #include <mutex>
 #include <condition_variable>
@@ -24,28 +23,28 @@ enum request_status
 class RequestManager
 {
 	// thread & synchronization variables
-	const int maxThreads = REQUEST_THREADS;
-	const int fileThreshold = FILE_SIZE_THRESHOLD;
-	const int max_request_attempts = MAX_REQUEST_ATTEMPTS;
+	const int max_threads_ = REQUEST_THREADS;
+	const int file_threshold_ = FILE_SIZE_THRESHOLD;
+	const int max_request_attempts_ = MAX_REQUEST_ATTEMPTS;
 
 	// synchronization variable decalration
-	std::atomic<bool> is_terminated;
-	std::mutex mtx;
-	std::condition_variable cv;
-	std::vector<std::thread> threadPool;
+	std::atomic<bool> is_terminated_;
+	std::mutex mtx_;
+	std::condition_variable cv_;
+	std::vector<std::thread> thread_pool_;
 	
 	// connection and download variable 
-	ConcurrentQueue<connection::conn_ptr> connectionQueue;
+	ConcurrentQueue<connection::conn_ptr> connection_queue_;
 	std::shared_ptr<DownloadManager> dwload_manager;
 
 	// private methods
 	void extract_next_connection();
-	void receiveRequest(connection::conn_ptr connection);
-	bool processRequest(PacketManager& req_packet_manager,connection::conn_ptr connection);
-	bool sendResponse(PacketManager& res_packet_manager, connection::conn_ptr connection);
+	void receive_request(connection::conn_ptr connection);
+	bool process_request(PacketManager& req_packet_manager,connection::conn_ptr connection);
+	bool send_response(PacketManager& res_packet_manager, connection::conn_ptr connection);
 public:
 	RequestManager(std::shared_ptr<DownloadManager>);
 	~RequestManager();
-	void terminateService();
-	bool addConnection(connection::conn_ptr newConnection, request_status& status);
+	void terminate_service();
+	bool add_connection(connection::conn_ptr newConnection, request_status& status);
 };

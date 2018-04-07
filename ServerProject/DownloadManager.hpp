@@ -19,27 +19,30 @@ typedef struct {
 } download_struct;
 
 class DownloadManager {
-	// thread & synchronization variables
-	const int maxThreadB = BIG_FILE_THREADS , maxThreadS = SMALL_FILE_THREADS;
-	std::vector<std::thread> threadPoolB, threadPoolS;
-	ConcurrentQueue<download_struct> bigFileQ, smallFileQ;
-	std::mutex mtxB, mtxS;
-	std::atomic<bool> is_terminated;
-	std::condition_variable cvB, cvS;
+	const int max_thread_b_ = BIG_FILE_THREADS;
+	const int max_thread_s_ = SMALL_FILE_THREADS;
+	std::vector<std::thread> thread_pool_b_;
+	std::vector<std::thread> thread_pool_s_;
+	ConcurrentQueue<download_struct> big_file_q_;
+	ConcurrentQueue<download_struct> small_file_q_;
+	std::mutex mtx_b_;
+	std::mutex mtx_s_;
+	std::atomic<bool> is_terminated_;
+	std::condition_variable cv_b_, cv_s_;
 
 	// file variables
-	std::string path;
-	const std::string temp_path = TEMP_PATH;
+	std::string path_;
+	const std::string temp_path_ = TEMP_PATH;
 
 	// private methods
-	void processBigFile();
-	void processSmallFile();
-	void manageDownload(download_struct req_struct);
-	void downloadFile(download_struct request);
+	void process_big_file();
+	void process_small_file();
+	//void manageDownload(download_struct req_struct);
+	void download_file(download_struct request);
 public:
 	DownloadManager();
 	~DownloadManager();
-	void terminateService();
-	bool insertSmallFile(request_struct request, connection::conn_ptr connection);
-	bool insertBigFile(request_struct request, connection::conn_ptr connection);
+	void terminate_service();
+	bool insert_small_file(request_struct request, connection::conn_ptr connection);
+	bool insert_big_file(request_struct request, connection::conn_ptr connection);
 };

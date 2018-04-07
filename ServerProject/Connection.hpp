@@ -10,8 +10,7 @@
 #include <list>
 
 #include "Listen_socket.h"
-#include "SocketException.h"
-#include "TimeoutException.hpp"
+#include "Exceptions.hpp"
 
 #pragma comment(lib,"ws2_32.lib") //Required for WinSock
 
@@ -20,9 +19,9 @@ namespace connection {
 	class TCPConnection {
 		// definition of the variable
 		SOCKET sock = 0;
-		SOCKADDR_IN remote_address;
-		const long sec = TIMEOUT_SEC;
-		const long usec = TIMEOUT_USEC;
+		SOCKADDR_IN remote_address_;
+		const long sec_ = TIMEOUT_SEC;
+		const long usec_ = TIMEOUT_USEC;
 
 		// definition of the private methods
 		size_t readline_unbuffered(char *vptr, size_t maxlen);
@@ -31,9 +30,9 @@ namespace connection {
 		bool accept_connection(Listen_socket s);
 		bool close_connection() const;
 		void print_endpoint_info() const;
-		bool recvall(char *data, const int totalBytes, int& totalReadBytes);
-		bool sendall(const char *data, const int totalBytes, int& totalSentBytes);
-		bool readline(char *data, const int maxBytes, int& readBytes);
+		bool recv_all(char *data, const int totalBytes, int& totalReadBytes);
+		bool send_all(const char *data, const int totalBytes, int& totalSentBytes);
+		bool read_line(char *data, const int maxBytes, int& readBytes);
 	};
 
 	// definition of the connection pointer type 
@@ -41,7 +40,7 @@ namespace connection {
 
 	class Session
 	{
-		std::list<conn_ptr> connection_pool;
+		std::list<conn_ptr> connection_pool_;
 
 		// the constructor of copy and the assign operator are deleted
 		Session(const Session& source) {}

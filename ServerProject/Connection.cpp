@@ -10,8 +10,8 @@ TCPConnection::TCPConnection() {}
  * \return TRUE if the connection is established, FALSE otherwise
  */
 bool TCPConnection::accept_connection(Listen_socket s) {
-	int addrlen = sizeof(remote_address);
-	int sock_desc = s.getSocket();
+	int addrlen = sizeof(remote_address_);
+	int sock_desc = s.get_socket();
 
 	if(sock_desc == SOCKET_ERROR)
 	{
@@ -19,7 +19,7 @@ bool TCPConnection::accept_connection(Listen_socket s) {
 		return false;
 	}
 
-	sock = accept(sock_desc, (SOCKADDR*)&remote_address, &addrlen);
+	sock = accept(sock_desc, (SOCKADDR*)&remote_address_, &addrlen);
 
 	// check if the scoket return an error
 	if (sock ==  SOCKET_ERROR) {								
@@ -50,7 +50,7 @@ bool TCPConnection::close_connection() const {
  */
 void TCPConnection::print_endpoint_info() const {
 	char client_address[INET_ADDRSTRLEN];
-	inet_ntop(AF_INET, &(remote_address.sin_addr), client_address, INET_ADDRSTRLEN);
+	inet_ntop(AF_INET, &(remote_address_.sin_addr), client_address, INET_ADDRSTRLEN);
 
 	if (sock == 0) {
 		std::cout << "socket not connected" << std::endl;
@@ -58,7 +58,7 @@ void TCPConnection::print_endpoint_info() const {
 	}
 
 	std::cout << "IP address: " << client_address << std::endl;
-	std::cout << "port number: " << ntohs(remote_address.sin_port) << std::endl << std::endl;
+	std::cout << "port number: " << ntohs(remote_address_.sin_port) << std::endl << std::endl;
 }
 
 /**
@@ -68,7 +68,7 @@ void TCPConnection::print_endpoint_info() const {
  * \param totalReadByte : number of Bytes really read
  * \return false if the connection has been closed by peer, otherside true
  */
-bool TCPConnection::recvall(char *data, int totalBytes, int& totalReadBytes) {
+bool TCPConnection::recv_all(char *data, int totalBytes, int& totalReadBytes) {
 	struct timeval time;
 	int byteReceived = 0;
 	FD_SET read_sock;
@@ -77,8 +77,8 @@ bool TCPConnection::recvall(char *data, int totalBytes, int& totalReadBytes) {
 	FD_SET(sock, &read_sock);
 
 	while (byteReceived < totalBytes) {
-		time.tv_sec = sec; 
-		time.tv_usec = usec;
+		time.tv_sec = sec_; 
+		time.tv_usec = usec_;
 
 		int result = select(1, &read_sock, nullptr, nullptr, &time);
 
@@ -118,7 +118,7 @@ bool TCPConnection::recvall(char *data, int totalBytes, int& totalReadBytes) {
  * \param totalSentByte : reference type, total number of bytes really sent
  * \return false if the connection has been closed by peer, true if the data has been sent correctly
  */
-bool TCPConnection::sendall(const char* data, const int totalBytes, int& totalSentBytes) {
+bool TCPConnection::send_all(const char* data, const int totalBytes, int& totalSentBytes) {
 	int uploadedBytes = 0;
 	
 	while (uploadedBytes < totalBytes) {
@@ -141,7 +141,7 @@ bool TCPConnection::sendall(const char* data, const int totalBytes, int& totalSe
  * \param maxByte : max # of Bytes that can be read
  * \return false if the connection has been closed by peer, true if the data are read correclty
  */
-bool TCPConnection::readline(char *data, const int maxBytes, int& readBytes) {
+bool TCPConnection::read_line(char *data, const int maxBytes, int& readBytes) {
 	int rByte = readline_unbuffered(data, (size_t) maxBytes);
 
 	if (rByte == 0) {

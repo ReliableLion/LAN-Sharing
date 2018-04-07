@@ -3,7 +3,7 @@
 #include "Message.hpp"
 #include <cstdint> //Required to use std::int32_t
 
-Message::Message() : messageSize(0) {
+Message::Message() : message_size_(0) {
 }
 
 Message::Message(const char * data_buffer, const int size) {
@@ -24,7 +24,7 @@ Message::Message(const MessageType::error_code error) {
 
 void Message::append(const char * data_buffer, const int size) {
 
-	m_buffer.insert(m_buffer.end(), data_buffer, data_buffer + size);
+	m_buffer_.insert(m_buffer_.end(), data_buffer, data_buffer + size);
 }
 
 void Message::append(const std::string & str) {
@@ -34,7 +34,7 @@ void Message::append(const std::string & str) {
 
 void Message::append(const Message & p) { //Allocate new block for buffer
 
-	append(reinterpret_cast<const char*>(&p.m_buffer), p.m_buffer.size());
+	append(reinterpret_cast<const char*>(&p.m_buffer_), p.m_buffer_.size());
 }
 
 void Message::append(const __int64 int64) {
@@ -83,7 +83,7 @@ void Message::append(const std::size_t s) {
 ProtocolMessage::ProtocolMessage(const __int64 file_size, const FILETIME file_timestamp, const std::string file_name) {
 
 	// first append the type of the message
-	this->messageCode = MessageType::SEND;
+	this->message_code_ = MessageType::SEND;
 
 	// insert the request information
 	this->requestBody.file_size = file_size;
@@ -92,12 +92,12 @@ ProtocolMessage::ProtocolMessage(const __int64 file_size, const FILETIME file_ti
 }
 
 ProtocolMessage::ProtocolMessage(protocol::MessageType::message_code message_code) {
-	this->messageCode = message_code;
+	this->message_code_ = message_code;
 }
 
 ProtocolMessage::ProtocolMessage(protocol::MessageType::error_code error) {
-	this->messageCode = MessageType::ERR;
-	this->errorCode = error;
+	this->message_code_ = MessageType::ERR;
+	this->error_code_ = error;
 }
 
 /**
@@ -107,13 +107,13 @@ ProtocolMessage::ProtocolMessage(protocol::MessageType::error_code error) {
 bool ProtocolMessage::convert_incoming_packet() {
 
 	// TODO check if the buffer contain the exact size of data
-	if(m_buffer.size() < _min_size_request_  ||  
-		m_buffer.size() > _max_size_request_)
+	if(m_buffer_.size() < min_size_request_  ||  
+		m_buffer_.size() > max_size_request_)
 	{
 		return false;
 	}
 
-	const std::vector<int8_t>::const_iterator begin = m_buffer.begin() + 4;
+	const std::vector<int8_t>::const_iterator begin = m_buffer_.begin() + 4;
 
 	std::vector<int8_t>::const_iterator first = begin;
 	std::vector<int8_t>::const_iterator last = first + sizeof(__int64);
@@ -125,13 +125,13 @@ bool ProtocolMessage::convert_incoming_packet() {
 	last = begin + 2 * sizeof(__int64);
 	std::vector<int8_t> file_time_stamp(first, last);
 
-	memcpy(&timeStamp.QuadPart, file_time_stamp.data(), file_time_stamp.size());
-	timeStamp.QuadPart = ntohll(timeStamp.QuadPart);
-	this->requestBody.file_timestamp.dwLowDateTime = timeStamp.LowPart;
-	this->requestBody.file_timestamp.dwHighDateTime = timeStamp.HighPart;
+	memcpy(&time_stamp_.QuadPart, file_time_stamp.data(), file_time_stamp.size());
+	time_stamp_.QuadPart = ntohll(time_stamp_.QuadPart);
+	this->requestBody.file_timestamp.dwLowDateTime = time_stamp_.LowPart;
+	this->requestBody.file_timestamp.dwHighDateTime = time_stamp_.HighPart;
 
 	first = begin + 2 * sizeof(__int64);
-	last = m_buffer.end();
+	last = m_buffer_.end();
 	std::vector<int8_t> file_name(first, last);
 
 	char name[256];
@@ -147,7 +147,7 @@ bool ProtocolMessage::convert_incoming_packet() {
  */
 void ProtocolMessage::prepare_outgoing_packet() {
 
-	switch(messageCode)
+	switch(message_code_)
 	{
 	case MessageType::SEND:
 		{
@@ -162,8 +162,8 @@ void ProtocolMessage::prepare_outgoing_packet() {
 	case MessageType::ERR:
 		{
 			// append the error and the error code 
-			append(messageCode);
-			append(errorCode);
+			append(message_code_);
+			append(error_code_);
 		}
 		break;
 	default: 
@@ -176,47 +176,47 @@ void ProtocolMessage::prepare_outgoing_packet() {
 void ProtocolMessage::prepare_send_message(){
 
 	append(protocol::MessageType::getMessageType(MessageType::SEND));
-	append(static_cast<const char*>(messageBody.c_str()));
+	append(static_cast<const char*>(message_body_.c_str()));
 
 	__int64 fileSize = htonll(this->requestBody.file_size);
 	append(reinterpret_cast<const char*>(&fileSize), sizeof(__int64));
 
-	timeStamp.LowPart = this->requestBody.file_timestamp.dwLowDateTime;
-	timeStamp.HighPart = this->requestBody.file_timestamp.dwHighDateTime;
+	time_stamp_.LowPart = this->requestBody.file_timestamp.dwLowDateTime;
+	time_stamp_.HighPart = this->requestBody.file_timestamp.dwHighDateTime;
 
-	__int64 fileTimestamp = htonll(timeStamp.QuadPart);
+	__int64 fileTimestamp = htonll(time_stamp_.QuadPart);
 	append(reinterpret_cast<const char*>(&fileTimestamp), sizeof(__int64));
 
 	append(static_cast<const char*>(this->requestBody.file_name.c_str()), this->requestBody.file_name.size());
 
-	append(static_cast<const char*>(endMessage.c_str()));
+	append(static_cast<const char*>(end_message_.c_str()));
 }
 
 bool ProtocolMessage::get_packet_type() {
 	char packet_type[5];
 	
 	try {
-		if(m_buffer.empty())
+		if(m_buffer_.empty())
 		{
-			messageCode = MessageType::UNDEFINED;
+			message_code_ = MessageType::UNDEFINED;
 			return false;
 		}
 
-		memcpy(static_cast<void*>(packet_type), static_cast<void*>(&(*m_buffer.begin())), 4);
+		memcpy(static_cast<void*>(packet_type), static_cast<void*>(&(*m_buffer_.begin())), 4);
 		packet_type[4] = '\0';
 
 		// TODO check if the conversion goes wrong
-		messageCode = protocol::MessageType::getMessageType(std::string(packet_type));
+		message_code_ = protocol::MessageType::getMessageType(std::string(packet_type));
 		return true;
 	}
 	catch (std::exception e) {
-		messageCode = MessageType::UNDEFINED;
+		message_code_ = MessageType::UNDEFINED;
 		return false;
 	}
 }
 
 std::vector<int8_t> ProtocolMessage::get_packet_data() const {
-	return m_buffer;
+	return m_buffer_;
 }
 
 

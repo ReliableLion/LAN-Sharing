@@ -5,8 +5,8 @@
 namespace protocol {
 
 	class MessageType {
-		static const std::map<std::string, int> messageType;
-		static const std::map<std::string, int> errorType;
+		static const std::map<std::string, int> message_type;
+		static const std::map<std::string, int> error_type;
 
 	public:
 		// enumerator declaration
@@ -21,11 +21,11 @@ namespace protocol {
 			ERR_1						
 		};
 
-		static protocol::MessageType::message_code getMessageType(std::string msgType);
-		static std::string getMessageType(protocol::MessageType::message_code msgType);
+		static protocol::MessageType::message_code get_message_type(std::string msgType);
+		static std::string get_message_type(protocol::MessageType::message_code msgType);
 
-		static protocol::MessageType::error_code getErrorType(std::string errorCode);
-		static std::string getErrorType(protocol::MessageType::error_code errorCode);
+		static protocol::MessageType::error_code get_error_type(std::string errorCode);
+		static std::string get_error_type(protocol::MessageType::error_code errorCode);
 	};
 
 } // end of namespace protocol 

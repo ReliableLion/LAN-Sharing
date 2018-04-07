@@ -20,28 +20,28 @@ enum server_state_type
 
 class Server
 {
-	std::thread server_main_thread;
+	std::thread server_main_thread_;
 
-	Listen_socket socket;
-	std::shared_ptr<RequestManager> request_manager;
-	std::shared_ptr<DownloadManager> download_manager;
+	Listen_socket socket_;
+	std::shared_ptr<RequestManager> request_manager_;
+	std::shared_ptr<DownloadManager> download_manager_;
 
-	std::condition_variable cv;
-	std::mutex mtx;
+	std::condition_variable cv_;
+	std::mutex mtx_;
 
-	bool  isPaused, isStopped;
-	server_state_type server_status;
+	bool  is_paused_, is_stopped_;
+	server_state_type server_status_;
 
 	// private methods
-	void listenNewConnection();
-	void runServer();
+	void listen_new_connection();
+	void run_server();
 public:
 	Server();
 	~Server();
-	bool changePort(int port);
-	void startServer();
-	void restartServer();
-	void pauseServer();
-	void rerunServer();
-	void closeServer();	
+	bool change_port(int port);
+	void start_server();
+	void restart_server();
+	void pause_server();
+	void rerun_server();
+	void close_server();	
 };

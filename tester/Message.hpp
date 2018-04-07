@@ -22,13 +22,13 @@ typedef struct {
 
 class Message {
 protected:
-	std::string messageBody = "";
+	std::string message_body_ = "";
 	std::stringstream stream;
-	const std::string endMessage = "\r\n";
-	size_t messageSize;
+	const std::string end_message_ = "\r\n";
+	size_t message_size_;
 
 	//Message Packet Buffer
-	std::vector<int8_t> m_buffer; 
+	std::vector<int8_t> m_buffer_; 
 
 public:
 	Message();
@@ -46,13 +46,13 @@ public:
 };
 
 class ProtocolMessage : public Message {
-	protocol::MessageType::message_code messageCode;
-	protocol::MessageType::error_code errorCode;
+	protocol::MessageType::message_code message_code_;
+	protocol::MessageType::error_code error_code_;
 	request_struct requestBody;
-	ULARGE_INTEGER timeStamp;
+	ULARGE_INTEGER time_stamp_;
 
-	int const _min_size_request_ = (4 + (2 * sizeof(__int64)) + 1);
-	int const _max_size_request_ = (4 + (2 * sizeof(__int64)) + _MAX_FILENAME_LENGTH_);
+	int const min_size_request_ = (4 + (2 * sizeof(__int64)) + 1);
+	int const max_size_request_ = (4 + (2 * sizeof(__int64)) + _MAX_FILENAME_LENGTH_);
 
 	// private methods
 	void prepare_send_message();
@@ -82,7 +82,7 @@ public:
 	bool ProtocolMessage::get_packet_type();
 
 	request_struct get_message_request() { return requestBody; };
-	protocol::MessageType::message_code get_message_code() { return messageCode; };
+	protocol::MessageType::message_code get_message_code() { return message_code_; };
 };
 
 /*class discovery_message : public Message {

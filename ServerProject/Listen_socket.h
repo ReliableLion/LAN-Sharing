@@ -9,14 +9,14 @@
 
 class Listen_socket
 {
-	int server_port;			// local server port 
-	SOCKET l_socket;			// listen socket
-	SOCKADDR_IN local_addr;		// local server address
+	int server_port_;			// local server port 
+	SOCKET l_socket_;			// listen socket
+	SOCKADDR_IN local_addr_;		// local server address
 public:
 	Listen_socket(int port);
 	Listen_socket(const Listen_socket& socket);
 	Listen_socket& operator= (const Listen_socket& socket);
 	~Listen_socket();
-	SOCKET getSocket();
+	SOCKET get_socket();
 };
 

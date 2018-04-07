@@ -2,39 +2,39 @@
 
 #include "FileHandler.hpp"
 
-FileHandler::FileHandler(std::string filename, std::string path) : filename(filename), file_dir(path), file_path("") {}
+FileHandler::FileHandler(std::string filename, std::string path) : filename_(filename), file_dir_(path), file_path_("") {}
 
 FileHandler::~FileHandler() { closeFile(); }
 
-bool FileHandler::isOpen() { return file.is_open(); }
+bool FileHandler::isOpen() { return file_.is_open(); }
 
 void FileHandler::openFile(int open_mode)
 {
-	if (filename.empty() || file_dir.empty())	throw FileOpenException();
+	if (filename_.empty() || file_dir_.empty())	throw FileOpenException();
 
 	std::stringstream ss;
-	ss << file_dir << "\\" << filename;
-	file_path = ss.str();
+	ss << file_dir_ << "\\" << filename_;
+	file_path_ = ss.str();
 
 	if (open_mode == WRITE)
 	{
-		file.open(file_path, std::fstream::binary | std::fstream::out);				// open the file in binary mode 
-		this->open_mode = WRITE;
+		file_.open(file_path_, std::fstream::binary | std::fstream::out);				// open the file in binary mode 
+		this->open_mode_ = WRITE;
 	}
 	else
 	{
-		file.open(file_path, std::fstream::binary | std::fstream::in);
-		this->open_mode = READ;
+		file_.open(file_path_, std::fstream::binary | std::fstream::in);
+		this->open_mode_ = READ;
 	}
 
-	if (!file.good())	throw FileOpenException();
+	if (!file_.good())	throw FileOpenException();
 }
 
 bool FileHandler::closeFile()
 {
-	if (file.is_open()) 
+	if (file_.is_open()) 
 	{
-		file.close();
+		file_.close();
 		return true;
 	}
 	
@@ -53,40 +53,40 @@ bool FileHandler::copyFile(FileHandler& dest)
 		return true;
 	
 
-	if(!this->file.is_open())
+	if(!this->file_.is_open())
 	{
 		this->openFile(READ);
-		this->open_mode = READ;
+		this->open_mode_ = READ;
 	}
 
-	if(this->file.is_open() && this->open_mode == WRITE)
+	if(this->file_.is_open() && this->open_mode_ == WRITE)
 	{
 		this->closeFile();
 		this->openFile(READ);
-		this->open_mode = READ;
+		this->open_mode_ = READ;
 	}
 
-	if (!dest.file.is_open())
+	if (!dest.file_.is_open())
 	{
 		this->openFile(READ);
-		this->open_mode = READ;
+		this->open_mode_ = READ;
 	}
 
-	if (dest.file.is_open() && dest.open_mode == READ)
+	if (dest.file_.is_open() && dest.open_mode_ == READ)
 	{
 		this->closeFile();
 		this->openFile(READ);
-		this->open_mode = READ;
+		this->open_mode_ = READ;
 	}
 
 	// TODO.: search better method for file transfert
-	dest.file << this->file.rdbuf();
-	return (this->file.good() && dest.file.good());
+	dest.file_ << this->file_.rdbuf();
+	return (this->file_.good() && dest.file_.good());
 }
 						
 bool FileHandler::removeFile()
 {			
-	int res = remove(this->file_path.c_str());
+	int res = remove(this->file_path_.c_str());
 	if(res == 0)
 	{
 		return true;
@@ -103,26 +103,26 @@ void FileHandler::writeData(const char *buffer, std::size_t size)
 
 	if (buffer == nullptr || size < 0)	throw FileWriteException();
 
-	if (!file.is_open())
+	if (!file_.is_open())
 	{
 		openFile(WRITE);					// if file is not open, try to open it, otherwisw throw a new FileWrite Exception	
-		open_mode = WRITE;
+		open_mode_ = WRITE;
 	}
 
-	if(file.is_open() && open_mode == READ)
+	if(file_.is_open() && open_mode_ == READ)
 	{
 		closeFile();
 		openFile(WRITE);
-		open_mode = WRITE;
+		open_mode_ = WRITE;
 	}
 
 	do
 	{
-		file.write(buffer, n_byte);
+		file_.write(buffer, n_byte);
 		count++;
-	} while (!file.good() && count < maxAttempts);
+	} while (!file_.good() && count < max_attempts_);
 
-	if (count == maxAttempts)	throw FileWriteException();
+	if (count == max_attempts_)	throw FileWriteException();
 }
 
 void FileHandler::readFile(char *buffer, std::size_t size)
@@ -130,18 +130,18 @@ void FileHandler::readFile(char *buffer, std::size_t size)
 
 }
 
-std::string FileHandler::getFilename() { return this->filename; }
+std::string FileHandler::getFilename() { return this->filename_; }
 
 std::string FileHandler::getFilePath()
 {
-	if(file_path.empty())
+	if(file_path_.empty())
 	{
 		std::stringstream ss;
-		ss << file_dir << "\\" << filename;
-		return (file_path = ss.str());
+		ss << file_dir_ << "\\" << filename_;
+		return (file_path_ = ss.str());
 	} 
 
-	return file_path;
+	return file_path_;
 }
 
 
@@ -179,7 +179,7 @@ TemporaryFile::~TemporaryFile()
 {
 	// if the destructor is invoked for an instance of the temporary file 
 	// this will close the file and remove it from 
-	if (file.is_open()) file.close();
+	if (file_.is_open()) file_.close();
 		removeFile();
 }
 

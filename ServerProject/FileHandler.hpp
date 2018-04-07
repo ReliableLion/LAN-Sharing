@@ -4,8 +4,7 @@
 #include <string>
 #include <sstream>	
 
-#include "FileOpenException.h"
-#include "FileWriteException.h"
+#include "Exceptions.hpp"
 #include "Constants.hpp"
 
 enum file_open_type {WRITE, READ};
@@ -15,12 +14,13 @@ class FileHandler
 	FileHandler(FileHandler& source) {};
 	FileHandler& operator= (FileHandler& source) {};
 protected:
-	std::string file_dir;								// TODO remember to write \\ instead of \ when you write the file path
-	std::string filename;
-	std::string file_path;
-	std::fstream file;									// generic file stream for write and read operation on files
-	const int maxAttempts = MAX_FILE_ATTEMPTS;
-	file_open_type open_mode;
+	std::string file_dir_;								// TODO remember to write \\ instead of \ when you write the file path
+	std::string filename_;
+	std::string file_path_;
+	std::fstream file_;									// generic file stream for write and read operation on files
+	const int max_attempts_ = MAX_FILE_ATTEMPTS;
+	file_open_type open_mode_;
+
 public:
 	FileHandler(std::string filename, std::string path);
 	~FileHandler();
