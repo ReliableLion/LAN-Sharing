@@ -30,7 +30,7 @@ class Server
 	std::mutex mtx;
 
 	bool  isPaused, isStopped;
-	server_state_type server_state;
+	server_state_type server_status;
 
 	// private methods
 	void listenNewConnection();

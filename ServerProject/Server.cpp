@@ -16,13 +16,13 @@ Server::Server() : socket(DEFAULT_LISTEN_PORT)
 		exit(1);
 	}
 
-	server_state = CREATED;
+	server_status = CREATED;
 	isPaused = false;
 	isStopped = false;
 
 	// create an instance of the download and request manager
-	download_manager = std::shared_ptr<DownloadManager>(new DownloadManager());
-	request_manager = std::shared_ptr<RequestManager>(new RequestManager(download_manager));
+	/*download_manager = std::shared_ptr<DownloadManager>(new DownloadManager());
+	request_manager = std::shared_ptr<RequestManager>(new RequestManager(download_manager));*/
 
 	/*local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	local_addr.sin_port = htons(port);
@@ -48,27 +48,25 @@ Server::~Server()
 void Server::runServer() 
 {
 
-	if(server_state != CREATED) {
+	if(server_status != CREATED) 
 		return;
-	}
 	
 	while (!isStopped) 
 	{
-		server_state = RUNNING;
+		server_status = RUNNING;
 		std::cout << "the server is running" << std::endl;
 
 		while (!isPaused || !isStopped)
-		{
-			listenNewConnection();
-		}
+		listenNewConnection();
+		
 
-		server_state = PAUSED;
+		server_status = PAUSED;
 		std::cout << "the server is paused" << std::endl;
 		std::unique_lock<std::mutex> ul(mtx);
 		cv.wait(ul);
 	}
 		
-	server_state = STOPPED;
+	server_status = STOPPED;
 	std::cout << "the server is stopped" << std::endl;
 }
 
@@ -112,7 +110,7 @@ void Server::listenNewConnection()
 bool Server::changePort(int port)
 {
 	// create a new instance of the listen_socket only if the server is
-	if (port >= 0 && port <= MAX_PORT && server_state == CREATED)
+	if (port >= 0 && port <= MAX_PORT && server_status == CREATED)
 	{
 		socket = Listen_socket(port);
 		return true;
@@ -134,7 +132,7 @@ void Server::startServer()
 void Server::restartServer() 
 {
 	closeServer();
-	server_state = CREATED;
+	server_status = CREATED;
 	isPaused = false;
 	isStopped = false;
 	startServer();
@@ -142,30 +140,27 @@ void Server::restartServer()
 
 void Server::pauseServer()
 {
-	if(server_state == RUNNING)
-	{
+	if(server_status == RUNNING)
 		isPaused = true;
-	}
 }
 
 void Server::rerunServer()
 {
-	if(server_state == PAUSED)
+	if(server_status == PAUSED)
 	{
 		isPaused = false;
 		std::lock_guard<std::mutex> lock_guard(mtx);
 		cv.notify_all();
 	}
 
-	if (server_state == STOPPED)
-	{
-		std::cout << "the server is stopped, is not possible to stop it" << std::endl;
-	}
+	if (server_status == STOPPED)
+		std::cout << "the server is stopped" << std::endl;
 }
 
 void Server::closeServer()
 {
-	if(server_state == RUNNING || server_state == PAUSED)
+	// if the server is in the RUNNING or PAUSED state, the boolean variable is set to true and the server is stopped 
+	if(server_status == RUNNING || server_status == PAUSED)
 	{
 		isStopped = true;
 		std::lock_guard<std::mutex> lock_guard(mtx);
@@ -174,10 +169,8 @@ void Server::closeServer()
 
 	closesocket(socket.getSocket());
 
-	if(server_state == STOPPED)
-	{
+	if(server_status == STOPPED)
 		server_main_thread.join();
-	}
 
 	// delete the pointer to the old managers
 	// since the request manager has associated a pointer to the downlaod manager, should be resetted first the request manager pointer 
