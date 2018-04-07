@@ -50,11 +50,27 @@ int main(int argc, char* argv[]){
 
 		Sleep(3000);
 
+		if (discovery_service.get_online_users().size() == 0)
+			cout << "NO USERS" << endl;
+		else
+			for (auto user : discovery_service.get_online_users()) {
+				cout << "USER: " << user.first << ":" << user.second << endl;
+			}
+
 		cout << "Sending discovery..." << endl;
 
 		discovery_service.find_users();
 
-		cout << "Discovery sent!" << endl; 
+		cout << "Discovery sent!" << endl;
+		Sleep(3000);
+
+		if (discovery_service.get_online_users().size() == 0)
+			cout << "NO USERS" << endl;
+		else
+			for (auto user : discovery_service.get_online_users()) {
+				cout << "USER: " << user.first << ":" << user.second << endl;
+			}
+
 		/*
 		auto f1 = std::async(start_server);
 

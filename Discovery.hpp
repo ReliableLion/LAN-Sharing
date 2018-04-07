@@ -12,9 +12,11 @@ public:
 
 	void start_discovery_service();
 
-	void send_hello();
+	//void send_hello();
+
 	// Return a list of pairs (UserIP, Username)
 	void find_users();
+	map<string, string> get_online_users() const;
 
 private:
 	void start_listening();
