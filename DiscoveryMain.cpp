@@ -1,6 +1,5 @@
 #include "UDPService.hpp"
 #include "Discovery.hpp"
-#include "Session.hpp"
 #include <future>
 #include <iostream>     //for using cout
 #include <stdlib.h>     //for using the function sleep

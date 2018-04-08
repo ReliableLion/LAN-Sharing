@@ -294,7 +294,7 @@ map<string, string> udp_client::get_online_users() {
 				return online_users;
 			}
 			if (n == SOCKET_ERROR) {
-				throw socket_exception(WSAGetLastError());
+				throw SocketException(WSAGetLastError());
 			}
 		}
 	} while (duration_cast<chrono::seconds>(steady_clock::now() - start) < 3s);

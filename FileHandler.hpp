@@ -1,55 +1,62 @@
 #pragma once
-#include <WinSock2.h>
-#include "Exceptions.hpp"
+
 #include <fstream>
 #include <string>
+#include <sstream>	
+
+#include "Exceptions.hpp"
 #include "Constants.hpp"
-#include <datetimeapi.h>
+
+enum file_open_type { WRITE, READ };
 
 class FileHandler {
+	FileHandler(FileHandler& source) {};
+	FileHandler& operator= (FileHandler& source) {};
 protected:
-	std::string file_dir;								// TODO remember to write \\ instead of \ when you write the file path
-	std::string file_path;
-	std::string filename;
-	std::fstream file;									// generic file stream for write and read operation on files
-	HANDLE handle_file_;
-	const int maxAttempts = MAX_FILE_ATTEMPTS;
+	std::string file_dir_;								// TODO remember to write \\ instead of \ when you write the file path
+	std::string filename_;
+	std::string file_path_;
+	std::fstream file_;									// generic file stream for write and read operation on files
+	const int max_attempts_ = MAX_FILE_ATTEMPTS;
+	file_open_type open_mode_;
+
 public:
-	FileHandler() {};
 	FileHandler(std::string filename, std::string path);
-	virtual ~FileHandler();
-	virtual bool openFile() = 0;
+	~FileHandler();
+	void openFile(int open_mode);
 	bool closeFile();
-	void removeFile();
-	bool copyFile(FileHandler& dest_file);
+	bool isOpen();
+	bool removeFile();
+	bool copyFile(FileHandler& dest);
+	void writeData(const char *buffer, std::size_t size);
+	void readFile(char *buffer, std::size_t size);
 	std::string getFilename();
+	std::string getFilePath();
 	/*FileHandler(char *filename, char *path);
 	FileHandler(const FileHandler&& filehandler);
 	FileHandler(const FileHandler& filehandler);*/
 };
 
-class InputFileHandler : public FileHandler {
+/*class InputFileHandler : public FileHandler
+{
 public:
-	InputFileHandler(std::string filename, std::string path);
-	~InputFileHandler();
-	bool openFile();
-	void readFile(char *buffer, std::size_t size);
+InputFileHandler(std::string filename, std::string path);
+~InputFileHandler();
+void openFile();
+void readFile(char *buffer, std::size_t size);
 };
 
-class OutputFileHandler : public FileHandler {
+class OutputFileHandler : public FileHandler
+{
 public:
-	OutputFileHandler(std::string filename, std::string path);
-	~OutputFileHandler();
-	bool openFile();
-	void writeData(const char *buffer, std::size_t size);
-};
+OutputFileHandler(std::string filename, std::string path);
+~OutputFileHandler();
+void openFile();
+void writeData(const char *buffer, std::size_t size);
+};*/
 
-class TransmitFileHandler : public FileHandler {
-
+class TemporaryFile : public FileHandler {
 public:
-	TransmitFileHandler(std::string filename, std::string path);
-	~TransmitFileHandler();
-	bool openFile();
-	bool transmit_file(SOCKET socket) const;
-
+	TemporaryFile(std::string filename, std::string path);
+	~TemporaryFile();
 };

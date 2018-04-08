@@ -13,6 +13,9 @@
  */
 #define TIMEOUT 3
 
+#define TIMEOUT_SEC 10				// 10 seconds
+#define TIMEOUT_USEC 0				// 0 milliseconds
+
 /* UDP SECTION */
 /**
  * \brief UDP port used to which the UDP server is listening to 
@@ -39,7 +42,16 @@
 #define USERNAME_LENGTH 255
 
 /* FILE SECTION */
+#define BIG_FILE_THREADS 3
+#define SMALL_FILE_THREADS 2
+#define FILE_SIZE_THRESHOLD 1024 * 1024		// 1MB
+#define REQUEST_THREADS 4
+#define MAX_REQUEST_ATTEMPTS 3
 #define MAX_FILE_ATTEMPTS 5
+#define TEMP_PATH std::string("C:\\users\\utentepc\\Appdata\\local\\temp")
+#define QUEUE_MAX_ELEMENTS 1000
+#define MAX_FILENAME_LENGTH_ 256
+#define MAX_PORT 65535
 
 /* TCP SECTION */
 #define DEFAULT_LISTEN_PORT 1500

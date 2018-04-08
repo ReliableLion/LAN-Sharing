@@ -1,33 +1,31 @@
 #pragma once
+
 #include <map>
 
 namespace protocol {
+
 	class MessageType {
+		static const std::map<std::string, int> message_type;
+		static const std::map<std::string, int> error_type;
 
 	public:
-
-		static int protocol::MessageType::getMessageType(std::string msg_type);
-
-		static std::string protocol::MessageType::getMessageType(int msg_type);
-
-		const enum type {
-			send,
-			ok,
-			err,
-			undefined
+		// enumerator declaration
+		const enum message_code {
+			SEND,						// code used to send the request to the server
+			OK,							// code to responde affermatively to the request
+			ERR,						// code that specify a error 
+			UNDEFINED					// message code not recognized
 		};
 
-		static int get_error_type(std::string msg_type) {
-			return 0;
-		}
-
-		const enum error_type {
-
+		const enum error_code {
+			ERR_1
 		};
 
-	private:
-		static const std::map<std::string, int> message_type;
-		const std::map<std::string, int> error_type_ = {};
+		static protocol::MessageType::message_code get_message_type(std::string msgType);
+		static std::string get_message_type(protocol::MessageType::message_code msgType);
 
+		static protocol::MessageType::error_code get_error_type(std::string errorCode);
+		static std::string get_error_type(protocol::MessageType::error_code errorCode);
 	};
-}
+
+} // end of namespace protocol 

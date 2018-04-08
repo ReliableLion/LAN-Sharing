@@ -1,26 +1,32 @@
 #pragma once
+
+#include <sstream>
+
 #include "Protocol.hpp"
 #include "Constants.hpp"
 #include "Message.hpp"
-#include "Session.hpp"
+#include "Connection.hpp"
 
-typedef enum {
-	READ_CORRECTLY,					// the packet is received correclty by the server
-	URZ_PACKET,						// the packet isn't recognized by the server
-	CLD_CONN						// the connection has been closed by peer
-} packet_code;
+enum packet_code {
+	READ_OK,						// the packet is received correclty by the server
+	PACKET_ERR,						// the packet isn't recognized by the server
+	CLSD_CONN,						// the connection has been closed by peer
+};
 
 class PacketManager {
-private:
 	const int buffer_length = MAXBUFL;
-	RequestMessage message;
 	request_struct request;
+	connection::conn_ptr connection;
+
+	protocol::MessageType::message_code last_message_code;
+	protocol::MessageType::message_code last_error_code;
 public:
 	PacketManager();
-	packet_code receivePacket(session::conn_ptr connection);
-	request_struct get_request_struct();
-	bool checkRequest();
-	bool sendReply(session::conn_ptr connection, protocol::MessageType::type msgType);			// used to send an ok message
-	static bool sendReply(session::conn_ptr connection, protocol::MessageType::error_type errorType);		// used to send an error message
-
+	~PacketManager();
+	packet_code receivePacket(connection::conn_ptr connection);
+	request_struct get_request();
+	bool send_reply(connection::conn_ptr connection, protocol::MessageType::message_code msgType);			// used to send an ok message
+	bool send_error(connection::conn_ptr connection, protocol::MessageType::error_code errorType);			// used to send an error message
 };
+
+

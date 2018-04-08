@@ -1,29 +1,37 @@
 #include "FileHandler.hpp"
-#include<Mswsock.h>
-// link with Ws2_32.lib
-#pragma comment (lib, "Mswsock.lib")
 
-FileHandler::FileHandler(std::string filename, std::string path) : filename(filename), file_dir(path) {}
+FileHandler::FileHandler(std::string filename, std::string path) : filename_(filename), file_dir_(path), file_path_("") {}
 
 FileHandler::~FileHandler() { closeFile(); }
 
-/*FileHandler::FileHandler(co t FileHandler& filehandler) {
-//TODO remember to complete the copy constructor
-// creation of a copy
-}
-FileHandler::FileHandler(const FileHandler&& filehandler) {
-// TODO remember to complete the move constructor
-}*/
+bool FileHandler::isOpen() { return file_.is_open(); }
 
-bool FileHandler::closeFile() {
+void FileHandler::openFile(int open_mode) {
+	if (filename_.empty() || file_dir_.empty())	throw FileOpenException();
 
-	if (file.is_open()) {
-		file.close();
-		return true;
+	std::stringstream ss;
+	ss << file_dir_ << "\\" << filename_;
+	file_path_ = ss.str();
+
+	if (open_mode == WRITE) {
+		file_.open(file_path_, std::fstream::binary | std::fstream::out);				// open the file in binary mode 
+		this->open_mode_ = WRITE;
 	}
 	else {
-		return false;
+		file_.open(file_path_, std::fstream::binary | std::fstream::in);
+		this->open_mode_ = READ;
 	}
+
+	if (!file_.good())	throw FileOpenException();
+}
+
+bool FileHandler::closeFile() {
+	if (file_.is_open()) {
+		file_.close();
+		return true;
+	}
+
+	return false;
 }
 
 /**
@@ -31,126 +39,126 @@ bool FileHandler::closeFile() {
 * \param dest_file
 * \return
 */
-bool FileHandler::copyFile(FileHandler& dest_file) {
-	std::ifstream src;
-	std::ofstream dest;
-
-	src.open(this->filename, std::fstream::binary);
-	dest.open(dest_file.getFilename(), std::fstream::binary);
-
-	dest << src.rdbuf();
-	return (src.good() && dest.good());
-}
+bool FileHandler::copyFile(FileHandler& dest) {
+	// return true if the 2 file are the same
+	if (&dest == this)
+		return true;
 
 
-void FileHandler::removeFile() {
-	remove(this->filename.c_str());
-}
-
-std::string FileHandler::getFilename() { return this->filename; }
-
-InputFileHandler::InputFileHandler(std::string filename, std::string path) : FileHandler(filename, path) {}
-
-InputFileHandler::~InputFileHandler() {
-	closeFile();
-}
-
-bool InputFileHandler::openFile() {
-	if (filename.empty() || file_dir.empty()) {				//check if the filename or the file path are empty
-		throw file_open_exception();
+	if (!this->file_.is_open()) {
+		this->openFile(READ);
+		this->open_mode_ = READ;
 	}
 
-	file_path = file_dir.append("\\").append(filename);							// pathname definition
-
-	file.open(file_path, std::fstream::binary, std::fstream::in);				// open the file in binary mode 
-	if (!file.good()) {
-		throw file_open_exception();
-	}
-	return true;
-}
-
-void InputFileHandler::readFile(char *buffer, std::size_t size) {
-
-}
-
-OutputFileHandler::OutputFileHandler(std::string filename, std::string path) : FileHandler(filename, path) {}
-
-OutputFileHandler::~OutputFileHandler() {
-	closeFile();
-}
-
-bool OutputFileHandler::openFile() {
-	if (filename.empty() || file_dir.empty()) {				//check if the filename or the file path are empty
-		throw file_open_exception();
+	if (this->file_.is_open() && this->open_mode_ == WRITE) {
+		this->closeFile();
+		this->openFile(READ);
+		this->open_mode_ = READ;
 	}
 
-	file_path = file_dir.append("\\").append(filename);							// pathname definition
-
-	file.open(file_path, std::fstream::binary, std::fstream::out);				// open the file in binary mode 
-	if (!file.good()) {
-		throw file_open_exception();
+	if (!dest.file_.is_open()) {
+		this->openFile(READ);
+		this->open_mode_ = READ;
 	}
-	return true;
+
+	if (dest.file_.is_open() && dest.open_mode_ == READ) {
+		this->closeFile();
+		this->openFile(READ);
+		this->open_mode_ = READ;
+	}
+
+	// TODO.: search better method for file transfert
+	dest.file_ << this->file_.rdbuf();
+	return (this->file_.good() && dest.file_.good());
 }
 
-void OutputFileHandler::writeData(const char *buffer, std::size_t size) {
+bool FileHandler::removeFile() {
+	int res = remove(this->file_path_.c_str());
+	if (res == 0) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+void FileHandler::writeData(const char *buffer, std::size_t size) {
 	std::size_t n_byte = size;
 	int count = 0;
 
-	if (buffer == nullptr) {
-		throw file_write_exception();
+	if (buffer == nullptr || size < 0)	throw FileWriteException();
+
+	if (!file_.is_open()) {
+		openFile(WRITE);					// if file is not open, try to open it, otherwisw throw a new FileWrite Exception	
+		open_mode_ = WRITE;
 	}
 
-	if (!file.is_open()) {						// if file is not open, try to open it, otherwisw throw a new FileWrite Eception
-		if (!openFile()) {
-			throw file_write_exception();
-		}
+	if (file_.is_open() && open_mode_ == READ) {
+		closeFile();
+		openFile(WRITE);
+		open_mode_ = WRITE;
 	}
 
 	do {
-		file.write(buffer, n_byte);
+		file_.write(buffer, n_byte);
 		count++;
-	} while (!file.good() || count < maxAttempts);
+	} while (!file_.good() && count < max_attempts_);
 
-	if (count == maxAttempts) {
-		throw file_write_exception();
+	if (count == max_attempts_)	throw FileWriteException();
+}
+
+void FileHandler::readFile(char *buffer, std::size_t size) {
+
+}
+
+std::string FileHandler::getFilename() { return this->filename_; }
+
+std::string FileHandler::getFilePath() {
+	if (file_path_.empty()) {
+		std::stringstream ss;
+		ss << file_dir_ << "\\" << filename_;
+		return (file_path_ = ss.str());
 	}
 
-
+	return file_path_;
 }
 
-TransmitFileHandler::TransmitFileHandler(std::string filename, std::string path) : FileHandler(filename, path) {}
 
-TransmitFileHandler::~TransmitFileHandler() {
-	CloseHandle(handle_file_);
+
+
+/*OutputFileHandler::OutputFileHandler(std::string filename, std::string path) : FileHandler(filename, path) {}
+
+OutputFileHandler::~OutputFileHandler()
+{
+closeFile();
 }
 
-bool TransmitFileHandler::openFile() {
+void OutputFileHandler::openFile()
+{
+if (filename.empty() || file_dir.empty())	throw FileOpenException();
 
-	if (filename.empty() || file_dir.empty()) {				//check if the filename or the file path are empty
-		throw file_open_exception();
-	}
+std::stringstream ss;														// pathname definition
+ss << file_dir << "\\" << filename;
+file_path = ss.str();
 
-	file_path = file_dir.append("\\").append(filename);							// pathname definition
+file.open(file_path, std::fstream::binary, std::fstream::out);				// open the file in binary mode
 
-	handle_file_ = CreateFile(file_path.c_str(),               // file to open
-		GENERIC_READ,          // open for reading
-		FILE_SHARE_READ,       // share for reading
-	    nullptr,                  // default security
-		OPEN_EXISTING,         // existing file only
-		FILE_FLAG_OVERLAPPED & FILE_FLAG_SEQUENTIAL_SCAN, // normal file
-		nullptr);                 // no attr. template
-
-	if (handle_file_ == INVALID_HANDLE_VALUE) {
-		throw file_open_exception();
-	}
-
-	return true;
+if (!file.good())	throw FileOpenException();
 }
 
-bool TransmitFileHandler::transmit_file(const SOCKET socket) const {
+/**
+* \brief this method is in change to write the buffer into the file, raise FileWriteException if there are some error
+* \param buffer: the chunk of data to be written into the file
+* \param size: the size of the data to be written
+*/
 
-	if (!::TransmitFile(socket, handle_file_, 0, CHUNK, nullptr, nullptr, TF_USE_SYSTEM_THREAD))
-		return true;
-	throw transmit_file_exception(WSAGetLastError());
+TemporaryFile::TemporaryFile(std::string filename, std::string path) : FileHandler(filename, path) {}
+
+TemporaryFile::~TemporaryFile() {
+	// if the destructor is invoked for an instance of the temporary file 
+	// this will close the file and remove it from 
+	if (file_.is_open()) file_.close();
+	removeFile();
 }
+
+

@@ -33,10 +33,10 @@ private:
 	std::string error_message_;
 };
 
-class transmit_file_exception : public std::exception
-{
+
+class FileTransmissionException : public std::exception {
 public:
-	explicit transmit_file_exception(const int error) {
+	explicit FileTransmissionException(const int error) {
 		this->error_ = error;
 	}
 	const char* what() const throw() override {
@@ -49,10 +49,9 @@ private:
 	int error_;
 };
 
-class socket_exception : public std::exception {
-
+class SocketException : public std::exception {
 public:
-	explicit socket_exception(const int error) {
+	explicit SocketException(const int error) {
 		this->error_ = error;
 	}
 
@@ -66,15 +65,21 @@ private:
 	int error_;
 };
 
-class file_open_exception : public std::exception {
+class FileOpenException : public std::exception {
 public:
 	const char* what() const throw() override {
 		return "is not possible to open/close the file";
 	}
 };
 
-class file_write_exception : public std::exception {
+class FileWriteException : public std::exception {
 	const char* what() const throw() override {
 		return "is not possible to write the file";
+	}
+};
+
+class TimeoutException : public std::exception {
+	virtual const char* what() const throw() {
+		return "the connection reached the timeout";
 	}
 };

@@ -1,52 +1,74 @@
 #include "PacketManager.hpp"
 
+// this class has only a default constructor
 PacketManager::PacketManager() {}
+
+PacketManager::~PacketManager() {}
 
 /**
 * \brief
-* \param connection : TCP connection for data reading
+* \param connection : TCP connection used to transfer byte
 * \return false if the connection has been closed or if the packet is n
 */
-packet_code PacketManager::receivePacket(const session::conn_ptr connection) {
+packet_code PacketManager::receivePacket(connection::conn_ptr connection) {
 	char buffer[MAXBUFL];
-	char packetType[4];
 	int readBytes = 0;
+	ProtocolMessage req_packet;
 
-	if (connection->readline(buffer) == false) return CLD_CONN;
+	this->connection = connection;
 
-	message.Append(buffer);																		// set the buffer inside the PacketMessage instance
-	message.get_packet_type(packetType);															// check the packet type	
-	const auto msg_type = protocol::MessageType::getMessageType(std::string(packetType));
+	try {
+		if (connection->read_line(buffer, buffer_length, readBytes) == false) return CLSD_CONN;
+		req_packet.Append(buffer, readBytes);					// set the buffer inside the PacketMessage instance
 
-	if (msg_type == protocol::MessageType::type::undefined) return URZ_PACKET;				// if the packet is unrecognizedr
-	if (msg_type == protocol::MessageType::type::send) return READ_CORRECTLY;				// if the packet is send
-	
-	return URZ_PACKET;
+																// check the packet type
+		if (req_packet.get_packet_type()) {
+			switch (last_message_code = req_packet.get_message_code()) {
+			case protocol::MessageType::UNDEFINED:
+			{
+				return PACKET_ERR;
+			}
+			case protocol::MessageType::ERR:
+			{
+				switch (req_packet.get_error_code()) {
+				case MessageType::ERR_1:
+				{
+					return PACKET_ERR;
+				}
+				}
+			} break;
+			case protocol::MessageType::SEND:
+			{
+				request = req_packet.get_message_request();
+				return READ_OK;					// if the packet is sent
+			}
+			default:
+			{
+				return PACKET_ERR;
+			}
+			}
+		}
+	}
+	catch (std::exception &e) {
+		// the message parser raised an exception; return a packet error
+		return PACKET_ERR;
+	}
 }
 
-request_struct PacketManager::get_request_struct() {
-	return (request = message.get_request_data());											// set and return the request struct
-}
 
 /**
-* \brief : check the request received
-* \return true if the request is ammissible, false otherwise
+* \brief
+* \return the request struct associated to thee request received by the server
 */
-bool PacketManager::checkRequest() {
-
-	if (request.file_size <= 0) return false;
-	if (request.file_name.length() > 256) return false;						// return false if the filename is too long
-																			//if (request.fileTimestamp)
-
-	return true;
+request_struct PacketManager::get_request() {
+	return 	request;
 }
 
-bool PacketManager::sendReply(session::conn_ptr connection, protocol::MessageType::type msgType) {
-	int sentByte;
+bool PacketManager::send_reply(connection::conn_ptr connection, protocol::MessageType::message_code msgType) {
+	ProtocolMessage res_packet(msgType);
 
-	/*msg.clear();
-	msg << protocol::MessageType::getMessageType(msgType);
-	return connection->sendall(msg.str().c_str(), msg.str().length(), sentByte);*/
+	res_packet.prepare_outgoing_packet();
+	// TODO in this part the class must forward the packet to the end point
 	return false;
 }
 
@@ -57,13 +79,10 @@ bool PacketManager::sendReply(session::conn_ptr connection, protocol::MessageTyp
 * \param errorType
 * \return
 */
-bool PacketManager::sendReply(session::conn_ptr connection, protocol::MessageType::error_type errorType) {
-	int sent_byte;
+bool PacketManager::send_error(connection::conn_ptr connection, protocol::MessageType::error_code errorType) {
+	int sentByte;
+	ProtocolMessage res_packet(errorType);
 
-	/*msg.clear();
-	msg << protocol::MessageType::getMessageType(msgType);
-	return connection->sendall(msg.str().c_str(), msg.str().length(), sentByte);*/
-
-	//TODO Implement send reply based on TCPConnection::sendAll
+	// TODO in this part the class must forward the packet to the end point
 	return false;
 }
