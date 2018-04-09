@@ -24,14 +24,14 @@ protected:
 public:
 	FileHandler(std::string filename, std::string path);
 	~FileHandler();
-	void openFile(int open_mode);
-	bool closeFile();
-	bool isOpen();
-	bool removeFile();
-	bool copyFile(FileHandler& dest);
-	void writeData(const char *buffer, std::size_t size);
-	void readFile(char *buffer, std::size_t size);
-	std::string getFilename();
+	void open_file(int open_mode);
+	bool close_file();
+	bool is_open();
+	bool remove_file();
+	bool copy_file(FileHandler& dest);
+	void write_data(const char *buffer, std::size_t size);
+	void read_file(char *buffer, std::size_t size);
+	std::string get_filename();
 	std::string getFilePath();
 	/*FileHandler(char *filename, char *path);
 	FileHandler(const FileHandler&& filehandler);

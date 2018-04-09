@@ -1,8 +1,5 @@
 #pragma once
 
-#include "stdafx.h"
-
-#include <Ws2tcpip.h> 
 #include <iostream>
 #include <memory>
 #include <iomanip>
@@ -11,6 +8,7 @@
 
 #include "Listen_socket.h"
 #include "Exceptions.hpp"
+#include "Constants.hpp"
 
 #pragma comment(lib,"ws2_32.lib") //Required for WinSock
 
@@ -18,7 +16,7 @@ namespace connection {
 
 	class TCPConnection {
 		// definition of the variable
-		SOCKET sock = 0;
+		SOCKET socket_ = 0;
 		SOCKADDR_IN remote_address_;
 		const long sec_ = TIMEOUT_SEC;
 		const long usec_ = TIMEOUT_USEC;
@@ -48,6 +46,6 @@ namespace connection {
 	public:
 		Session();
 		~Session();
-		void addConnectioToSession();
+		void add_connectio_to_session();
 	};
 }

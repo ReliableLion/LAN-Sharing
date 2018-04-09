@@ -1,3 +1,5 @@
+#include "stdafx.h"
+
 #include "Listen_socket.h"
 
 /*

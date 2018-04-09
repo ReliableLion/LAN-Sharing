@@ -1,4 +1,7 @@
+#include "stdafx.h"
+
 #include "Connection.hpp" 
+
 
 using namespace connection;
 
@@ -19,10 +22,10 @@ bool TCPConnection::accept_connection(Listen_socket s) {
 		return false;
 	}
 
-	sock = accept(sock_desc, (SOCKADDR*)&remote_address_, &addrlen);
+	socket_ = accept(sock_desc, (SOCKADDR*)&remote_address_, &addrlen);
 
 	// check if the scoket return an error
-	if (sock ==  SOCKET_ERROR) {								
+	if (socket_ ==  SOCKET_ERROR) {								
 		std::cout << "server refused the connection, error: " << std::to_string(WSAGetLastError()) << std::endl;
 		return false;
 	}
@@ -32,7 +35,7 @@ bool TCPConnection::accept_connection(Listen_socket s) {
 
 bool TCPConnection::close_connection() const {
 
-	if (closesocket(sock) == SOCKET_ERROR)
+	if (closesocket(socket_) == SOCKET_ERROR)
 	{
 		if (WSAGetLastError() == WSAENOTSOCK)
 			//If socket error is that operation is not performed on a socket (This happens when the socket has already been closed)
@@ -52,7 +55,7 @@ void TCPConnection::print_endpoint_info() const {
 	char client_address[INET_ADDRSTRLEN];
 	inet_ntop(AF_INET, &(remote_address_.sin_addr), client_address, INET_ADDRSTRLEN);
 
-	if (sock == 0) {
+	if (socket_ == 0) {
 		std::cout << "socket not connected" << std::endl;
 		return;
 	}
@@ -68,46 +71,47 @@ void TCPConnection::print_endpoint_info() const {
  * \param totalReadByte : number of Bytes really read
  * \return false if the connection has been closed by peer, otherside true
  */
-bool TCPConnection::recv_all(char *data, int totalBytes, int& totalReadBytes) {
+bool TCPConnection::recv_all(char *data, int total_bytes, int& total_read_bytes) {
 	struct timeval time;
-	int byteReceived = 0;
+	int byte_received = 0;
 	FD_SET read_sock;
 
 	FD_ZERO(&read_sock);
-	FD_SET(sock, &read_sock);
+	FD_SET(socket_, &read_sock);
 
-	while (byteReceived < totalBytes) {
+	while (byte_received < total_bytes) {
 		time.tv_sec = sec_; 
 		time.tv_usec = usec_;
 
-		int result = select(1, &read_sock, nullptr, nullptr, &time);
+		int select_result = select(1, &read_sock, nullptr, nullptr, &time);
 
-		if (result == SOCKET_ERROR) {
+		if (select_result == SOCKET_ERROR) {
 			throw SocketException(WSAGetLastError());
 		} 
-		if (result == 0) {
+		if (select_result == 0) {
 			throw TimeoutException();
 		}
 
-		if (result == 1) {
+		if (select_result == 1) {
 
-			int byteRead = recv(sock, data + byteReceived, totalBytes - byteReceived, 0);
-			if (byteRead == SOCKET_ERROR) {
+			int byte_read = recv(socket_, data + byte_received, total_bytes - byte_received, 0);
+			if (byte_read == SOCKET_ERROR) {
 				throw SocketException(WSAGetLastError());
 			}
-			if (byteRead == 0) {
-				totalReadBytes = byteReceived;
+			if (byte_read == 0) {
+				total_read_bytes = byte_received;
 				return false;
 			}
 
-			byteReceived += byteRead;					// increment the number of bytes received
+			// increment the number of bytes received
+			byte_received += byte_read;					
 
 		} else {
-			totalReadBytes = byteReceived;
+			total_read_bytes = byte_received;
 			return false;
 		}
 	}
-	totalReadBytes = byteReceived;
+	total_read_bytes = byte_received;
 	return true;
 }
 
@@ -118,18 +122,18 @@ bool TCPConnection::recv_all(char *data, int totalBytes, int& totalReadBytes) {
  * \param totalSentByte : reference type, total number of bytes really sent
  * \return false if the connection has been closed by peer, true if the data has been sent correctly
  */
-bool TCPConnection::send_all(const char* data, const int totalBytes, int& totalSentBytes) {
-	int uploadedBytes = 0;
+bool TCPConnection::send_all(const char* data, const int total_bytes, int& total_sent_bytes) {
+	int uploaded_bytes = 0;
 	
-	while (uploadedBytes < totalBytes) {
-		int sentBytes = send(sock, data + uploadedBytes, totalBytes - uploadedBytes, 0);
-		if (sentBytes == 0) {
+	while (uploaded_bytes < total_bytes) {
+		int sent_bytes = send(socket_, data + uploaded_bytes, total_bytes - uploaded_bytes, 0);
+		if (sent_bytes == 0) {
 			return false;
 		} else 
-		if (sentBytes == SOCKET_ERROR) {
+		if (sent_bytes == SOCKET_ERROR) {
 			throw SocketException(WSAGetLastError());
 		}
-		uploadedBytes += sentBytes;
+		uploaded_bytes += sent_bytes;
 	}
 	return true;
 }
@@ -141,17 +145,17 @@ bool TCPConnection::send_all(const char* data, const int totalBytes, int& totalS
  * \param maxByte : max # of Bytes that can be read
  * \return false if the connection has been closed by peer, true if the data are read correclty
  */
-bool TCPConnection::read_line(char *data, const int maxBytes, int& readBytes) {
-	int rByte = readline_unbuffered(data, (size_t) maxBytes);
+bool TCPConnection::read_line(char *data, const int max_bytes, int& read_bytes) {
+	int read_byte = readline_unbuffered(data, (size_t) max_bytes);
 
-	if (rByte == 0) {
+	if (read_byte == 0) {
 		return false;
 	}  else
-	if (rByte < 0) {
+	if (read_byte < 0) {
 		throw SocketException(WSAGetLastError());
 	}  else
-	if (rByte > 0) {
-		readBytes = rByte;
+	if (read_byte > 0) {
+		read_bytes = read_byte;
 		return true;
 	}
 }
@@ -166,7 +170,7 @@ size_t TCPConnection::readline_unbuffered(char *vptr, size_t maxlen) {
 	ptr = vptr;
 	for (n = 1; n<maxlen; n++)
 	{
-		if ((rc = recv(sock, &c, 1, 0)) == 1)
+		if ((rc = recv(socket_, &c, 1, 0)) == 1)
 		{
 			*ptr++ = c;
 			if (c == '\n')

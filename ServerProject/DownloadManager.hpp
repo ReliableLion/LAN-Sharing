@@ -1,7 +1,5 @@
 #pragma once
 
-#include "stdafx.h"
-
 #include <windows.h>
 #include <atomic>
 #include <thread>
@@ -12,6 +10,18 @@
 #include "FileHandler.hpp"
 #include "Connection.hpp"
 #include "Message.hpp"
+#include "Constants.hpp"
+
+enum download_error
+{
+	OK,
+	FILE_NOT_COMPLETE,
+	CONNECTION_CLOSED,
+	COPY_ERROR,
+	SOCKET_ERROR_2,
+	FILE_WRITE_ERROR,
+	TIMEOUT_ERROR
+};
 
 typedef struct {
 	request_struct req;
@@ -38,7 +48,7 @@ class DownloadManager {
 	void process_big_file();
 	void process_small_file();
 	//void manageDownload(download_struct req_struct);
-	void download_file(download_struct request);
+	int download_file(download_struct request);
 public:
 	DownloadManager();
 	~DownloadManager();

@@ -4,11 +4,11 @@
 
 FileHandler::FileHandler(std::string filename, std::string path) : filename_(filename), file_dir_(path), file_path_("") {}
 
-FileHandler::~FileHandler() { closeFile(); }
+FileHandler::~FileHandler() { close_file(); }
 
-bool FileHandler::isOpen() { return file_.is_open(); }
+bool FileHandler::is_open() { return file_.is_open(); }
 
-void FileHandler::openFile(int open_mode)
+void FileHandler::open_file(int open_mode)
 {
 	if (filename_.empty() || file_dir_.empty())	throw FileOpenException();
 
@@ -30,7 +30,7 @@ void FileHandler::openFile(int open_mode)
 	if (!file_.good())	throw FileOpenException();
 }
 
-bool FileHandler::closeFile()
+bool FileHandler::close_file()
 {
 	if (file_.is_open()) 
 	{
@@ -46,7 +46,7 @@ bool FileHandler::closeFile()
  * \param dest_file 
  * \return 
  */
-bool FileHandler::copyFile(FileHandler& dest)
+bool FileHandler::copy_file(FileHandler& dest)
 {
 	// return true if the 2 file are the same
 	if(&dest == this)
@@ -55,36 +55,36 @@ bool FileHandler::copyFile(FileHandler& dest)
 
 	if(!this->file_.is_open())
 	{
-		this->openFile(READ);
+		this->open_file(READ);
 		this->open_mode_ = READ;
 	}
 
 	if(this->file_.is_open() && this->open_mode_ == WRITE)
 	{
-		this->closeFile();
-		this->openFile(READ);
+		this->close_file();
+		this->open_file(READ);
 		this->open_mode_ = READ;
 	}
 
 	if (!dest.file_.is_open())
 	{
-		this->openFile(READ);
+		this->open_file(READ);
 		this->open_mode_ = READ;
 	}
 
 	if (dest.file_.is_open() && dest.open_mode_ == READ)
 	{
-		this->closeFile();
-		this->openFile(READ);
+		this->close_file();
+		this->open_file(READ);
 		this->open_mode_ = READ;
 	}
 
-	// TODO.: search better method for file transfert
+	// TODO search better method for file transfert
 	dest.file_ << this->file_.rdbuf();
 	return (this->file_.good() && dest.file_.good());
 }
 						
-bool FileHandler::removeFile()
+bool FileHandler::remove_file()
 {			
 	int res = remove(this->file_path_.c_str());
 	if(res == 0)
@@ -96,7 +96,7 @@ bool FileHandler::removeFile()
 	}
 }
 
-void FileHandler::writeData(const char *buffer, std::size_t size)
+void FileHandler::write_data(const char *buffer, std::size_t size)
 {
 	std::size_t n_byte = size;
 	int count = 0;
@@ -105,14 +105,14 @@ void FileHandler::writeData(const char *buffer, std::size_t size)
 
 	if (!file_.is_open())
 	{
-		openFile(WRITE);					// if file is not open, try to open it, otherwisw throw a new FileWrite Exception	
+		open_file(WRITE);					// if file is not open, try to open it, otherwisw throw a new FileWrite Exception	
 		open_mode_ = WRITE;
 	}
 
 	if(file_.is_open() && open_mode_ == READ)
 	{
-		closeFile();
-		openFile(WRITE);
+		close_file();
+		open_file(WRITE);
 		open_mode_ = WRITE;
 	}
 
@@ -125,12 +125,12 @@ void FileHandler::writeData(const char *buffer, std::size_t size)
 	if (count == max_attempts_)	throw FileWriteException();
 }
 
-void FileHandler::readFile(char *buffer, std::size_t size)
+void FileHandler::read_file(char *buffer, std::size_t size)
 {
 
 }
 
-std::string FileHandler::getFilename() { return this->filename_; }
+std::string FileHandler::get_filename() { return this->filename_; }
 
 std::string FileHandler::getFilePath()
 {
@@ -180,7 +180,7 @@ TemporaryFile::~TemporaryFile()
 	// if the destructor is invoked for an instance of the temporary file 
 	// this will close the file and remove it from 
 	if (file_.is_open()) file_.close();
-		removeFile();
+		remove_file();
 }
 
 

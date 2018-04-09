@@ -1,3 +1,5 @@
+#include "stdafx.h"
+
 #include "PacketManager.hpp"
 
 // this class has only a default constructor
@@ -20,7 +22,7 @@ packet_code PacketManager::receivePacket(connection::conn_ptr connection)
 
 	try 
 	{
-		if (connection->readline(buffer, buffer_length, readBytes) == false) return CLSD_CONN;
+		if (connection->read_line(buffer, buffer_length, readBytes) == false) return CLSD_CONN;
 		req_packet.append(buffer, readBytes);					// set the buffer inside the PacketMessage instance
 		
 		// check the packet type

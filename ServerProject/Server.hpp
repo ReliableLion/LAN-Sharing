@@ -1,7 +1,5 @@
 #pragma once
 
-#include "stdafx.h"
-
 #include <ctime>
 #include <thread>
 #include <mutex>
@@ -12,9 +10,9 @@
 enum server_state_type
 {
 	CREATED,
-	PAUSED,
-	STOPPED,
-	RUNNING
+	PAUSE,
+	STOP,
+	RUN
 };
 
 
@@ -27,7 +25,9 @@ class Server
 	std::shared_ptr<DownloadManager> download_manager_;
 
 	std::condition_variable cv_;
+	std::condition_variable cv2_;
 	std::mutex mtx_;
+	std::mutex mtx2_;
 
 	bool  is_paused_, is_stopped_;
 	server_state_type server_status_;

@@ -28,4 +28,4 @@ namespace protocol {
 		static std::string get_error_type(protocol::MessageType::error_code errorCode);
 	};
 
-} // end of namespace protocol 
+}

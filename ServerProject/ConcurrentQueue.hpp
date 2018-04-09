@@ -5,6 +5,8 @@
 
 #include "Constants.hpp"
 
+#include "stdafx.h"
+
 template <typename T>
 class ConcurrentQueue {
 	std::queue<T> c_queue_;
@@ -20,7 +22,7 @@ public:
 	 * \param element
 	 * \return return TRUE if the data is pushed correctly, FALSE othrewise
 	 */
-	bool insertElement(T element) {
+	bool insert_element(T element) {
 		std::lock_guard<std::mutex> queue_lock(mtx_);
 		
 		// if the queue exceed the maximum capability return false
@@ -35,7 +37,7 @@ public:
 	 * \param element: used to insert the value of the popped data 
 	 * \return return TRUE if the element is popped correctly, FALSE if cannot performed a pop on  the queue
 	 */
-	bool popElement(T& element) {
+	bool pop_element(T& element) {
 		std::lock_guard<std::mutex> queue_lock(mtx_);
 		
 		// if the queue go under 0 element return false
@@ -46,7 +48,7 @@ public:
 		return true;
 	}
 
-	bool isEmpty() { 
+	bool is_empty() { 
 		std::lock_guard<std::mutex> queue_lock(mtx_);
 		return c_queue_.empty();
 	}

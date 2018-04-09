@@ -1,5 +1,6 @@
+#include "stdafx.h"
+
 #include "RequestManager.hpp"
-#include "PacketManager.hpp"
 
 //		PUBLIC METHODS
 
@@ -10,9 +11,7 @@ RequestManager::RequestManager(std::shared_ptr<DownloadManager> dwload_manager)
 
 	// instantiate all the threads that are used to manage all the incoming requests
 	for (int i = 0; i < max_threads_; i++)
-	{
 		thread_pool_.push_back(std::thread(&RequestManager::extract_next_connection, this));
-	}
 }
 
 /*
@@ -32,14 +31,16 @@ void RequestManager::terminate_service()
 	connection::conn_ptr connection;
 	is_terminated_.store(true);						// this flag is used to stop the threads computation
 
-	while (!connection_queue_.isEmpty()) 
-	{			// iterate the entire queue and close the pending connections
-		connection_queue_.popElement(connection);
+	while (!connection_queue_.is_empty()) 
+	{			
+		// iterate the entire queue and close the pending connections
+		connection_queue_.pop_element(connection);
 		connection->close_connection();
 	}
 
 	for (auto i = 0; i < max_threads_; i++)
-	{			// close all threads
+	{			
+		// close all threads
 		cv_.notify_all();
 		thread_pool_[i].join();						// "unlock" the threads that wait on the condition variable
 	}
@@ -58,7 +59,7 @@ bool RequestManager::add_connection(connection::conn_ptr newConnection, request_
 	{
 		std::lock_guard<std::mutex> l(mtx_);
 
-		if (!connection_queue_.insertElement(newConnection)) 
+		if (!connection_queue_.insert_element(newConnection)) 
 		{
 			status = FULL_QUEUE;
 			return false;			// the queue has reached the max number of element
@@ -85,13 +86,13 @@ void RequestManager::extract_next_connection()
 		ul.lock();
 
 		cv_.wait(ul, [this]() {														// wait on the condition varaible
-			return (!connection_queue_.isEmpty() && !is_terminated_.load());			// unlock the condition variable only if the queue is not empty or the server has been closed
+			return (!connection_queue_.is_empty() && !is_terminated_.load());			// unlock the condition variable only if the queue is not empty or the server has been closed
 		});
 		
 		if (is_terminated_.load()) exit = true;										// if the server has been closed this method must return in order to join the threads
 		
 		// get the connection from the queue and then release the lock 
-		connection_queue_.popElement(newConnection);	
+		connection_queue_.pop_element(newConnection);	
 		ul.unlock();
 		receive_request(newConnection);
 	}

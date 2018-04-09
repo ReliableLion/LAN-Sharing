@@ -8,25 +8,25 @@ Server::Server() : socket_(DEFAULT_LISTEN_PORT)
 {
 	// when a new instance of Server is declared, a new listen socket is created  and binded to receive incoming request
 	// winsock startup
-	WSAData wsaData;
+	/*WSAData wsaData;
 	WORD DllVersion = MAKEWORD(2, 1);
 	if (WSAStartup(DllVersion, &wsaData) != 0)
 	{
 		std::cout << "WinSock startup fail" << std::endl;
 		exit(1);
-	}
+	}*/
 
 	server_status_ = CREATED;
 	is_paused_ = false;
 	is_stopped_ = false;
 
 	// create an instance of the download and request manager
-	/*download_manager = std::shared_ptr<DownloadManager>(new DownloadManager());
-	request_manager = std::shared_ptr<RequestManager>(new RequestManager(download_manager));*/
+	download_manager_ = std::shared_ptr<DownloadManager>(new DownloadManager());
+	request_manager_ = std::shared_ptr<RequestManager>(new RequestManager(download_manager_));
 
-	/*local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	local_addr.sin_port = htons(port);
-	local_addr.sin_family = AF_INET;
+	/*local_addr_.sin_addr.s_addr = htonl(INADDR_ANY);
+	local_addr_.sin_port = htons(port_);
+	local_addr_.sin_family = AF_INET;
 
 	l_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (bind(l_socket, (SOCKADDR*) &local_addr, sizeof(local_addr)) == SOCKET_ERROR) {
@@ -47,26 +47,25 @@ Server::~Server()
 
 void Server::run_server() 
 {
-
 	if(server_status_ != CREATED) 
 		return;
 	
 	while (!is_stopped_) 
 	{
-		server_status_ = RUNNING;
+		server_status_ = RUN;
 		std::cout << "the server is running" << std::endl;
 
 		while (!is_paused_ || !is_stopped_)
-		listen_new_connection();
+			listen_new_connection();
 		
-
-		server_status_ = PAUSED;
+		std::unique_lock<std::mutex> pause_lock(mtx2_);
+		server_status_ = PAUSE;
 		std::cout << "the server is paused" << std::endl;
-		std::unique_lock<std::mutex> ul(mtx_);
-		cv_.wait(ul);
+		cv2_.notify_all();
+		pause_lock.unlock();
 	}
 		
-	server_status_ = STOPPED;
+	server_status_ = STOP;
 	std::cout << "the server is stopped" << std::endl;
 }
 
@@ -96,7 +95,7 @@ void Server::listen_new_connection()
 				std::cout << "impossible to add the connection, the queue is full" << std::endl;
 				break;
 			case TERM_SIGNAL:
-				std::cout << "impossibleto add the connection becase the request manager hase reveived the shutdown request" << std::endl;
+				std::cout << "impossible to add the connection becase the request manager hase reveived the shutdown request" << std::endl;
 				break;
 			}
 		}
@@ -140,37 +139,49 @@ void Server::restart_server()
 
 void Server::pause_server()
 {
-	if(server_status_ == RUNNING)
+	if(server_status_ == RUN)
 		is_paused_ = true;
 }
 
 void Server::rerun_server()
 {
-	if(server_status_ == PAUSED)
+	if (server_status_ == PAUSE)
 	{
 		is_paused_ = false;
 		std::lock_guard<std::mutex> lock_guard(mtx_);
 		cv_.notify_all();
 	}
 
-	if (server_status_ == STOPPED)
-		std::cout << "the server is stopped" << std::endl;
+	if (server_status_ == STOP)
+		std::cout << "the server is stopped, cannot rerun" << std::endl;
 }
 
 void Server::close_server()
 {
-	// if the server is in the RUNNING or PAUSED state, the boolean variable is set to true and the server is stopped 
-	if(server_status_ == RUNNING || server_status_ == PAUSED)
+	// if the server is in the RUN or PAUSE state, the boolean variable is set to true and the server is stopped 
+	if (server_status_ == PAUSE)
 	{
-		is_stopped_ = true;
 		std::lock_guard<std::mutex> lock_guard(mtx_);
 		cv_.notify_all();
 	}
 
-	closesocket(socket_.get_socket());
+	if (server_status_ == RUN)
+	{
+		is_stopped_ = true;
 
-	if(server_status_ == STOPPED)
-		server_main_thread_.join();
+		std::unique_lock<std::mutex> lock(mtx2_);
+		cv2_.wait(lock, [this]() {
+			return (server_status_ == PAUSE);
+		});
+		lock.unlock();
+
+		std::lock_guard<std::mutex> lock_guard(mtx_);
+		cv_.notify_all();
+	}
+
+	//closesocket(socket.getSocket());
+
+	server_main_thread_.join();
 
 	// delete the pointer to the old managers
 	// since the request manager has associated a pointer to the downlaod manager, should be resetted first the request manager pointer 
@@ -178,3 +189,4 @@ void Server::close_server()
 	request_manager_.reset();
 	download_manager_.reset();
 }
+

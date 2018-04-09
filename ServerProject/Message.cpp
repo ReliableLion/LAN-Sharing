@@ -1,3 +1,5 @@
+#include "stdafx.h"
+
 #include "Message.hpp"
 #include <cstdint> //Required to use std::int32_t
 
