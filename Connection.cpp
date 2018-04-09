@@ -29,6 +29,56 @@ bool TCPConnection::accept_connection(Listen_socket s) {
 	return true;
 }
 
+bool TCPConnection::create_connection(const char *host, const char *port) {
+
+		int n;
+		struct addrinfo hints, *res, *res0;
+
+		memset(&hints, 0, sizeof(hints));
+		hints.ai_family = AF_INET;
+		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_protocol = IPPROTO_TCP;
+
+		if ((n = getaddrinfo(host, port, &hints, &res0)) != 0) {
+			std::cout << "Error within getaddrinfo(): " << WSAGetLastError() << std::endl;
+			return false;
+		}
+
+		sock = -1;
+		for (res = res0; res != nullptr; res = res->ai_next) {
+
+			sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+			if (sock == INVALID_SOCKET) {
+
+				std::cout << "(%s) socket() failed" << std::endl;
+				continue;
+			}
+
+			std::cout << "(%s) --- Socket created, fd number: " << sock << std::endl;
+
+			if (connect(sock, res->ai_addr, res->ai_addrlen) < 0) {
+
+				closesocket(sock);	/* bind error, close and try next one */
+				continue;
+			}
+
+			std::cout << "(%s) --- Connected to target address: " << inet_ntoa(((struct sockaddr_in *)(res->ai_addr))->sin_addr) << ":" <<
+				htons(((struct sockaddr_in *)(res->ai_addr))->sin_port) << std::endl;
+
+			break; /* Ok we got one */
+		}
+
+		if (res == NULL) {	/* errno set from final connect() */
+			std::cout << "Couldn't connect to " << host << ":" << port << " because of error " << WSAGetLastError() << std::endl;
+			return false;
+		}
+
+		freeaddrinfo(res0);
+
+		return true;;
+}
+
+
 bool TCPConnection::close_connection() const {
 
 	if (closesocket(sock) == SOCKET_ERROR) {

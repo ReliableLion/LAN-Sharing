@@ -121,7 +121,7 @@ void udp_client::get_server_info(std::string address, std::string port) {
 
 		sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 
-		if (socket < nullptr) {
+		if (sock == INVALID_SOCKET) {
 			cout << "Socket() failed! Error: " << WSAGetLastError() << endl;
 			continue;
 		}

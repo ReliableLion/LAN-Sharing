@@ -55,6 +55,30 @@ packet_code PacketManager::receivePacket(connection::conn_ptr connection) {
 	}
 }
 
+packet_code PacketManager::send_packet(connection::conn_ptr connection, const HANDLE file, const std::string file_name) {
+
+	char buffer[MAXBUFL];
+	int read_bytes = 0, total_bytes_sent;
+	ProtocolMessage req_packet;
+
+	FILETIME ftWrite;
+
+	// Retrieve the file times for the file.
+	if (!GetFileTime(file, nullptr, nullptr, &ftWrite))
+		return PACKET_ERR;
+
+	RequestMessage request_message(GetFileSize(file, nullptr), ftWrite, file_name);
+
+	// TODO Check correctness about protocol message to send
+
+	this->connection = connection;
+	if (connection->send_all(request_message.get_packet_data().c_str(), strlen(request_message.get_packet_data().c_str()), total_bytes_sent)) {
+		return READ_OK;
+	}
+
+	return PACKET_ERR;
+}
+
 
 /**
 * \brief

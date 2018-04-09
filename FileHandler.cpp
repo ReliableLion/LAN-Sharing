@@ -4,6 +4,15 @@ FileHandler::FileHandler(std::string filename, std::string path) : filename_(fil
 
 FileHandler::~FileHandler() { closeFile(); }
 
+HANDLE FileHandler::get_file_handle() {
+
+	std::stringstream ss;
+	ss << file_dir_ << "\\" << filename_;
+	file_path_ = ss.str();
+
+	return CreateFile(file_path_.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, nullptr);
+}
+
 bool FileHandler::isOpen() { return file_.is_open(); }
 
 void FileHandler::openFile(int open_mode) {

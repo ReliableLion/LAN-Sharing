@@ -26,6 +26,7 @@ namespace connection {
 		size_t readline_unbuffered(char *vptr, size_t maxlen);
 	public:
 		TCPConnection();
+		bool create_connection(const char *host, const char *port);
 		bool accept_connection(Listen_socket s);
 		bool close_connection() const;
 		void print_endpoint_info() const;

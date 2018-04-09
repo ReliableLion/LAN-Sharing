@@ -2,10 +2,10 @@
 
 #include <fstream>
 #include <string>
-#include <sstream>	
-
+#include <sstream>
 #include "Exceptions.hpp"
 #include "Constants.hpp"
+#include "stdafx.h"
 
 enum file_open_type { WRITE, READ };
 
@@ -23,6 +23,7 @@ protected:
 public:
 	FileHandler(std::string filename, std::string path);
 	~FileHandler();
+	HANDLE get_file_handle();
 	void openFile(int open_mode);
 	bool closeFile();
 	bool isOpen();

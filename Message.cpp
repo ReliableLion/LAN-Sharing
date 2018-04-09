@@ -138,8 +138,9 @@ void RequestMessage::get_packet_type(char* packet_type) {
 	}
 }
 
-std::vector<int8_t> RequestMessage::get_packet_data() const {
-	return m_buffer;
+std::string RequestMessage::get_packet_data() {
+	const auto temp = reinterpret_cast<char*>((m_buffer.data()));
+	return std::string(temp, m_buffer.size());
 }
 
 discovery_message::discovery_message() : message() {

@@ -1,6 +1,5 @@
 #pragma once
-#include <WinSock2.h>
-#include <windows.h>
+#include "stdafx.h"
 #include <sstream>
 #include "Protocol.hpp"
 #include <vector>
@@ -69,7 +68,7 @@ public:
 
 	request_struct RequestMessage::get_request_data();
 	void RequestMessage::get_packet_type(char* packetType);
-	std::vector<int8_t> get_packet_data() const;
+	std::string get_packet_data();
 
 private:
 	request_struct requestBody;
