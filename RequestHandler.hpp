@@ -7,6 +7,15 @@
 #include "ConcurrentQueue.hpp"
 #include <atomic>
 #include <map>
+#include "PacketManager.hpp"
+
+struct file_request {
+	std::string file_name;
+	std::string destination_address;
+	DWORD file_size;
+	size_t transferred_bytes = 0;
+	std::shared_ptr<connection::TCPConnection> connection;
+};
 
 class request_handler {
 
@@ -15,8 +24,9 @@ class request_handler {
 	const int max_request_attempts_ = MAX_REQUEST_ATTEMPTS;
 
 	// connection and download variable 
-	std::map<std::string, std::shared_ptr<connection::TCPConnection>> requests_;
+	std::list<file_request> requests_;
 	std::shared_ptr<upload_manager> upload_manager_;
+	PacketManager packet_manager_;
 
 	// synchronization variable decalration
 	std::atomic<bool> is_terminated_;

@@ -6,6 +6,7 @@
 #include "Constants.hpp"
 #include "Message.hpp"
 #include "Connection.hpp"
+#include "WindowsFileHandler.hpp"
 
 enum packet_code {
 	READ_OK,						// the packet is received correclty by the server
@@ -25,7 +26,7 @@ public:
 	PacketManager();
 	~PacketManager();
 	packet_code receivePacket(connection::conn_ptr connection);
-	packet_code send_packet(connection::conn_ptr connection, HANDLE file, std::string file_name);
+	packet_code send_packet(connection::conn_ptr connection, WindowsFileHandler file_handler);
 	request_struct get_request();
 	bool send_reply(connection::conn_ptr connection, protocol::MessageType::message_code msgType);			// used to send an ok message
 	bool send_error(connection::conn_ptr connection, protocol::MessageType::error_code errorType);			// used to send an error message

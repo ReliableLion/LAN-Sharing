@@ -55,7 +55,7 @@ packet_code PacketManager::receivePacket(connection::conn_ptr connection) {
 	}
 }
 
-packet_code PacketManager::send_packet(connection::conn_ptr connection, const HANDLE file, const std::string file_name) {
+packet_code PacketManager::send_packet(connection::conn_ptr connection, WindowsFileHandler file_handler) {
 
 	char buffer[MAXBUFL];
 	int read_bytes = 0, total_bytes_sent;
@@ -64,10 +64,10 @@ packet_code PacketManager::send_packet(connection::conn_ptr connection, const HA
 	FILETIME ftWrite;
 
 	// Retrieve the file times for the file.
-	if (!GetFileTime(file, nullptr, nullptr, &ftWrite))
+	if (!file_handler.get_file_time(nullptr, nullptr, &ftWrite))
 		return PACKET_ERR;
 
-	RequestMessage request_message(GetFileSize(file, nullptr), ftWrite, file_name);
+	RequestMessage request_message(file_handler.get_file_size(), ftWrite, file_handler.getFilename());
 
 	// TODO Check correctness about protocol message to send
 

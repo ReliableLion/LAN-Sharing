@@ -23,7 +23,6 @@ protected:
 public:
 	FileHandler(std::string filename, std::string path);
 	~FileHandler();
-	HANDLE get_file_handle();
 	void openFile(int open_mode);
 	bool closeFile();
 	bool isOpen();
