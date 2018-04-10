@@ -6,7 +6,6 @@
 #include <memory>
 #include "ConcurrentQueue.hpp"
 #include <atomic>
-#include <map>
 #include "PacketManager.hpp"
 
 struct file_request {
@@ -16,6 +15,8 @@ struct file_request {
 	size_t transferred_bytes = 0;
 	std::shared_ptr<connection::TCPConnection> connection;
 };
+
+class upload_manager;
 
 class request_handler {
 

@@ -7,8 +7,6 @@
 #include "Constants.hpp"
 #include "stdafx.h"
 
-enum file_open_type { WRITE, READ };
-
 class WindowsFileHandler {
 
 protected:
