@@ -67,7 +67,7 @@ packet_code PacketManager::send_packet(connection::conn_ptr connection, WindowsF
 	if (!file_handler.get_file_time(nullptr, nullptr, &ftWrite))
 		return PACKET_ERR;
 
-	RequestMessage request_message(file_handler.get_file_size(), ftWrite, file_handler.getFilename());
+	RequestMessage request_message(file_handler.get_file_size(), ftWrite, file_handler.get_filename());
 
 	// TODO Check correctness about protocol message to send
 

@@ -1,12 +1,13 @@
-#include "UDPService.hpp"
-#include "Discovery.hpp"
-#include <future>
+//#include "UDPService.hpp"
+//#include "Discovery.hpp"
+//#include <future>
 #include <iostream>     //for using cout
 #include <stdlib.h>     //for using the function sleep
+#include "RequestHandler.hpp"
 
 using namespace std;
 
-
+/*
 void start_server() {
 
 	udp_service::udp_server server;
@@ -25,7 +26,7 @@ void start_server() {
 	cout << "Here the message: " << buffer << " from: " << udp_service::get_client_address(client_address_ptr) << endl;
 
 	server.send_datagram(buffer, &client_address, address_len, strlen(buffer));
-}
+}*/
 
 int main(int argc, char* argv[]){
 
@@ -39,7 +40,26 @@ int main(int argc, char* argv[]){
 			exit(0);
 		}
 		
-		discovery discovery_service = discovery("davide");
+		//upload_manager upload;
+		//request_handler request(make_shared<upload_manager>(upload));
+
+		cout << "Ora creo la richiesta e quindi leggo il file" << endl;
+
+		//request.send_request("192.168.1.1", "D:\\Documenti\\test\\test.txt");
+
+		cout << "Richeista creata e file letto" << endl;
+
+		Sleep(10000);
+
+		return 0;
+	}
+	catch (std::exception& e) {
+		std::cerr << "Exception: " << e.what() << std::endl;
+	}
+}
+
+/*
+ * 		discovery discovery_service = discovery("davide");
 
 		cout << "Starting discovery service" << endl;
 
@@ -114,10 +134,3 @@ int main(int argc, char* argv[]){
 			cout << "Connection error" << endl;
 
 		*/
-
-		return 0;
-	}
-	catch (std::exception& e) {
-		std::cerr << "Exception: " << e.what() << std::endl;
-	}
-}

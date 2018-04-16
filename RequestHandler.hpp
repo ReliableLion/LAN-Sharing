@@ -35,11 +35,9 @@ class request_handler {
 	std::condition_variable cv_;
 	std::vector<std::thread> thread_pool_;
 
-	static std::string request_handler::get_file_name_from_full_path(const std::string& file_path);
-
 public:
 	request_handler(std::shared_ptr<upload_manager>);
-	~request_handler();
+	//~request_handler();
 	bool send_request(char* server, char *file_path);
 	
 };
