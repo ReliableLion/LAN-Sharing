@@ -1,5 +1,7 @@
 #pragma once
 
+#include "stdafx.h"
+
 #include <ctime>
 #include <thread>
 #include <mutex>
@@ -16,9 +18,12 @@ enum server_state_type {
 
 
 class Server {
+
+	SOCKET passive_socket_;
+	SOCADDR_IN local_address_;
+
 	std::thread server_main_thread_;
 
-	Listen_socket socket_;
 	std::shared_ptr<RequestManager> request_manager_;
 	std::shared_ptr<DownloadManager> download_manager_;
 
@@ -28,13 +33,11 @@ class Server {
 	bool  is_paused_, is_stopped_;
 	server_state_type server_status_;
 
-	// private methods
 	void listen_new_connection();
 	void run_server();
 public:
-	Server();
+	Server(int port);
 	~Server();
-	bool change_port(int port);
 	void start_server();
 	void restart_server();
 	void pause_server();

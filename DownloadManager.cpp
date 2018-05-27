@@ -81,8 +81,6 @@ bool DownloadManager::insert_small_file(request_struct request, connection::conn
 	return false;
 }
 
-//				PRIVATE METHODS	
-
 void DownloadManager::process_small_file() {
 	std::unique_lock<std::mutex> ul(mtx_s_, std::defer_lock);
 	download_struct smallFileReq;
@@ -95,11 +93,47 @@ void DownloadManager::process_small_file() {
 			return (!small_file_q_.isEmpty() && !is_terminated_.load());
 		});
 
-		if (is_terminated_.load()) exit = true;
-		small_file_q_.popElement(smallFileReq);
+		// get the request struct from the queue than release the lock
+		if (is_terminated_.load) exit = true;
+		else small_file_q_.popElement(smallFileReq);
 
-		// TODO insert here the function for the file download
-		download_file(smallFileReq);
+		// release the queue lock 
+		ul.unlock();
+
+		try
+		{
+			if (!exit) 
+			{
+				// create a temporary file for the download
+				TemporaryFile temporary_file();
+				if (download_file(smallFileReq, temporary_file()))
+				{
+					
+					FileHandler destination_file();
+					if (!copy_file(temporary_file, destination_file))
+					{
+						destination_file.remove();
+						std::cout << "impossible to copy the file to destination" << std::endl;
+					}
+				} 
+				else
+				{
+					std::cout << "impossible to complete the download of the file..." << std::endl;
+				}
+
+			}
+			
+		}
+		catch (SocketException &se) {
+			std::cout << "server error: " << se.what() << std::endl;
+		}
+		catch (FileWriteException &fwe) {
+			std::cout << "impossible to write the data into the specified file" << std::endl;
+		}
+		catch (TimeoutException &te) {
+			std::cout << "connection reached timeout, closing the connection" << std::endl;
+		}
+		
 		smallFileReq.conn->close_connection();
 	}
 }
@@ -116,67 +150,92 @@ void DownloadManager::process_big_file() {
 			return (!big_file_q_.isEmpty() && !is_terminated_.load());
 		});
 
-		if (is_terminated_.load()) exit = true;									// if receive a notify to stop the downlaod exit from the main loop
-		small_file_q_.popElement(bigFileReq);
+		if (is_terminated_.load()) exit = true;
+		else small_file_q_.popElement(bigFileReq);
 
-		// check if the connection os alive
-		// if not go to the next pending resource
-		// TODO insert here the function for the file download
-		download_file(bigFileReq);
+		ul.unlock();
 
+		try
+		{
+			if (!exit) 
+			{
+				// create a new temp file that 
+				TemporaryFile temporary_file(bigFileReq.req.file_name, temp_path_);
+				if (download_file(bigFileReq, temporary_file))
+				{
+					// create aa new file and copy the content the temporary one it into this
+					FileHandler destination_file();
+					if (!copy_file(temporary_file, destination_file))
+					{
+						destination_file.remove();
+						std::cout << "impossible to copy the file to the destination folder";
+					}
+
+				}
+				else
+					std::cout << "impossible to complete the download of the file..." << std::endl;
+		
+			}
+		}
+		catch (SocketException &se) {
+			std::cout << "server error: " << se.what() << std::endl;
+		}
+		catch (FileWriteException &fwe) {
+			std::cout << "impossible to write the data into the specified file" << std::endl;
+		}
+		catch (TimeoutException &te) {
+			std::cout << "connection reached timeout, closing the connection" << std::endl;
+		}
+
+		bigFileReq.conn->close_connection();
 	}
 }
 
-void DownloadManager::download_file(download_struct request) {
-	//FileHandler dest_file(request.req.file_name, path);
-	TemporaryFile temp_file(request.req.file_name, temp_path_);
+bool DownloadManager::download_file(download_struct request, TemporaryFile &temporary_file) {
+
 	int leftByte = request.req.file_size;
 	int bytes_to_downlaod = 0, downloaded_bytes = 0;
-	char buffer[MAXBUFL];
-	bool connection_closed;
+	bool connection_closed = false;
 
-	try {
-		temp_file.openFile(WRITE);								// open the two files, if an exception is throw by the program then the file is closed by the destructor
+	std::shared_ptr<SocketBuffer> buffer;
+	int buffer_max_size = buffer->get_max_size();
 
-		while (leftByte != 0 && !connection_closed) {
-			if (leftByte >= MAXBUFL)					// if the remaining data are greater than the max size of the buffer then the bytes to download are max buff lenght
-				bytes_to_downlaod = MAXBUFL;
-			else
-				bytes_to_downlaod = leftByte;				// if the remaining data are smaller than the max, set the remaining bytes value
+	temporary_file.open_file(WRITE);								// open the two files, if an exception is throw by the program then the file is closed by the destructor
 
-			if (request.conn->recv_all(buffer, bytes_to_downlaod, downloaded_bytes))			// check if the connection is 
-			{
-				leftByte -= downloaded_bytes;
-				temp_file.writeData(buffer, downloaded_bytes);
-			}
-			else
-				connection_closed = true;
+	while (leftByte != 0 && !connection_closed) {
+		if (leftByte >= buffer_max_size)					// if the remaining data are greater than the max size of the buffer then the bytes to download are max buff lenght
+			bytes_to_downlaod = buffer_max_size;
+		else
+			bytes_to_downlaod = leftByte;				// if the remaining data are smaller than the max, set the remaining bytes value
+
+		if (request.conn->recv_all(buffer, bytes_to_downlaod))			// check if the connection is 
+		{
+			leftByte -= buffer->get_size();
+			temporary_file.write_data(buffer);
 		}
-
-
-		FileHandler destination_file(request.req.file_name, path_);
-		destination_file.openFile(WRITE);
-
-		if (destination_file.copyFile(temp_file)) {
-			temp_file.closeFile();
-			destination_file.closeFile();
+		else
+		{
+			connection_closed = true;
 		}
-		else {
-			// TODO is not possible to copy the temp file into the destination file
-		}
+	}
 
-		request.conn->close_connection();
+	if (leftByte != 0)
+		return false;
+	
+	return true;
+}
+
+bool DownloadManager::copy_file(TemporaryFile& temporary_file, FileHandler& destination_file)
+{
+	destination_file.open_file(WRITE);
+
+	if (destination_file.copy_file(temporary_file)) {
+		temporary_file.close_file();
+		destination_file.close_file();
 	}
-	catch (SocketException &se) {
-		std::cout << "server error: " << se.what() << std::endl;
-		request.conn->close_connection();
+	else {
+		return false;
 	}
-	catch (FileWriteException &fwe) {
-		std::cout << "impossible to write the data into the specified file" << std::endl;
-		request.conn->close_connection();
-	}
-	catch (TimeoutException &te) {
-		std::cout << "connection reached timeout, closing the connection" << std::endl;
-		request.conn->close_connection();
-	}
+
+	return true;
 }

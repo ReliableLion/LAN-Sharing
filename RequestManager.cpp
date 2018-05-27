@@ -110,7 +110,7 @@ void RequestManager::receive_request(connection::conn_ptr connection) {
 			-if the connection is closed, write a message
 			*/
 
-			switch (packet_manager.receivePacket(connection)) {
+			switch (packet_manager.receive_packet(connection)) {
 			case CLSD_CONN:
 			{
 				// exit from the internal while but before close the connction

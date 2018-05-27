@@ -1,106 +1,83 @@
+#include "stdafx.h"
+
 #include "Connection.hpp" 
+#include <ws2def.h>
 
 using namespace connection;
 
-TCPConnection::TCPConnection() {}
+TCPConnection::TCPConnection(const char* host, const int port) : alive(true)
+{
+	int n;
+	struct addrinfo hints, *res, *res0;
 
-/**
-* \brief acppt an incoming TCP connection
-* \param s receive the local socket used by the server
-* \return TRUE if the connection is established, FALSE otherwise
-*/
-bool TCPConnection::accept_connection(Listen_socket s) {
-	int addrlen = sizeof(remote_address_);
-	int sock_desc = s.get_socket();
+	if (port < 0 || port > 65535) throw SocketException(1);
 
-	if (sock_desc == SOCKET_ERROR) {
-		std::cout << "impossible to accept a connection, the local socket is empty" << std::endl;
-		return false;
+	std::string char_port = std::to_string(port);
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
+
+	if ((n = getaddrinfo(host, char_port.c_str(), &hints, &res0)) != 0)
+		std::cout << "Error within getaddrinfo(): " << WSAGetLastError() << std::endl;
+
+	sock_ = -1;
+	for (res = res0; res != nullptr; res = res->ai_next) {
+
+		sock_ = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+		if (sock_ == INVALID_SOCKET) {
+			std::cout << "(%s) socket() failed" << std::endl;
+			continue;
+		}
+
+		std::cout << "(%s) --- Socket created, fd number: " << sock_ << std::endl;
+
+		if (connect(sock_, res->ai_addr, res->ai_addrlen) < 0) {
+			closesocket(sock_);	/* bind error, close and try next one */
+			continue;
+		}
+
+		remote_address_ = *((struct sockaddr_in *)(res->ai_addr));
+		break; /* Ok we got one */
 	}
 
-	sock = accept(sock_desc, (SOCKADDR*)&remote_address_, &addrlen);
+	freeaddrinfo(res0);
 
-	// check if the scoket return an error
-	if (sock == SOCKET_ERROR) {
-		std::cout << "server refused the connection, error: " << std::to_string(WSAGetLastError()) << std::endl;
-		return false;
+	if (res == NULL) {	/* errno set from final connect() */
+		std::cout << "Couldn't connect to " << host << ":" << port << " because of error " << WSAGetLastError() << std::endl;
+		throw SocketException(1);
 	}
-
-	return true;
-}
-
-bool TCPConnection::create_connection(const char *host, const char *port) {
-
-		int n;
-		struct addrinfo hints, *res, *res0;
-
-		memset(&hints, 0, sizeof(hints));
-		hints.ai_family = AF_INET;
-		hints.ai_socktype = SOCK_STREAM;
-		hints.ai_protocol = IPPROTO_TCP;
-
-		if ((n = getaddrinfo(host, port, &hints, &res0)) != 0) {
-			std::cout << "Error within getaddrinfo(): " << WSAGetLastError() << std::endl;
-			return false;
-		}
-
-		sock = -1;
-		for (res = res0; res != nullptr; res = res->ai_next) {
-
-			sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-			if (sock == INVALID_SOCKET) {
-
-				std::cout << "(%s) socket() failed" << std::endl;
-				continue;
-			}
-
-			std::cout << "(%s) --- Socket created, fd number: " << sock << std::endl;
-
-			if (connect(sock, res->ai_addr, res->ai_addrlen) < 0) {
-
-				closesocket(sock);	/* bind error, close and try next one */
-				continue;
-			}
-
-			std::cout << "(%s) --- Connected to target address: " << inet_ntoa(((struct sockaddr_in *)(res->ai_addr))->sin_addr) << ":" <<
-				htons(((struct sockaddr_in *)(res->ai_addr))->sin_port) << std::endl;
-
-			break; /* Ok we got one */
-		}
-
-		if (res == NULL) {	/* errno set from final connect() */
-			std::cout << "Couldn't connect to " << host << ":" << port << " because of error " << WSAGetLastError() << std::endl;
-			return false;
-		}
-
-		freeaddrinfo(res0);
-
-		return true;;
 }
 
 
-bool TCPConnection::close_connection() const {
+TCPConnection::TCPConnection(SOCKET socket, SOCKADDR_IN socket_address) : alive(true)
+{
+	sock_ = socket;
+	remote_address_ = socket_address;
+}
 
-	if (closesocket(sock) == SOCKET_ERROR) {
-		if (WSAGetLastError() == WSAENOTSOCK)
-			//If socket error is that operation is not performed on a socket (This happens when the socket has already been closed)
-			return true; //return true since connection has already been closed
 
-		std::cout << "Failed to close the socket. Winsock Error: " + std::to_string(WSAGetLastError()) + "!";
-		return false;
+void TCPConnection::close_connection() const
+{
+
+	if (alive) {
+		if (closesocket(sock_) == SOCKET_ERROR) {
+			if (WSAGetLastError() == WSAENOTSOCK)
+				std::cout << "Failed to close the socket. Winsock Error: " + std::to_string(WSAGetLastError()) + "!" << std::endl;
+		}
 	}
 
-	return true;
 }
 
 /**
 * \brief print on standard output the information about the remote endpoint assoicated with the TCP connection
 */
 void TCPConnection::print_endpoint_info() const {
-	char client_address[INET_ADDRSTRLEN];
-	inet_ntop(AF_INET, &(remote_address_.sin_addr), client_address, INET_ADDRSTRLEN);
+	char client_address[1024];
+	inet_ntop(AF_INET, &(remote_address_.sin_addr), client_address, 1024);
 
-	if (sock == 0) {
+	if (sock_ == 0) {
 		std::cout << "socket not connected" << std::endl;
 		return;
 	}
@@ -116,48 +93,51 @@ void TCPConnection::print_endpoint_info() const {
 * \param totalReadByte : number of Bytes really read
 * \return false if the connection has been closed by peer, otherside true
 */
-bool TCPConnection::recv_all(char *data, int totalBytes, int& totalReadBytes) {
-	struct timeval time;
-	int byteReceived = 0;
-	FD_SET read_sock;
+bool TCPConnection::read_data(std::shared_ptr<SocketBuffer> buffer, int size) {
 
-	FD_ZERO(&read_sock);
-	FD_SET(sock, &read_sock);
+	if (size > buffer->get_max_size()) throw SocketException(1);
 
-	while (byteReceived < totalBytes) {
-		time.tv_sec = sec_;
-		time.tv_usec = usec_;
+	auto *local_buffer = new char[buffer->get_max_size()];
+	memset(local_buffer, 0, buffer->get_max_size());
+	int bytes_received = 0, bytes_read = 0;
 
-		int result = select(1, &read_sock, nullptr, nullptr, &time);
+	buffer->clear();
 
-		if (result == SOCKET_ERROR) {
-			throw SocketException(WSAGetLastError());
-		}
-		if (result == 0) {
-			throw TimeoutException();
-		}
+	try
+	{
+		while (bytes_received < size &&  alive) {
+			bytes_read = read_select(local_buffer, buffer->get_max_size());
 
-		if (result == 1) {
-
-			int byteRead = recv(sock, data + byteReceived, totalBytes - byteReceived, 0);
-			if (byteRead == SOCKET_ERROR) {
+			if (bytes_read == SOCKET_ERROR) {
+				delete[] local_buffer;
 				throw SocketException(WSAGetLastError());
 			}
-			if (byteRead == 0) {
-				totalReadBytes = byteReceived;
-				return false;
+
+			// the connection is closed 
+			if (bytes_read == 0) alive = false;
+			else
+			{
+				bytes_received += bytes_read;					// increment the number of bytes received
+				buffer->add(local_buffer, bytes_read);
 			}
 
-			byteReceived += byteRead;					// increment the number of bytes received
-
-		}
-		else {
-			totalReadBytes = byteReceived;
-			return false;
 		}
 	}
-	totalReadBytes = byteReceived;
-	return true;
+	catch (SocketException &se)
+	{
+		delete[] local_buffer;
+		throw;
+	}
+	catch (TimeoutException &te)
+	{
+		delete[] local_buffer;
+		throw;
+	}
+
+	// deallocate the local buffer
+	delete[] local_buffer;
+
+	return alive;
 }
 
 /**
@@ -167,20 +147,21 @@ bool TCPConnection::recv_all(char *data, int totalBytes, int& totalReadBytes) {
 * \param totalSentByte : reference type, total number of bytes really sent
 * \return false if the connection has been closed by peer, true if the data has been sent correctly
 */
-bool TCPConnection::send_all(const char* data, const int totalBytes, int& totalSentBytes) {
-	int uploadedBytes = 0;
+bool TCPConnection::send_data(std::shared_ptr<SendSocketBuffer> buffer) {
+	const int total_bytes = buffer->get_size();
+	int sent_bytes = 0;
 
-	while (uploadedBytes < totalBytes) {
-		int sentBytes = send(sock, data + uploadedBytes, totalBytes - uploadedBytes, 0);
-		if (sentBytes == 0) {
-			return false;
-		}
-		else
-			if (sentBytes == SOCKET_ERROR) {
-				throw SocketException(WSAGetLastError());
-			}
-		uploadedBytes += sentBytes;
+	while (buffer->get_bytes_sent() < total_bytes) {
+
+		sent_bytes = send(sock_, buffer->get_buffer(), buffer->get_remaining_bytes(), 0);
+
+		if (sent_bytes == 0) return false;
+
+		if (sent_bytes == SOCKET_ERROR) throw SocketException(WSAGetLastError());
+
+		buffer->send(sent_bytes);
 	}
+
 	return true;
 }
 
@@ -191,34 +172,35 @@ bool TCPConnection::send_all(const char* data, const int totalBytes, int& totalS
 * \param maxByte : max # of Bytes that can be read
 * \return false if the connection has been closed by peer, true if the data are read correclty
 */
-bool TCPConnection::read_line(char *data, const int maxBytes, int& readBytes) {
-	int rByte = readline_unbuffered(data, (size_t)maxBytes);
+bool TCPConnection::read_line(std::shared_ptr<SocketBuffer> buffer) {
 
-	if (rByte == 0) {
-		return false;
-	}
-	else
-		if (rByte < 0) {
-			throw SocketException(WSAGetLastError());
-		}
-		else
-			if (rByte > 0) {
-				readBytes = rByte;
-				return true;
-			}
-	return false;
+	auto *local_buffer = new char[buffer->get_max_size()];
+	memset(local_buffer, 0, buffer->get_max_size());
+
+	const int read_byte = readline_unbuffered(local_buffer, buffer->get_max_size());
+
+	if (read_byte == 0) return false;
+
+	if (read_byte < 0) throw SocketException(WSAGetLastError());
+
+	//	TODO	sistemare la parte di gestione dell'overflow della linea da leggere
+	/*if (local_buffer[read_byte - 1] != '\n')
+	{
+		local_buffer[read_byte - 1] = ''
+	}*/
+
+	buffer->add(local_buffer, read_byte);
+	return true;
 }
 
-//					PRIVATE METHODS
-
-size_t TCPConnection::readline_unbuffered(char *vptr, size_t maxlen) {
+size_t TCPConnection::readline_unbuffered(char *vptr, int maxlen) {
 
 	size_t n, rc;
 	char c, *ptr;
 
 	ptr = vptr;
 	for (n = 1; n<maxlen; n++) {
-		if ((rc = recv(sock, &c, 1, 0)) == 1) {
+		if ((rc = recv(sock_, &c, 1, 0)) == 1) {
 			*ptr++ = c;
 			if (c == '\n')
 				break;	/* newline is stored, like fgets() */
@@ -235,4 +217,25 @@ size_t TCPConnection::readline_unbuffered(char *vptr, size_t maxlen) {
 	*ptr = 0; /* null terminate like fgets() */
 
 	return n;
+}
+
+size_t TCPConnection::read_select(char *read_buffer, int size)
+{
+	struct timeval time;
+	FD_SET read_sock;
+
+	FD_ZERO(&read_sock);
+	FD_SET(sock_, &read_sock);
+
+	time.tv_sec = sec_;
+	time.tv_usec = usec_;
+
+	const int result = select(sock_ + 1, &read_sock, nullptr, nullptr, &time);
+
+	if (result == SOCKET_ERROR) throw SocketException(1);
+
+	if (result == 0) throw TimeoutException();
+
+	if (result > 0) return recv(sock_, read_buffer, size, 0);
+
 }

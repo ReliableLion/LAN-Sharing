@@ -1,12 +1,14 @@
+#include "stdafx.h"
+
 #include "FileHandler.hpp"
 
-FileHandler::FileHandler(std::string filename, std::string path) : filename_(filename), file_dir_(path), file_path_("") {}
+FileHandler::FileHandler(std::string filename, std::string path) : filename_(filename), file_dir_(path), file_path_(""), open_mode_(WRITE) {}
 
-FileHandler::~FileHandler() { closeFile(); }
+FileHandler::~FileHandler() { close_file(); }
 
-bool FileHandler::isOpen() { return file_.is_open(); }
+bool FileHandler::is_open() { return file_.is_open(); }
 
-void FileHandler::openFile(int open_mode) {
+void FileHandler::open_file(int open_mode) {
 	if (filename_.empty() || file_dir_.empty())	throw FileOpenException();
 
 	std::stringstream ss;
@@ -25,7 +27,7 @@ void FileHandler::openFile(int open_mode) {
 	if (!file_.good())	throw FileOpenException();
 }
 
-bool FileHandler::closeFile() {
+bool FileHandler::close_file() {
 	if (file_.is_open()) {
 		file_.close();
 		return true;
@@ -36,34 +38,36 @@ bool FileHandler::closeFile() {
 
 /**
 * \brief
-* \param dest_file
+* \param dest_file: destination file of the copy
 * \return
 */
-bool FileHandler::copyFile(FileHandler& dest) {
-	// return true if the 2 file are the same
-	if (&dest == this)
-		return true;
+bool FileHandler::copy_file(FileHandler& dest) {
 
+	// return true if the 2 file are the same
+	if (&dest == this) return true;
 
 	if (!this->file_.is_open()) {
-		this->openFile(READ);
+		this->open_file(READ);
 		this->open_mode_ = READ;
 	}
 
-	if (this->file_.is_open() && this->open_mode_ == WRITE) {
-		this->closeFile();
-		this->openFile(READ);
+	if (this->file_.is_open() && this->open_mode_ == WRITE)
+	{
+		this->close_file();
+		this->open_file(READ);
 		this->open_mode_ = READ;
 	}
 
-	if (!dest.file_.is_open()) {
-		this->openFile(READ);
+	if (!dest.file_.is_open()) 
+	{
+		this->open_file(READ);
 		this->open_mode_ = READ;
 	}
 
-	if (dest.file_.is_open() && dest.open_mode_ == READ) {
-		this->closeFile();
-		this->openFile(READ);
+	if (dest.file_.is_open() && dest.open_mode_ == READ) 
+	{
+		this->close_file();
+		this->open_file(READ);
 		this->open_mode_ = READ;
 	}
 
@@ -72,49 +76,54 @@ bool FileHandler::copyFile(FileHandler& dest) {
 	return (this->file_.good() && dest.file_.good());
 }
 
-bool FileHandler::removeFile() {
+bool FileHandler::remove_file() {
 	int res = remove(this->file_path_.c_str());
-	if (res == 0) {
-		return true;
-	}
-	else {
-		return false;
-	}
+
+	if (res == 0) return true;
+
+	return false;
 }
 
-void FileHandler::writeData(const char *buffer, std::size_t size) {
-	std::size_t n_byte = size;
+void FileHandler::write_data(std::shared_ptr<SocketBuffer> buffer) {
+
+	// la logica è questa: il buffer che passo come parametro decide le regole,
+	// infatti è quest'ulimo che decide la dimensione del buffer locale da utilizzare e
+	// la quantità di byte da leggere dal file
+
+	if (!file_.is_open())
+	{
+		open_file(WRITE);					// if file is not open, try to open it, otherwisw throw a new FileWrite Exception	
+		open_mode_ = WRITE;
+	}
+
+	if (file_.is_open() && open_mode_ == READ)
+	{
+		close_file();
+		open_file(WRITE);
+		open_mode_ = WRITE;
+	}
+
 	int count = 0;
 
-	if (buffer == nullptr || size < 0)	throw FileWriteException();
-
-	if (!file_.is_open()) {
-		openFile(WRITE);					// if file is not open, try to open it, otherwisw throw a new FileWrite Exception	
-		open_mode_ = WRITE;
-	}
-
-	if (file_.is_open() && open_mode_ == READ) {
-		closeFile();
-		openFile(WRITE);
-		open_mode_ = WRITE;
-	}
-
 	do {
-		file_.write(buffer, n_byte);
+		file_.write(buffer->get_buffer(), buffer->get_size());
 		count++;
 	} while (!file_.good() && count < max_attempts_);
 
-	if (count == max_attempts_)	throw FileWriteException();
+	if (count == max_attempts_) throw FileWriteException();
 }
 
-void FileHandler::readFile(char *buffer, std::size_t size) {
+void FileHandler::read_file(std::shared_ptr<SocketBuffer> buffer)
+{
 
 }
 
-std::string FileHandler::getFilename() { return this->filename_; }
+std::string FileHandler::get_filename() { return this->filename_; }
 
-std::string FileHandler::getFilePath() {
-	if (file_path_.empty()) {
+std::string FileHandler::get_FilePath() {
+
+	if (file_path_.empty())
+	{
 		std::stringstream ss;
 		ss << file_dir_ << "\\" << filename_;
 		return (file_path_ = ss.str());
@@ -124,13 +133,11 @@ std::string FileHandler::getFilePath() {
 }
 
 
-
-
 /*OutputFileHandler::OutputFileHandler(std::string filename, std::string path) : FileHandler(filename, path) {}
 
 OutputFileHandler::~OutputFileHandler()
 {
-closeFile();
+close_file();
 }
 
 void OutputFileHandler::openFile()
@@ -158,7 +165,7 @@ TemporaryFile::~TemporaryFile() {
 	// if the destructor is invoked for an instance of the temporary file 
 	// this will close the file and remove it from 
 	if (file_.is_open()) file_.close();
-	removeFile();
+	remove_file();
 }
 
 

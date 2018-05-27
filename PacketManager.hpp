@@ -25,7 +25,7 @@ class PacketManager {
 public:
 	PacketManager();
 	~PacketManager();
-	packet_code receivePacket(connection::conn_ptr connection);
+	packet_code receive_packet(connection::conn_ptr connection);
 	packet_code send_packet(connection::conn_ptr connection, WindowsFileHandler file_handler);
 	request_struct get_request();
 	bool send_reply(connection::conn_ptr connection, protocol::MessageType::message_code msgType);			// used to send an ok message

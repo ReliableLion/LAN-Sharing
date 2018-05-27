@@ -10,18 +10,18 @@ PacketManager::~PacketManager() {}
 * \param connection : TCP connection used to transfer byte
 * \return false if the connection has been closed or if the packet is n
 */
-packet_code PacketManager::receivePacket(connection::conn_ptr connection) {
-	char buffer[MAXBUFL];
-	int readBytes = 0;
+packet_code PacketManager::receive_packet(connection::conn_ptr connection) {
+	std::shared_ptr<SocketBuffer> buffer(new SocketBuffer);
 	ProtocolMessage req_packet;
 
 	this->connection = connection;
 
 	try {
-		if (connection->read_line(buffer, buffer_length, readBytes) == false) return CLSD_CONN;
-		req_packet.Append(buffer, readBytes);					// set the buffer inside the PacketMessage instance
 
-																// check the packet type
+		if (!connection->read_line(buffer)) return CLSD_CONN;
+		
+		req_packet.Append(buffer->get_buffer(), buffer->get_size());					// set the buffer inside the PacketMessage instance
+																						// check the packet type
 		if (req_packet.get_packet_type()) {
 			switch (last_message_code = req_packet.get_message_code()) {
 			case protocol::MessageType::UNDEFINED:
@@ -57,24 +57,22 @@ packet_code PacketManager::receivePacket(connection::conn_ptr connection) {
 
 packet_code PacketManager::send_packet(connection::conn_ptr connection, WindowsFileHandler file_handler) {
 
-	char buffer[MAXBUFL];
-	int read_bytes = 0, total_bytes_sent;
+	std::shared_ptr<SendSocketBuffer> buffer(new SendSocketBuffer);
 	ProtocolMessage req_packet;
 
 	FILETIME ftWrite;
 
 	// Retrieve the file times for the file.
-	if (!file_handler.get_file_time(nullptr, nullptr, &ftWrite))
-		return PACKET_ERR;
+	if (!file_handler.get_file_time(nullptr, nullptr, &ftWrite)) return PACKET_ERR;
 
 	RequestMessage request_message(file_handler.get_file_size(), ftWrite, file_handler.get_filename());
+	buffer->replace(request_message.get_packet_data().c_str(), strlen(request_message.get_packet_data().c_str()));
 
 	// TODO Check correctness about protocol message to send
 
 	this->connection = connection;
-	if (connection->send_all(request_message.get_packet_data().c_str(), strlen(request_message.get_packet_data().c_str()), total_bytes_sent)) {
-		return READ_OK;
-	}
+
+	if (connection->send_data(buffer)) return READ_OK;
 
 	return PACKET_ERR;
 }

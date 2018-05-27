@@ -1,38 +1,39 @@
 #pragma once
 
-#include <Ws2tcpip.h> 
+#include "stdafx.h"
+
 #include <iostream>
 #include <memory>
 #include <iomanip>
 #include <ctime>
 #include <list>
 
-#include "Listen_socket.hpp"
 #include "Exceptions.hpp"
 #include "Constants.hpp"
-
-#pragma comment(lib,"ws2_32.lib") //Required for WinSock
+#include "SocketBuffer.hpp"
 
 namespace connection {
 
 	class TCPConnection {
 		// definition of the variable
-		SOCKET sock = 0;
+		SOCKET sock_;
 		SOCKADDR_IN remote_address_;
 		const long sec_ = TIMEOUT_SEC;
 		const long usec_ = TIMEOUT_USEC;
+		bool alive;
 
 		// definition of the private methods
-		size_t readline_unbuffered(char *vptr, size_t maxlen);
+		size_t readline_unbuffered(char *vptr, int  maxlen);
+		size_t read_select(char *read_buffer, int size);
 	public:
-		TCPConnection();
-		bool create_connection(const char *host, const char *port);
-		bool accept_connection(Listen_socket s);
-		bool close_connection() const;
+		TCPConnection(const char *host, const int port);
+		TCPConnection(SOCKET socket, SOCKADDR_IN socket_address);
+
+		void close_connection() const;
 		void print_endpoint_info() const;
-		bool recv_all(char *data, const int totalBytes, int& totalReadBytes);
-		bool send_all(const char *data, const int totalBytes, int& totalSentBytes);
-		bool read_line(char *data, const int maxBytes, int& readBytes);
+		bool read_data(std::shared_ptr<SocketBuffer> buffer, int size);
+		bool send_data(std::shared_ptr<SendSocketBuffer> buffer);
+		bool read_line(std::shared_ptr<SocketBuffer> buffer);
 	};
 
 	// definition of the connection pointer type 

@@ -31,11 +31,10 @@ class DownloadManager {
 	std::string path_;
 	const std::string temp_path_ = TEMP_PATH;
 
-	// private methods
 	void process_big_file();
 	void process_small_file();
-	//void manageDownload(download_struct req_struct);
-	void download_file(download_struct request);
+	bool download_file(download_struct request, TemporaryFile &temporary_file);
+	bool copy_file(TemporaryFile &temporary_file, FileHandler &destination_file);
 public:
 	DownloadManager();
 	~DownloadManager();
