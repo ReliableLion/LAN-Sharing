@@ -118,6 +118,7 @@
     <ClCompile Include="Listen_socket.cpp" />
     <ClCompile Include="Message.cpp" />
     <ClCompile Include="PacketManager.cpp" />
+    <ClCompile Include="progetto_malnati.cpp" />
     <ClCompile Include="Protocol.cpp" />
     <ClCompile Include="RequestHandler.cpp" />
     <ClCompile Include="RequestManager.cpp" />

@@ -22,30 +22,32 @@ packet_code PacketManager::receive_packet(connection::conn_ptr connection) {
 		
 		req_packet.Append(buffer->get_buffer(), buffer->get_size());					// set the buffer inside the PacketMessage instance
 																						// check the packet type
-		if (req_packet.get_packet_type()) {
-			switch (last_message_code = req_packet.get_message_code()) {
-			case protocol::MessageType::UNDEFINED:
+		if (req_packet.get_packet_type()) 
+		{
+			switch (last_message_code = req_packet.get_message_code())
 			{
-				return PACKET_ERR;
-			}
-			case protocol::MessageType::ERR:
-			{
-				switch (req_packet.get_error_code()) {
-				case MessageType::ERR_1:
+				case protocol::MessageType::UNDEFINED:
 				{
 					return PACKET_ERR;
 				}
+				case protocol::MessageType::ERR:
+				{
+					switch (req_packet.get_error_code()) {
+					case MessageType::ERR_1:
+					{
+						return PACKET_ERR;
+					}
+					}
+				} break;
+				case protocol::MessageType::SEND:
+				{
+					request = req_packet.get_message_request();
+					return READ_OK;					// if the packet is sent
 				}
-			} break;
-			case protocol::MessageType::SEND:
-			{
-				request = req_packet.get_message_request();
-				return READ_OK;					// if the packet is sent
-			}
-			default:
-			{
-				return PACKET_ERR;
-			}
+				default:
+				{
+					return PACKET_ERR;
+				}
 			}
 		}
 	}

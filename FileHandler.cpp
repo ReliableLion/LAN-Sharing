@@ -2,24 +2,27 @@
 
 #include "FileHandler.hpp"
 
-FileHandler::FileHandler(std::string filename, std::string path) : filename_(filename), file_dir_(path), file_path_(""), open_mode_(WRITE) {}
+FileHandler::FileHandler(std::string filename, std::string path) : filename_(filename), file_dir_(path), file_path_(""), open_mode_(READ) {}
 
 FileHandler::~FileHandler() { close_file(); }
 
 bool FileHandler::is_open() { return file_.is_open(); }
 
-void FileHandler::open_file(int open_mode) {
+void FileHandler::open_file(int open_mode)
+{
 	if (filename_.empty() || file_dir_.empty())	throw FileOpenException();
 
 	std::stringstream ss;
 	ss << file_dir_ << "\\" << filename_;
 	file_path_ = ss.str();
 
-	if (open_mode == WRITE) {
+	if (open_mode == WRITE)
+	{
 		file_.open(file_path_, std::fstream::binary | std::fstream::out);				// open the file in binary mode 
 		this->open_mode_ = WRITE;
 	}
-	else {
+	else
+	{
 		file_.open(file_path_, std::fstream::binary | std::fstream::in);
 		this->open_mode_ = READ;
 	}
@@ -27,8 +30,10 @@ void FileHandler::open_file(int open_mode) {
 	if (!file_.good())	throw FileOpenException();
 }
 
-bool FileHandler::close_file() {
-	if (file_.is_open()) {
+bool FileHandler::close_file()
+{
+	if (file_.is_open())
+	{
 		file_.close();
 		return true;
 	}
@@ -41,67 +46,33 @@ bool FileHandler::close_file() {
 * \param dest_file: destination file of the copy
 * \return
 */
-bool FileHandler::copy_file(FileHandler& dest) {
+bool FileHandler::copy_file(FileHandler& dest)
+{
+	if (!(this->is_open() && dest.is_open()
+		&& this->open_mode_ == READ && dest.open_mode_ == WRITE))
+		throw FileWriteException();
 
-	// return true if the 2 file are the same
-	if (&dest == this) return true;
-
-	if (!this->file_.is_open()) {
-		this->open_file(READ);
-		this->open_mode_ = READ;
-	}
-
-	if (this->file_.is_open() && this->open_mode_ == WRITE)
-	{
-		this->close_file();
-		this->open_file(READ);
-		this->open_mode_ = READ;
-	}
-
-	if (!dest.file_.is_open()) 
-	{
-		this->open_file(READ);
-		this->open_mode_ = READ;
-	}
-
-	if (dest.file_.is_open() && dest.open_mode_ == READ) 
-	{
-		this->close_file();
-		this->open_file(READ);
-		this->open_mode_ = READ;
-	}
-
-	// TODO.: search better method for file transfert
 	dest.file_ << this->file_.rdbuf();
 	return (this->file_.good() && dest.file_.good());
 }
 
-bool FileHandler::remove_file() {
-	int res = remove(this->file_path_.c_str());
+bool FileHandler::remove_file()
+{
+	if (file_.is_open()) this->close_file();
 
-	if (res == 0) return true;
+	if (remove(this->file_path_.c_str())) return true;
 
 	return false;
 }
 
-void FileHandler::write_data(std::shared_ptr<SocketBuffer> buffer) {
+void FileHandler::write_data(std::shared_ptr<SocketBuffer> buffer)
+{
 
 	// la logica è questa: il buffer che passo come parametro decide le regole,
 	// infatti è quest'ulimo che decide la dimensione del buffer locale da utilizzare e
 	// la quantità di byte da leggere dal file
 
-	if (!file_.is_open())
-	{
-		open_file(WRITE);					// if file is not open, try to open it, otherwisw throw a new FileWrite Exception	
-		open_mode_ = WRITE;
-	}
-
-	if (file_.is_open() && open_mode_ == READ)
-	{
-		close_file();
-		open_file(WRITE);
-		open_mode_ = WRITE;
-	}
+	if (!file_.is_open() || open_mode_ == READ)	throw FileWriteException();
 
 	int count = 0;
 
@@ -113,14 +84,15 @@ void FileHandler::write_data(std::shared_ptr<SocketBuffer> buffer) {
 	if (count == max_attempts_) throw FileWriteException();
 }
 
-void FileHandler::read_file(std::shared_ptr<SocketBuffer> buffer)
+void FileHandler::read_data(std::shared_ptr<SocketBuffer> buffer)
 {
 
 }
 
 std::string FileHandler::get_filename() { return this->filename_; }
 
-std::string FileHandler::get_FilePath() {
+std::string FileHandler::get_filepath()
+{
 
 	if (file_path_.empty())
 	{
@@ -161,11 +133,11 @@ if (!file.good())	throw FileOpenException();
 
 TemporaryFile::TemporaryFile(std::string filename, std::string path) : FileHandler(filename, path) {}
 
-TemporaryFile::~TemporaryFile() {
+TemporaryFile::~TemporaryFile()
+{
 	// if the destructor is invoked for an instance of the temporary file 
 	// this will close the file and remove it from 
 	if (file_.is_open()) file_.close();
+
 	remove_file();
 }
-
-

@@ -32,9 +32,9 @@ public:
 	bool remove_file();
 	bool copy_file(FileHandler& dest);
 	void write_data(std::shared_ptr<SocketBuffer> buffer);
-	void read_file(std::shared_ptr<SocketBuffer> buffer);
+	void read_data(std::shared_ptr<SocketBuffer> buffer);
 	std::string get_filename();
-	std::string get_FilePath();
+	std::string get_filepath();
 	/*FileHandler(char *filename, char *path);
 	FileHandler(const FileHandler&& filehandler);
 	FileHandler(const FileHandler& filehandler);*/

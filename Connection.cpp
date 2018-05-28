@@ -1,7 +1,6 @@
 #include "stdafx.h"
 
 #include "Connection.hpp" 
-#include <ws2def.h>
 
 using namespace connection;
 

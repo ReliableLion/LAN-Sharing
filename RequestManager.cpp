@@ -111,61 +111,67 @@ void RequestManager::receive_request(connection::conn_ptr connection) {
 			*/
 
 			switch (packet_manager.receive_packet(connection)) {
-			case CLSD_CONN:
-			{
-				// exit from the internal while but before close the connction
-				exit = true;
-				connection->close_connection();
-				std::cout << "connection closed by peer" << std::endl;
-			} break;
-
-			// packet not recognized
-			case PACKET_ERR:
-			{
-				exit = false;
-				i++;
-				packet_manager.send_error(connection, MessageType::ERR_1);
-			} break;
-
-			// packet read correctly
-			case READ_OK:
-			{
-				if (process_request(packet_manager, connection)) {
+				case CLSD_CONN:
+				{
+					// exit from the internal while but before close the connction
 					exit = true;
-					received_correctly = true;
-					packet_manager.send_reply(connection, MessageType::OK);
-				}
-				else {
-					exit = false;
-					i++;										// increment the bad-request counter
-					std::cout << "impossible to recognize the request format " << std::endl;
-					packet_manager.send_error(connection, MessageType::ERR_1);
-				}
-			} break;
+					connection->close_connection();
+					std::cout << "connection closed by peer" << std::endl;
+				} break;
 
-			default:
-				break;
+				// packet not recognized
+				case PACKET_ERR:
+				{
+					exit = false;
+					i++;
+					packet_manager.send_error(connection, MessageType::ERR_1);
+				} break;
+
+				// packet read correctly
+				case READ_OK:
+				{
+					if (process_request(packet_manager, connection))
+					{
+						exit = true;
+						received_correctly = true;
+						packet_manager.send_reply(connection, MessageType::OK);
+					}
+					else 
+					{
+						exit = false;
+						i++;										// increment the bad-request counter
+						std::cout << "impossible to recognize the request format " << std::endl;
+						packet_manager.send_error(connection, MessageType::ERR_1);
+					}
+				} break;
+
+				default:
+					break;
 			}
 
 		} while (!exit && i < max_request_attempts_);
 
 		// check if the packet is received correctly
-		if (received_correctly) {
+		if (received_correctly)
+		{
 			std::cout << "request received correclty" << std::endl;
 		}
-		else if (i == max_request_attempts_) {
+		else if (i == max_request_attempts_) 
+		{
 			packet_manager.send_error(connection, MessageType::ERR_1);
 			connection->close_connection();
 			std::cout << "max attempts reached by the server, close the connection" << std::endl;
 		}
 
 	}
-	catch (TimeoutException &e) {
+	catch (TimeoutException &e) 
+	{
 		std::cout << "server reached the timeout, close the connection" << std::endl;
 		packet_manager.send_error(connection, MessageType::ERR_1);
 		connection->close_connection();
 	}
-	catch (SocketException &e) {
+	catch (SocketException &e) 
+	{
 		std::cout << "server encourred in a socket exception, close the connection" << std::endl;
 		packet_manager.send_error(connection, MessageType::ERR_1);
 		connection->close_connection();
@@ -182,28 +188,37 @@ void RequestManager::receive_request(connection::conn_ptr connection) {
 bool RequestManager::process_request(PacketManager& req_packet_manager, connection::conn_ptr connection) {
 	request_struct request = req_packet_manager.get_request();
 
-	if (request.file_size <= 0) {
+	if (request.file_size <= 0) 
+	{
 		req_packet_manager.send_error(connection, MessageType::ERR_1);
 		return false;
 	}
-	if (request.file_name.length() > 256) {
+	if (request.file_name.length() > 256)
+	{
 		req_packet_manager.send_error(connection, MessageType::ERR_1);
 		return false;
 	}
 
 	// if is not possible to inset the data into the queue return an error
-	if (request.file_size >= file_threshold_) {
-		if (!dwload_manager->insert_big_file(request, connection)) {
+	if (request.file_size >= file_threshold_)
+	{
+		if (!dwload_manager->insert_big_file(request, connection)) 
+		{
 			req_packet_manager.send_error(connection, MessageType::ERR_1);
+			return false;
 		}
+		return true;
 	}
-	else {
-		if (dwload_manager->insert_small_file(request, connection)) {
+	else 
+	{
+		if (dwload_manager->insert_small_file(request, connection))
+		{
 			req_packet_manager.send_error(connection, MessageType::ERR_1);
+			return false;
 		}
+		return true;
 	}
 
-	return true;
 }
 
 

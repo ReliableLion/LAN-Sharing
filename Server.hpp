@@ -2,9 +2,9 @@
 
 #include "stdafx.h"
 
-#include <ctime>
 #include <thread>
 #include <mutex>
+#include <ctime>
 
 #include "Connection.hpp"
 #include "RequestManager.hpp"
@@ -20,7 +20,7 @@ enum server_state_type {
 class Server {
 
 	SOCKET passive_socket_;
-	SOCADDR_IN local_address_;
+	SOCKADDR_IN local_address_;
 
 	std::thread server_main_thread_;
 
@@ -35,6 +35,7 @@ class Server {
 
 	void listen_new_connection();
 	void run_server();
+	void print_client_info(std::chrono::time_point<std::chrono::system_clock> time_stamp, connection::TCPConnection &connection);
 public:
 	Server(int port);
 	~Server();
