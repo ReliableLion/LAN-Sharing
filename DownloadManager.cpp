@@ -108,16 +108,17 @@ void DownloadManager::process_small_file()
 		});
 
 		// get the request struct from the queue than release the lock
-		if (is_terminated_.load) exit = true;
+		if (is_terminated_.load()) exit = true;
 		else small_file_q_.popElement(smallFileReq);
 
 		// release the queue lock 
 		ul.unlock();
-
+		/*
 		try
 		{
 			if (!exit) 
 			{
+				
 				// create a temporary file for the download
 				TemporaryFile temporary_file();
 				if (download_file(smallFileReq, temporary_file()))
@@ -135,7 +136,7 @@ void DownloadManager::process_small_file()
 					std::cout << "impossible to complete the download of the file..." << std::endl;
 				}
 
-			}
+			} 
 			
 		}
 		catch (SocketException &se) {
@@ -148,7 +149,7 @@ void DownloadManager::process_small_file()
 			std::cout << "connection reached timeout, closing the connection" << std::endl;
 		}
 		
-		smallFileReq.conn->close_connection();
+		smallFileReq.conn->close_connection(); */
 	}
 }
 
@@ -170,7 +171,7 @@ void DownloadManager::process_big_file()
 		else small_file_q_.popElement(bigFileReq);
 
 		ul.unlock();
-
+		/*
 		try
 		{
 			if (!exit) 
@@ -201,7 +202,7 @@ void DownloadManager::process_big_file()
 			std::cout << "connection reached timeout, closing the connection" << std::endl;
 		}
 
-		bigFileReq.conn->close_connection();
+		bigFileReq.conn->close_connection(); */
 	}
 }
 

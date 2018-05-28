@@ -8,14 +8,16 @@ request_handler::request_handler(const std::shared_ptr<upload_manager> upload_ma
 
 bool request_handler::send_request(char* server, char *file_path) {
 
-	connection::TCPConnection tcp_connection;
+	int port2 = DEFAULT_LISTEN_PORT;
+
+	connection::TCPConnection tcp_connection(server, port2);
 
 	WindowsFileHandler file_handler(file_path);
 	
 	if (!file_handler.get_file_handle())
 		return false;
 	
-	std::string port = std::to_string(DEFAULT_LISTEN_PORT);
+	//std::string port = std::to_string(DEFAULT_LISTEN_PORT);
 
 	//if (tcp_connection.create_connection(server, port.c_str())) {
 

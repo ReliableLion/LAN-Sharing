@@ -6,6 +6,7 @@
 #include "Constants.hpp"
 #include "Message.hpp"
 #include "Connection.hpp"
+#include "SocketBuffer.hpp"
 #include "WindowsFileHandler.hpp"
 
 enum packet_code {

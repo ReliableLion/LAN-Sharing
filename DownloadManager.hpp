@@ -9,6 +9,7 @@
 #include "FileHandler.hpp"
 #include "Connection.hpp"
 #include "Message.hpp"
+#include "SocketBuffer.hpp"
 
 typedef struct {
 	request_struct req;

@@ -27,8 +27,8 @@ private:
 	char *read_buffer_;
 public: 
 	SendSocketBuffer() : SocketBuffer(), send_position_(0) { read_buffer_ = buffer_; };
-	void sent(int n);
+	void send(int n);
 	char *get_buffer() override;
-	int getTotalSent();
-	int getRemainingByte();
+	int get_bytes_sent();
+	int get_remaining_bytes();
 };

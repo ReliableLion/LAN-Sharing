@@ -17,7 +17,6 @@ void SocketBuffer::add(const char *data, int size)
 	}
 	
 	// copy the content of the buffer passed as parameter to the internal buffer
-	strcpy();
 	memcpy(buffer_ + current_size_, data, size);
 	current_size_ += size;
 }
@@ -59,7 +58,7 @@ char* SocketBuffer::get_buffer()
 	return buffer_;
 }
 
-void SendSocketBuffer::sent(int n)
+void SendSocketBuffer::send(int n)
 {
 	if (n < 1)
 		return;
@@ -75,7 +74,7 @@ void SendSocketBuffer::sent(int n)
 	}
 } 
 
-int SendSocketBuffer::getTotalSent()
+int SendSocketBuffer::get_bytes_sent()
 {
 	return send_position_;
 }
@@ -86,7 +85,7 @@ char* SendSocketBuffer::get_buffer()
 }
 
 
-int SendSocketBuffer::getRemainingByte()
+int SendSocketBuffer::get_remaining_bytes()
 {
 	return current_size_ - send_position_;
 }
