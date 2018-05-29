@@ -21,10 +21,10 @@ namespace protocol {
 			ERR_1
 		};
 
-		static protocol::MessageType::message_code get_message_type(std::string msgType);
+		static message_code get_message_type(std::string msgType);
 		static std::string get_message_type(protocol::MessageType::message_code msgType);
 
-		static protocol::MessageType::error_code get_error_type(std::string errorCode);
+		static error_code get_error_type(std::string errorCode);
 		static std::string get_error_type(protocol::MessageType::error_code errorCode);
 	};
 

@@ -119,13 +119,13 @@ public:
 																						return this->requestBody.file_name;
 																						}*/
 
-	bool ProtocolMessage::get_packet_type();
+	bool get_packet_type();
 
-	void ProtocolMessage::prepare_outgoing_packet();
+	void prepare_outgoing_packet();
 	std::vector<int8_t> get_packet_data() const;
 
 	// this method is used to convert the buffer receive into a reuqest
-	bool ProtocolMessage::convert_incoming_packet();
+	bool convert_incoming_packet();
 
 	request_struct get_message_request() { return request_body_; };
 	protocol::MessageType::message_code get_message_code() { return message_code_; };

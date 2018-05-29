@@ -15,7 +15,7 @@ protected:
 	std::string file_path_;
 	HANDLE file_handle_ = INVALID_HANDLE_VALUE;
 
-	static std::string WindowsFileHandler::get_file_name_from_full_path(const std::string& file_path);
+	static std::string get_file_name_from_full_path(const std::string& file_path);
 
 public:
 	WindowsFileHandler(std::string path);
