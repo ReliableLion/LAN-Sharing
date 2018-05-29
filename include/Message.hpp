@@ -52,22 +52,22 @@ public:
 	// This is used to create an empty RequestMessage, which it's supposed will be received
 	RequestMessage() {};
 
-	__int64 RequestMessage::get_file_size() const {
+	__int64 get_file_size() const {
 		return this->requestBody.file_size;
 	}
 
-	FILETIME RequestMessage::get_file_time_stamp() const {
+	FILETIME get_file_time_stamp() const {
 		return this->requestBody.file_timestamp;
 	}
 
-	std::string RequestMessage::get_file_name() const {
+	std::string get_file_name() const {
 		return this->requestBody.file_name;
 	}
 
-	void RequestMessage::prepare_message();
+	void prepare_message();
 
-	request_struct RequestMessage::get_request_data();
-	void RequestMessage::get_packet_type(char* packetType);
+	request_struct get_request_data();
+	void get_packet_type(char* packetType);
 	std::string get_packet_data();
 
 private:
@@ -87,11 +87,11 @@ public:
 
 	discovery_message();
 
-	std::string discovery_message::get_username();
+	std::string get_username();
 
-	std::string discovery_message::get_packet_type();
+	std::string get_packet_type();
 
-	std::string discovery_message::get_message_body();
+	std::string get_message_body();
 };
 
 class ProtocolMessage : public message {

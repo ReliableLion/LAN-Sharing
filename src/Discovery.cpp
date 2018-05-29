@@ -28,6 +28,8 @@ void discovery::start_listening() {
 	const auto client_address_ptr = &client_address;
 	ZeroMemory(&client_address, sizeof(client_address));
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
 	while (true) {
 
 		const auto address_len = udp_server.receive_datagram(buffer, client_address_ptr, MAXBUFL);
@@ -60,6 +62,7 @@ void discovery::start_listening() {
 
 		//send_datagram(buffer_, client_address_ptr, address_len, strlen(buffer_));
 	}
+#pragma clang diagnostic pop
 }
 
 void discovery::start_discovery_service() {

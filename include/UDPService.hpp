@@ -19,16 +19,16 @@ namespace udp_service {
 
 	public:
 
-		udp_client::udp_client();
+		udp_client();
 		bool get_adapter();
 
-		void udp_client::get_server_info(std::string address, std::string port);
-		int udp_client::send_datagram(std::string buff) const;
-		int udp_client::receive_datagram();
-		void udp_client::send_broadcast(const char* message);
-		map<string, string> udp_client::get_online_users();
+		void get_server_info(std::string address, std::string port);
+		int send_datagram(std::string buff) const;
+		int receive_datagram();
+		void send_broadcast(const char* message);
+		map<string, string> get_online_users();
 
-		udp_client::~udp_client();
+		~udp_client();
 
 	private:
 		int sock;
@@ -43,12 +43,12 @@ namespace udp_service {
 	class udp_server {
 
 	public:
-		udp_server::udp_server();
+		udp_server();
 
-		int udp_server::send_datagram(const char *buffer, const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
-		socklen_t udp_server::receive_datagram(char *buffer, const struct sockaddr_in *caddr, size_t len) const;
+		int send_datagram(const char *buffer, const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
+		socklen_t receive_datagram(char *buffer, const struct sockaddr_in *caddr, size_t len) const;
 
-		udp_server::~udp_server();
+		~udp_server();
 
 	private:
 		int server_sock_;
