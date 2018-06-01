@@ -5,7 +5,7 @@
 * \param msg_type represent the message in string format
 * \return the enum type of the message
 */
-protocol::MessageType::message_code protocol::MessageType::get_message_type(std::string msg_type) {
+protocol::message_code protocol::MessageType::get_message_type(std::string msg_type) {
 
 	if (message_type.at(msg_type) == SEND)
 		return SEND;
@@ -22,7 +22,7 @@ protocol::MessageType::message_code protocol::MessageType::get_message_type(std:
 * \param msg_type : enum type of the message
 * \return the string that represent the message code
 */
-std::string protocol::MessageType::get_message_type(protocol::MessageType::message_code msg_type) {
+std::string protocol::MessageType::get_message_type(protocol::message_code msg_type) {
 	for (auto it = std::begin(message_type); it != std::end(message_type); ++it)
 		if (it->second == msg_type)
 			return it->first;
@@ -30,7 +30,7 @@ std::string protocol::MessageType::get_message_type(protocol::MessageType::messa
 	return std::string("");
 }
 
-protocol::MessageType::error_code protocol::MessageType::get_error_type(std::string error_code) {
+protocol::error_code protocol::MessageType::get_error_type(std::string error_code) {
 
 	if (error_type.at(error_code) == SEND)
 		return ERR_1;
@@ -40,7 +40,7 @@ protocol::MessageType::error_code protocol::MessageType::get_error_type(std::str
 
 }
 
-std::string protocol::MessageType::get_error_type(protocol::MessageType::error_code error_code) {
+std::string protocol::MessageType::get_error_type(protocol::error_code error_code) {
 	for (auto it = std::begin(error_type); it != std::end(error_type); ++it)
 		if (it->second == error_code)
 			return it->first;

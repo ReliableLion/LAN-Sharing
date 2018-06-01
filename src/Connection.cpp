@@ -69,9 +69,6 @@ void TCPConnection::close_connection() const
 
 }
 
-/**
-* \brief print on standard output the information about the remote endpoint assoicated with the TCP connection
-*/
 void TCPConnection::print_endpoint_info() const {
 	char client_address[1024];
 	inet_ntop(AF_INET, &(remote_address_.sin_addr), client_address, 1024);
@@ -85,19 +82,12 @@ void TCPConnection::print_endpoint_info() const {
 	std::cout << "port number: " << ntohs(remote_address_.sin_port) << std::endl << std::endl;
 }
 
-/**
-* \brief
-* \param data : buffer filled with data received
-* \param totalByte : number of bytes to be read
-* \param totalReadByte : number of Bytes really read
-* \return false if the connection has been closed by peer, otherside true
-*/
 bool TCPConnection::read_data(std::shared_ptr<SocketBuffer> buffer, int size) {
 
 	if (size > buffer->get_max_size()) throw SocketException(1);
 
 	auto *local_buffer = new char[buffer->get_max_size()];
-	memset(local_buffer, 0, buffer->get_max_size());
+	memset(local_buffer, 0, (size_t) buffer->get_max_size());
 	int bytes_received = 0, bytes_read = 0;
 
 	buffer->clear();
@@ -139,13 +129,6 @@ bool TCPConnection::read_data(std::shared_ptr<SocketBuffer> buffer, int size) {
 	return alive;
 }
 
-/**
-* \brief
-* \param data : buffer used to send the data
-* \param totalByte : # of bytes to be sent
-* \param totalSentByte : reference type, total number of bytes really sent
-* \return false if the connection has been closed by peer, true if the data has been sent correctly
-*/
 bool TCPConnection::send_data(std::shared_ptr<SendSocketBuffer> buffer) {
 	const int total_bytes = buffer->get_size();
 	int sent_bytes = 0;
@@ -164,29 +147,34 @@ bool TCPConnection::send_data(std::shared_ptr<SendSocketBuffer> buffer) {
 	return true;
 }
 
-/**
-* \brief
-* \param data : buffer used to write the dato
-* \param readByte : reference value, total number of byte read
-* \param maxByte : max # of Bytes that can be read
-* \return false if the connection has been closed by peer, true if the data are read correclty
-*/
+
 bool TCPConnection::read_line(std::shared_ptr<SocketBuffer> buffer) {
 
+	// TODO ricordarsi di controllare se il buffer finisce con \r\n
+	int read_byte = 0;
 	auto *local_buffer = new char[buffer->get_max_size()];
-	memset(local_buffer, 0, buffer->get_max_size());
+	memset(local_buffer, 0, (std::size_t) buffer->get_max_size());
 
-	const int read_byte = readline_unbuffered(local_buffer, buffer->get_max_size());
+	struct timeval time;
+	FD_SET read_sock;
+
+	FD_ZERO(&read_sock);
+	FD_SET(sock_, &read_sock);
+
+	time.tv_sec = sec_;
+	time.tv_usec = usec_;
+
+	const int result = select(sock_ + 1, &read_sock, nullptr, nullptr, &time);
+
+	if (result == SOCKET_ERROR) throw SocketException(WSAGetLastError());
+
+	if (result == 0) throw TimeoutException();
+
+	if (result > 0) read_byte = readline_unbuffered(local_buffer, buffer->get_max_size());
 
 	if (read_byte == 0) return false;
 
 	if (read_byte < 0) throw SocketException(WSAGetLastError());
-
-	//	TODO	sistemare la parte di gestione dell'overflow della linea da leggere
-	/*if (local_buffer[read_byte - 1] != '\n')
-	{
-		local_buffer[read_byte - 1] = ''
-	}*/
 
 	buffer->add(local_buffer, read_byte);
 	return true;
@@ -218,7 +206,7 @@ size_t TCPConnection::readline_unbuffered(char *vptr, int maxlen) {
 	return n;
 }
 
-size_t TCPConnection::read_select(char *read_buffer, int size)
+int TCPConnection::read_select(char *read_buffer, int size)
 {
 	struct timeval time;
 	FD_SET read_sock;

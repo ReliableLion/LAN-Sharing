@@ -7,6 +7,7 @@
 #include "PacketManager.hpp"
 #include "FileHandler.hpp"
 #include "Exceptions.hpp"
+#include "PacketManager.hpp"
 
 #include <mutex>
 #include <condition_variable>
@@ -33,15 +34,16 @@ class RequestManager {
 
 	// connection and download variable 
 	ConcurrentQueue<connection::conn_ptr> connection_queue_;
-	std::shared_ptr<DownloadManager> dwload_manager;
+	std::shared_ptr<DownloadManager> download_manager;
 
-	// private methods
 	void extract_next_connection();
-	void receive_request(connection::conn_ptr connection);
-	bool process_request(PacketManager& req_packet_manager, connection::conn_ptr connection);
-	bool send_response(PacketManager& res_packet_manager, connection::conn_ptr connection);
+
+	void download_request(connection::conn_ptr connection);
+	bool validate_request(PacketManager &packet_manager, request_struct request);
+	bool forward_request(request_struct request, connection::conn_ptr connection);
+	//bool send_response(PacketManager& res_packet_manager, connection::conn_ptr connection);
 public:
-	RequestManager(std::shared_ptr<DownloadManager>);
+	RequestManager(std::shared_ptr<DownloadManager> download_manager);
 	~RequestManager();
 	void terminate_service();
 	bool add_connection(connection::conn_ptr newConnection, request_status& status);

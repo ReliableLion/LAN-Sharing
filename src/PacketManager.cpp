@@ -1,112 +1,104 @@
 #include "PacketManager.hpp"
 
 // this class has only a default constructor
-PacketManager::PacketManager() {}
+PacketManager::PacketManager(connection::conn_ptr connection) : connection(connection) {}
 
 PacketManager::~PacketManager() {}
 
-/**
-* \brief
-* \param connection : TCP connection used to transfer byte
-* \return false if the connection has been closed or if the packet is n
-*/
-packet_code PacketManager::receive_packet(connection::conn_ptr connection) {
-	std::shared_ptr<SocketBuffer> buffer(new SocketBuffer);
-	ProtocolMessage req_packet;
+/*
+ * return the information about the status code of the packet
+ */
+ProtocolMessage PacketManager::receive_packet() {
+    std::shared_ptr<SocketBuffer> buffer(new SocketBuffer);
+    ProtocolMessage request_packet;
 
-	this->connection = connection;
+    // TODO sistemare il closed connection
+    if (!connection->read_line(buffer)) //return CLOSED_CONNECTION;
 
-	try {
+    //  TODO controllare se il buffer finisce con il \r\n
+    request_packet.append(buffer->get_buffer(),
+                          buffer->get_size());
 
-		if (!connection->read_line(buffer)) return CLSD_CONN;
-		
-		req_packet.Append(buffer->get_buffer(), buffer->get_size());					// set the buffer inside the PacketMessage instance
-																						// check the packet type
-		if (req_packet.get_packet_type()) 
-		{
-			switch (last_message_code = req_packet.get_message_code())
-			{
-				case protocol::MessageType::UNDEFINED:
-				{
-					return PACKET_ERR;
-				}
-				case protocol::MessageType::ERR:
-				{
-					switch (req_packet.get_error_code()) {
-					case MessageType::ERR_1:
-					{
-						return PACKET_ERR;
-					}
-					}
-				} break;
-				case protocol::MessageType::SEND:
-				{
-					request = req_packet.get_message_request();
-					return READ_OK;					// if the packet is sent
-				}
-				default:
-				{
-					return PACKET_ERR;
-				}
-			}
-		}
-	}
-	catch (std::exception &e) {
-		// the message parser raised an exception; return a packet error
-		return PACKET_ERR;
-	}
+    return request_packet;
 }
 
-packet_code PacketManager::send_packet(connection::conn_ptr connection, WindowsFileHandler file_handler) {
+//        // check the packet type
+//        request_packet.compute_packet_type();
+//
+//        switch (last_message_code = request_packet.get_message_code()) {
+//            case protocol::UNDEFINED: {
+//                return PACKET_ERR;
+//            }
+//            case protocol::ERR: {
+////                switch (request_packet.get_error_code()) {
+////                    case protocol::ERR_1: {
+////                        return
+////                    }
+////                }
+//            }
+//                break;
+//            case protocol::SEND: {
+//                if (request_packet.compute_request()) {
+//                    return
+//                }
+//                request = request_packet.get_message_request();
+//                return READ_OK;
+//            }
+//            default: {
+//                return PACKET_ERR;
+//            }
+//        }
+//    }
+//    catch (std::exception &e) {
+//        // the message parser raised an exception; return a packet error
+//        return PACKET_ERR;
+//    }
 
-	std::shared_ptr<SendSocketBuffer> buffer(new SendSocketBuffer);
-	ProtocolMessage req_packet;
+/*
+ * send
+ */
+bool PacketManager::send_packet(WindowsFileHandler file_handler) {
 
-	FILETIME ftWrite;
+    std::shared_ptr<SendSocketBuffer> buffer(new SendSocketBuffer);
+    ProtocolMessage req_packet;
 
-	// Retrieve the file times for the file.
-	if (!file_handler.get_file_time(nullptr, nullptr, &ftWrite)) return PACKET_ERR;
+    FILETIME ftWrite;
 
-	RequestMessage request_message(file_handler.get_file_size(), ftWrite, file_handler.get_filename());
-	buffer->replace(request_message.get_packet_data().c_str(), strlen(request_message.get_packet_data().c_str()));
+    // Retrieve the file times for the file.
+    if (!file_handler.get_file_time(nullptr, nullptr, &ftWrite)) {
+        // TODO is not possible to return the ftWrite
+        return false;
+    }
 
-	// TODO Check correctness about protocol message to send
+    RequestMessage request_message(file_handler.get_file_size(), ftWrite, file_handler.get_filename());
+    buffer->replace(request_message.get_packet_data().c_str(), strlen(request_message.get_packet_data().c_str()));
 
-	this->connection = connection;
+    // TODO Check correctness about protocol message to send
 
-	if (connection->send_data(buffer)) return READ_OK;
-
-	return PACKET_ERR;
+    return connection->send_data(buffer);
 }
 
+/*
+ * return the request of the
+ */
+//request_struct PacketManager::get_request() {
+//    return request;
+//}
 
-/**
-* \brief
-* \return the request struct associated to thee request received by the server
-*/
-request_struct PacketManager::get_request() {
-	return 	request;
+bool PacketManager::send_reply(protocol::message_code msgType) {
+    ProtocolMessage res_packet(msgType);
+
+    res_packet.compute_request();
+    // TODO in this part the class must forward the packet to the end
+    return false;
 }
 
-bool PacketManager::send_reply(connection::conn_ptr connection, protocol::MessageType::message_code msgType) {
-	ProtocolMessage res_packet(msgType);
+bool PacketManager::send_error(protocol::error_code errorType) {
+    int sentByte;
+    ProtocolMessage response_packet(errorType);
 
-	res_packet.prepare_outgoing_packet();
-	// TODO in this part the class must forward the packet to the end point
-	return false;
-}
-
-/**
-* \brief
-* \param connection
-* \param msgType
-* \param errorType
-* \return
-*/
-bool PacketManager::send_error(connection::conn_ptr connection, protocol::MessageType::error_code errorType) {
-	int sentByte;
-	ProtocolMessage res_packet(errorType);
-
-	// TODO in this part the class must forward the packet to the end point
-	return false;
+    std::shared_ptr<SendSocketBuffer> buffer(new SendSocketBuffer);
+    // TODO da sistemare
+    //buffer->replace(response_packet.get_packet_data(), sizeof(response_packet.get_packet_data()));
+    return false;
 }

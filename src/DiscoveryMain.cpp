@@ -3,43 +3,31 @@
 //#include <future>
 #include <iostream>     //for using cout
 #include <stdlib.h>     //for using the function sleep
+#include <Server.hpp>
 #include "RequestHandler.hpp"
 
 using namespace std;
 
-/*
-void start_server() {
+void test1();
+void testServer();
 
-	udp_service::udp_server server;
 
-	cout << "Started server" << endl;
+int main(int argc, char* argv[]) {
 
-	char buffer[MAXBUFL] = "";
-	struct sockaddr_in server_address, client_address;
+	//Winsock Startup
+	WSAData wsa_data;
+	const WORD dll_version = MAKEWORD(2, 1);
+	if (WSAStartup(dll_version, &wsa_data) != 0) {
+		MessageBoxA(0, "Winsock startup failed", "Error", MB_OK | MB_ICONERROR);
+		exit(0);
+	}
 
-	const auto client_address_ptr = &client_address;
-	memset(&client_address, 0, sizeof(client_address));
+	testServer();
+	return 0;
+}
 
-	//server.start_discovery_listening();
-	const auto address_len = server.receive_datagram(buffer, client_address_ptr, sizeof(buffer));
-
-	cout << "Here the message: " << buffer << " from: " << udp_service::get_client_address(client_address_ptr) << endl;
-
-	server.send_datagram(buffer, &client_address, address_len, strlen(buffer));
-}*/
-
-int main(int argc, char* argv[]){
-
+void test1() {
 	try {
-
-		//Winsock Startup
-		WSAData wsa_data;
-		const WORD dll_version = MAKEWORD(2, 1);
-		if (WSAStartup(dll_version, &wsa_data) != 0) {
-			MessageBoxA(0, "Winsock startup failed", "Error", MB_OK | MB_ICONERROR);
-			exit(0);
-		}
-		
 		//upload_manager upload;
 		//request_handler request(make_shared<upload_manager>(upload));
 
@@ -50,12 +38,25 @@ int main(int argc, char* argv[]){
 		cout << "Richeista creata e file letto" << endl;
 
 		Sleep(10000);
-
-		return 0;
 	}
 	catch (std::exception& e) {
 		std::cerr << "Exception: " << e.what() << std::endl;
 	}
+}
+void testServer() {
+
+	try {
+		Server server(1500);
+
+		server.start_server();
+		this_thread::sleep_for(std::chrono::milliseconds(5000));
+		std::cout << "ciao!" << std::endl;
+		server.close_server();
+
+	} catch (SocketException &se) {
+		std::cout << "the server returned an exception" << std::endl;
+	}
+
 }
 
 /*
@@ -108,7 +109,7 @@ int main(int argc, char* argv[]){
 
 		*/
 
-		/*
+/*
 		session::TCPConnection connection;
 		cout << "Trying to connect" << endl;
 		if(connection.connect_to("192.168.1.14", DEFAULT_LISTEN_PORT)) {
@@ -134,3 +135,24 @@ int main(int argc, char* argv[]){
 			cout << "Connection error" << endl;
 
 		*/
+
+/*
+void start_server() {
+
+	udp_service::udp_server server;
+
+	cout << "Started server" << endl;
+
+	char buffer[MAXBUFL] = "";
+	struct sockaddr_in server_address, client_address;
+
+	const auto client_address_ptr = &client_address;
+	memset(&client_address, 0, sizeof(client_address));
+
+	//server.start_discovery_listening();
+	const auto address_len = server.receive_datagram(buffer, client_address_ptr, sizeof(buffer));
+
+	cout << "Here the message: " << buffer << " from: " << udp_service::get_client_address(client_address_ptr) << endl;
+
+	server.send_datagram(buffer, &client_address, address_len, strlen(buffer));
+}*/

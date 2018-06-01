@@ -24,7 +24,7 @@ namespace connection {
 
 		// definition of the private methods
 		size_t readline_unbuffered(char *vptr, int  maxlen);
-		size_t read_select(char *read_buffer, int size);
+		int read_select(char *read_buffer, int size);
 	public:
 		TCPConnection(const char *host, const int port);
 		TCPConnection(SOCKET socket, SOCKADDR_IN socket_address);

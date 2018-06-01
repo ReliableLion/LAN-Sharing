@@ -265,7 +265,7 @@ map<string, string> udp_client::get_online_users() {
 
 			n = recvfrom(sock, buffer_, MAXBUFL, 0, const_cast<struct sockaddr*>(reinterpret_cast<const struct sockaddr*>(&server_address_struct_)), &address_len);
 
-			packet.Append(buffer_, strlen(buffer_));
+            packet.append(buffer_, strlen(buffer_));
 
 			if (packet.get_packet_type() == HELLO_MSG) {
 

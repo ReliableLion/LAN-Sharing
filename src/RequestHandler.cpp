@@ -36,6 +36,7 @@ bool request_handler::send_request(char* server, char *file_path) {
 
 		requests_.push_back(file_request);
 
+		// TODO packet manager must be changed and initialized here every time
 /*		if (packet_manager_.send_packet(std::make_shared<connection::TCPConnection>(tcp_connection), file_handler) == READ_OK) {
 			upload_manager_->upload_file(std::make_shared<::file_request>(file_request));
 			return true;

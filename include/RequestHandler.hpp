@@ -27,7 +27,6 @@ class request_handler {
 	// connection and download variable 
 	std::list<file_request> requests_;
 	std::shared_ptr<upload_manager> upload_manager_;
-	PacketManager packet_manager_;
 
 	// synchronization variable decalration
 	std::atomic<bool> is_terminated_;
@@ -36,8 +35,7 @@ class request_handler {
 	std::vector<std::thread> thread_pool_;
 
 public:
-	request_handler(std::shared_ptr<upload_manager>);
+	request_handler(const std::shared_ptr<upload_manager> upload_manager);
 	//~request_handler();
 	bool send_request(char* server, char *file_path);
-	
 };

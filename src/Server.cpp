@@ -10,16 +10,17 @@
 */
 Server::Server(int port)
 {
-	if (port < 0 || port > 65535) throw std::exception();
+	// TODO da cambiare l'eccezione
+	if (port < 0 || port > 65535) throw SocketException(1);
 
 	// create the data structure that contain the local address and the port of the server
 	local_address_.sin_addr.s_addr = htonl(INADDR_ANY);
-	local_address_.sin_port = htons(port);
+	local_address_.sin_port = htons((uint16_t) port);
 	local_address_.sin_family = AF_INET;
 
 	passive_socket_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-	if (bind(passive_socket_, (SOCKADDR*)&local_address_, sizeof(local_address_)) == SOCKET_ERROR) {
+	if (bind(passive_socket_, (SOCKADDR*) &local_address_, sizeof(local_address_)) == SOCKET_ERROR) {
 		std::cout << "impossible to bind the socket with the specified address, error:" << std::to_string(WSAGetLastError()) << std::endl;
 		exit(1);
 	}
@@ -29,15 +30,11 @@ Server::Server(int port)
 		exit(1);
 	}
 
-	char msg1[1024];
-	inet_ntop(AF_INET, &(local_address_.sin_addr), msg1, 1024);
+	char address_msg[1024];
+	inet_ntop(AF_INET, &(local_address_.sin_addr), address_msg, 1024);
 
-	std::cout << "this host has address: " << msg1 << std::endl;
-	std::cout << "and is bindedf to port number: " << ntohs(local_address_.sin_port) << std::endl << std::endl;
-
-	server_status_ = CREATED;
-	is_paused_ = false;
-	is_stopped_ = false;
+	std::cout << "this server has address: " << address_msg << std::endl;
+	std::cout << "port number: " << ntohs(local_address_.sin_port) << std::endl << std::endl;
 }
 
 Server::~Server()
@@ -45,26 +42,13 @@ Server::~Server()
 	close_server();
 }
 
-void Server::run_server()
-{
-	if (server_status_ != CREATED) return;
+void Server::run_server() {
 
-	while (!is_stopped_)
-	{
-		server_status_ = RUNNING;
-		std::cout << "the server is running" << std::endl << std::endl;
+	std::cout << "the server is running" << std::endl << std::endl;
 
-		while (!is_paused_ || !is_stopped_)
-			listen_new_connection();
-
-		server_status_ = PAUSED;
-		std::cout << "the server is paused" << std::endl;
-		std::unique_lock<std::mutex> ul(mtx_);
-		cv_.wait(ul);
+	while (server_status == RUNNING) {
+		listen_new_connection();
 	}
-
-	server_status_ = STOPPED;
-	std::cout << "the server is stopped" << std::endl;
 }
 
 void Server::print_client_info(std::chrono::time_point<std::chrono::system_clock> time_point, connection::TCPConnection &connection)
@@ -86,6 +70,11 @@ void Server::listen_new_connection()
 
 	// accept an imcoming request
 	accept_socket = accept(passive_socket_, (SOCKADDR*) &client_address, &addrlen);
+
+	if (WSAGetLastError() == EINVAL) {
+		server_status = STOPPED;
+		return;
+	}
 
 	connection::TCPConnection new_connection(accept_socket, client_address);
 
@@ -110,62 +99,23 @@ void Server::listen_new_connection()
 
 void Server::start_server()
 {
-	// re-instantiate the request manager and the download manager
-	download_manager_ = std::shared_ptr<DownloadManager>(new DownloadManager());
-	request_manager_ = std::shared_ptr<RequestManager>(new RequestManager(download_manager_));
+    // TODO cambiare in make shared
+	download_manager_ = std::shared_ptr<DownloadManager> (new DownloadManager());
+	request_manager_ = std::shared_ptr<RequestManager> (new RequestManager(download_manager_));
 
-
-	/*SOCKADDR_IN client_address;
-	int addrlen = sizeof(client_address);
-	SOCKET accept_socket = accept(passive_socket_, (SOCKADDR*)&client_address, &addrlen);*/
-
-	// start a new thread
+	server_status = RUNNING;
 	server_main_thread_ = std::thread(&Server::run_server, this);
 }
 
-void Server::restart_server()
-{
-	close_server();
-	server_status_ = CREATED;
-	is_paused_ = false;
-	is_stopped_ = false;
-	start_server();
-}
-
-void Server::pause_server()
-{
-	if (server_status_ == RUNNING) is_paused_ = true;
-}
-
-void Server::rerun_server()
-{
-	if (server_status_ == PAUSED)
-	{
-		is_paused_ = false;
-		std::lock_guard<std::mutex> lock_guard(mtx_);
-		cv_.notify_all();
-	}
-
-	if (server_status_ == STOPPED)
-		std::cout << "the server is stopped" << std::endl;
-}
-
 void Server::close_server() {
-	// if the server is in the RUNNING or PAUSED state, the boolean variable is set to true and the server is stopped 
-	if (server_status_ == RUNNING || server_status_ == PAUSED)
-	{
-		is_stopped_ = true;
-		std::lock_guard<std::mutex> lock_guard(mtx_);
-		cv_.notify_all();
-	}
 
 	closesocket(passive_socket_);
-
-	if (server_status_ == STOPPED) server_main_thread_.join();
+	server_main_thread_.join();
 
 	// delete the pointer to the old managers
-	// since the request manager has associated a pointer to the downlaod manager, should be resetted first the request manager pointer 
+	// since the request manager has associated a pointer to the downlaod manager, should be resetted first the request manager pointer
 	// and then the download manager, otherwise the shared pointer is pointed two times and the instance is never destructed correctly
+
 	request_manager_.reset();
 	download_manager_.reset();
 }

@@ -34,7 +34,7 @@ void discovery::start_listening() {
 
 		const auto address_len = udp_server.receive_datagram(buffer, client_address_ptr, MAXBUFL);
 
-		packet.Append(buffer, strlen(buffer));
+        packet.append(buffer, strlen(buffer));
 
 		if (packet.get_packet_type() == DISCOVERY_MSG) {
 			cout << "HERE THE DISCOVERY RECEIVED: " << packet.get_message_body() << endl;
