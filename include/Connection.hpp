@@ -43,6 +43,8 @@ namespace connection {
         bool read_line(std::shared_ptr<SocketBuffer> buffer);
     };
 
+    // definition of the connection pointer type
+    typedef std::shared_ptr<TCPConnection> conn_ptr;
 
     class Session {
     private:
@@ -61,6 +63,5 @@ namespace connection {
         void add_connection_to_session();
     };
 
-    // definition of the connection pointer type
-    typedef std::shared_ptr<TCPConnection> conn_ptr;
+
 }

@@ -7,7 +7,6 @@ add_executable(LAN_Sharing
         DiscoveryMain.cpp
         DownloadManager.cpp
         FileHandler.cpp
-        Listen_socket.cpp
         Message.cpp
         PacketManager.cpp
         Protocol.cpp
