@@ -8,6 +8,7 @@
 #include "FileHandler.hpp"
 #include "Exceptions.hpp"
 #include "PacketManager.hpp"
+#include "Message.hpp"
 
 #include <mutex>
 #include <condition_variable>

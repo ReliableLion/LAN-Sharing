@@ -1,4 +1,3 @@
-#include <Message.hpp>
 #include "RequestManager.hpp"
 
 RequestManager::RequestManager(std::shared_ptr<DownloadManager> download_manager) {
@@ -83,7 +82,8 @@ void RequestManager::download_request(connection::conn_ptr connection) {
 
     // TODO declare here the requestManager and ReplyManager
     try {
-        while (!exit && i++ < max_request_attempts_);{
+        while (!exit && i++ < max_request_attempts_) {
+
             /*
             -if the packet is received correctly, write the reply and set received correclty true
             -if the request is accepted pass the connection to the downloadmanager
@@ -184,12 +184,14 @@ bool RequestManager::forward_request(request_struct request, connection::conn_pt
 
     // if is not possible to inset the request into the queue return an error
     if (request.file_size >= file_threshold_) {
-        if (!download_manager->insert_big_file(request, connection)) return false;
+        //if (!download_manager->insert_big_file(request, connection)) return false;
 
+        std::cout << "the request is forwarded to the big file queue" << std::endl;
         return true;
     } else {
-        if (!download_manager->insert_small_file(request, connection)) return false;
+       // if (!download_manager->insert_small_file(request, connection)) return false;
 
+        std::cout << "the request is forwarded to the small file queue"  << std::endl;
         return true;
     }
 }

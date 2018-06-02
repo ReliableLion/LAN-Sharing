@@ -71,7 +71,7 @@ void Server::listen_new_connection()
 	// accept an imcoming request
 	accept_socket = accept(passive_socket_, (SOCKADDR*) &client_address, &addrlen);
 
-	if (WSAGetLastError() == EINVAL) {
+	if (WSAGetLastError() == WSAEINVAL) {
 		server_status = STOPPED;
 		return;
 	}
@@ -83,13 +83,14 @@ void Server::listen_new_connection()
 
 
 
+	// TODO da rimuovere dopo aver fatto il test
 	ProtocolMessageTest proto;
 	proto.download_request(std::make_shared<connection::TCPConnection>(new_connection));
 
 
 	// add the request inside the request manager
 //	request_status status;
-//	if (request_manager_->add_connection(std::make_shared<connection::TCPConnection>(new_connection), status))
+//	if (request_manager_->add_connection(std::make_shared<connection::TCPConnection> (new_connection), status))
 //	{
 //		switch (status)
 //		{

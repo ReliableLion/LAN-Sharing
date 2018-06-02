@@ -5,14 +5,12 @@
 DownloadManager::DownloadManager() {
     is_terminated_.store(false);
 
-    for (int i = 0; i < max_thread_b_; i++) {                                                // threads declarations for the big file download
-        thread_pool_b_.push_back(std::thread(&DownloadManager::process_big_file,
-                                             this));        // pass to these threads the process big file methods
+    for (int i = 0; i < max_thread_b_; i++) {                                                   // threads declarations for the big file download
+        thread_pool_b_.push_back(std::thread(&DownloadManager::process_big_file, this));        // pass to these threads the process big file methods
     }
 
-    for (int i = 0; i < max_thread_s_; i++) {                                                // threads declarations for the small file download
-        thread_pool_s_.push_back(std::thread(&DownloadManager::process_small_file,
-                                             this));    // pass to these threads the process small file methods
+    for (int i = 0; i < max_thread_s_; i++) {                                                    // threads declarations for the small file download
+        thread_pool_s_.push_back(std::thread(&DownloadManager::process_small_file, this));       // pass to these threads the process small file methods
     }
 }
 
@@ -184,25 +182,23 @@ void DownloadManager::process_big_file() {
 }
 
 bool DownloadManager::download_file(download_struct request, TemporaryFile &temporary_file) {
-    int left_bytes = request.req.file_size;
-    int bytes_to_downlaod = 0, downloaded_bytes = 0;
+    int left_bytes = (int) request.req.file_size;
+    int bytes_to_download = 0, downloaded_bytes = 0;
     bool connection_closed = false;
 
     std::shared_ptr<SocketBuffer> buffer;
     const int buffer_max_size = buffer->get_max_size();
 
     try {
-        temporary_file.open_file(
-                WRITE);                                // open the two files, if an exception is throw by the program then the file is closed by the destructor
+        temporary_file.open_file(WRITE);                                // open the two files, if an exception is throw by the program then the file is closed by the destructor
 
         while (left_bytes != 0 && !connection_closed) {
-            if (left_bytes >=
-                buffer_max_size)                    // if the remaining data are greater than the max size of the buffer then the bytes to download are max buff lengh
-                bytes_to_downlaod = buffer_max_size;
+            if (left_bytes >= buffer_max_size)                    // if the remaining data are greater than the max size of the buffer then the bytes to download are max buff lengh
+                bytes_to_download = buffer_max_size;
             else
-                bytes_to_downlaod = left_bytes;                // if the remaining data are smaller than the max, set the remaining bytes value
+                bytes_to_download = left_bytes;                // if the remaining data are smaller than the max, set the remaining bytes value
 
-            if (request.conn->read_data(buffer, bytes_to_downlaod))            // check if the connection is
+            if (request.conn->read_data(buffer, bytes_to_download))            // check if the connection is
             {
                 left_bytes -= buffer->get_size();
                 temporary_file.write_data(buffer);
