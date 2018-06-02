@@ -9,14 +9,6 @@
 #include "SocketBuffer.hpp"
 #include "WindowsFileHandler.hpp"
 
-enum packet_code {
-    ERR_OK,
-	SEND_OK,
-	READ_OK,						// the packet is received correclty
-	PACKET_ERR,						// the packet isn't recognized
-	CLOSED_CONNECTION,				// the connection has been closed by peer
-};
-
 class PacketManager {
 	//const int buffer_length = MAXBUFL;
 	//request_struct request;

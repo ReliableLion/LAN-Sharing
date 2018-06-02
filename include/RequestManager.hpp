@@ -46,5 +46,5 @@ public:
 	RequestManager(std::shared_ptr<DownloadManager> download_manager);
 	~RequestManager();
 	void terminate_service();
-	bool add_connection(connection::conn_ptr newConnection, request_status& status);
+	bool add_connection(connection::conn_ptr new_connection, request_status& status);
 };

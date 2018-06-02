@@ -18,4 +18,4 @@ add_executable(LAN_Sharing
         UDPService.cpp
         UploadManager.cpp
         UserConfiguration.cpp
-        WindowsFileHandler.cpp)
+        WindowsFileHandler.cpp ProtocolMessageTest.cpp ../include/ProtocolMessageTest.hpp)

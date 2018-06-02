@@ -81,20 +81,26 @@ void Server::listen_new_connection()
 	// print some informations about the remote end-point, the time stamp when the connection has been accepted and more...
 	print_client_info(std::chrono::system_clock::now(), new_connection);
 
+
+
+	ProtocolMessageTest proto;
+	proto.download_request(std::make_shared<connection::TCPConnection>(new_connection));
+
+
 	// add the request inside the request manager
-	request_status status;
-	if (request_manager_->add_connection(std::make_shared<connection::TCPConnection>(new_connection), status))
-	{
-		switch (status)
-		{
-		case FULL_QUEUE:
-			std::cout << "impossible to add the connection, the queue is full" << std::endl;
-			break;
-		case TERM_SIGNAL:
-			std::cout << "impossibleto add the connection becase the request manager hase reveived the shutdown request" << std::endl;
-			break;
-		}
-	}
+//	request_status status;
+//	if (request_manager_->add_connection(std::make_shared<connection::TCPConnection>(new_connection), status))
+//	{
+//		switch (status)
+//		{
+//		case FULL_QUEUE:
+//			std::cout << "impossible to add the connection, the queue is full" << std::endl;
+//			break;
+//		case TERM_SIGNAL:
+//			std::cout << "impossibleto add the connection becase the request manager hase reveived the shutdown request" << std::endl;
+//			break;
+//		}
+//	}
 }
 
 void Server::start_server()

@@ -12,8 +12,8 @@ ProtocolMessage PacketManager::receive_packet() {
     std::shared_ptr<SocketBuffer> buffer(new SocketBuffer);
     ProtocolMessage request_packet;
 
-    // TODO sistemare il closed connection
-    if (!connection->read_line(buffer)) //return CLOSED_CONNECTION;
+
+    if (!connection->read_line(buffer)) throw ConnectionCloseException();
 
     //  TODO controllare se il buffer finisce con il \r\n
     request_packet.append(buffer->get_buffer(),

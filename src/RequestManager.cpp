@@ -1,5 +1,5 @@
+#include <Message.hpp>
 #include "RequestManager.hpp"
-#include "PacketManager.hpp"
 
 RequestManager::RequestManager(std::shared_ptr<DownloadManager> download_manager) {
     is_terminated_.store(false);
@@ -14,14 +14,8 @@ RequestManager::RequestManager(std::shared_ptr<DownloadManager> download_manager
 /*
 * this destructor close all the pending connections that are accepted by the server, but that are waiting a thread to elaborate the request
 */
-RequestManager::~RequestManager() {
-    terminate_service();
-}
+RequestManager::~RequestManager() { terminate_service(); }
 
-
-/**
-* \brief extracts and close all pending connections, then join all the threads
-*/
 void RequestManager::terminate_service() {
     connection::conn_ptr connection;
     is_terminated_.store(true);                        // this flag is used to stop the threads computation
@@ -38,17 +32,13 @@ void RequestManager::terminate_service() {
 
 }
 
-/**
-* \brief insert the connection inside
-* \param newConnection
-* \return TRUE if the is possible to add the new connection into the queue, FALSE if isn't possible to add the connction either if the queue is full or the server should be closed
-*/
-bool RequestManager::add_connection(connection::conn_ptr newConnection, request_status &status) {
-    // it is possible to add the connection into the queue of the requestManager only if the variable is terminated is true
+bool RequestManager::add_connection(connection::conn_ptr new_connection, request_status &status) {
+    // it is possible to add the connection into the queue of the requestManager
+    // only if the variable is_terminated is true
     if (!is_terminated_.load()) {
         std::lock_guard<std::mutex> l(mtx_);
 
-        if (!connection_queue_.insertElement(newConnection)) {
+        if (!connection_queue_.insertElement(new_connection)) {
             status = FULL_QUEUE;
             return false;            // the queue has reached the max number of element
         }
@@ -61,10 +51,8 @@ bool RequestManager::add_connection(connection::conn_ptr newConnection, request_
     return false;                // this object has been closed
 }
 
-//		PRIVATE METHODS
-
 void RequestManager::extract_next_connection() {
-    connection::conn_ptr newConnection;
+    connection::conn_ptr connection;
     std::unique_lock<std::mutex> ul(mtx_, std::defer_lock);
     bool exit = false;
 
@@ -76,31 +64,26 @@ void RequestManager::extract_next_connection() {
                     !is_terminated_.load());            // unlock the condition variable only if the queue is not empty or the server has been closed
         });
 
-        if (is_terminated_.load()) exit = true;                                        // if the server has been closed this method must return in order to join the threads
-
-        // get the connection from the queue and then release the lock
-        connection_queue_.popElement(newConnection);
-        ul.unlock();
-        download_request(newConnection);
+        if (is_terminated_.load())
+            exit = true;                                        // if the server has been closed this method must return in order to join the threads
+        else {
+            // get the connection from the queue and then release the lock
+            connection_queue_.popElement(connection);
+            ul.unlock();
+            download_request(connection);
+        }
     }
 }
 
-/**
-* \brief process every pending request received by the server
-* \param connection
-*/
 void RequestManager::download_request(connection::conn_ptr connection) {
-    bool exit, received_correctly;
+    bool exit = false, received_correctly = false;
     int i = 0;
 
     PacketManager packet_manager(connection);
 
     // TODO declare here the requestManager and ReplyManager
     try {
-        do {
-            exit = false;
-            received_correctly = false;
-
+        while (!exit && i++ < max_request_attempts_);{
             /*
             -if the packet is received correctly, write the reply and set received correclty true
             -if the request is accepted pass the connection to the downloadmanager
@@ -109,24 +92,17 @@ void RequestManager::download_request(connection::conn_ptr connection) {
             -if the connection is closed, write a message
             */
 
-            // TODO lanciare un'eccezione per indicare che la connessione è stata chiusa
             ProtocolMessage packet = packet_manager.receive_packet();
             packet.compute_packet_type();
 
             switch (packet.get_message_code()) {
+
                 case protocol::UNDEFINED : {
-                    exit = false;
                     packet_manager.send_error(protocol::ERR_1);
+                    exit = false;
                 }
                     break;
 
-                case protocol::ERR : {
-                    exit = true;
-                    // TODO aggiungere il dafarsi quando ricevo l'errore
-                }
-                    break;
-
-                    // packet read correctly
                 case protocol::OK : {
 //                    if (process_request(packet_manager, connection)) {
 //                        exit = true;
@@ -141,14 +117,23 @@ void RequestManager::download_request(connection::conn_ptr connection) {
 
 
                     if (packet.compute_request()) {
-                        if (validate_request(packet_manager, packet.get_message_request()))
-                            received_correctly = true;
-                        else
-                            received_correctly = false;
+                        request_struct req = packet.get_message_request();
+
+                        if (validate_request(packet_manager, req)) {
+
+                           if (forward_request(req, connection)) {
+                               exit = true;
+                           } else {
+                               packet_manager.send_error(protocol::ERR_1);
+                               exit = false;
+                           }
+
+                        }
+                        else exit = false;
                     } else {
                         // if the request is not valid send an error
                         packet_manager.send_error(protocol::ERR_1);
-                        received_correctly = false;
+                        exit = false;
                     }
 
                 }
@@ -158,32 +143,33 @@ void RequestManager::download_request(connection::conn_ptr connection) {
                     break;
             }
 
-        } while (!exit && i < max_request_attempts_);
+        }
 
         // check if the packet is received correctly
-        if (received_correctly) {
-            std::cout << "request received correclty" << std::endl;
-        } else if (i == max_request_attempts_) {
+        if (!exit && i > max_request_attempts_) {
             std::cout << "max attempts reached by the server, close the connection" << std::endl;
             connection->close_connection();
         }
 
-    }
-    catch (TimeoutException &te) {
+        std::cout << "request received correclty" << std::endl;
+
+    } catch (TimeoutException &te) {
         std::cout << "server reached the timeout, close the connection" << std::endl;
         packet_manager.send_error(protocol::ERR_1);
         connection->close_connection();
-    }
-    catch (SocketException &se) {
+    } catch (SocketException &se) {
         std::cout << "server encourred in a socket exception, close the connection" << std::endl;
         packet_manager.send_error(protocol::ERR_1);
         connection->close_connection();
+    } catch (ConnectionCloseException &ce) {
+        std::cout << "the connection has been closed by the peer" << std::endl;
     }
 }
 
 bool RequestManager::validate_request(PacketManager &packet_manager, request_struct request) {
     //request_struct request = req_packet_manager.get_request();
 
+    //  TODO cambiare gli errori da inviare al client
     if (request.file_size <= 0) {
         packet_manager.send_error(protocol::ERR_1);
         return false;
@@ -192,20 +178,17 @@ bool RequestManager::validate_request(PacketManager &packet_manager, request_str
         packet_manager.send_error(protocol::ERR_1);
         return false;
     }
-
-
-
 }
 
 bool RequestManager::forward_request(request_struct request, connection::conn_ptr connection) {
 
-    // if is not possible to inset the data into the queue return an error
+    // if is not possible to inset the request into the queue return an error
     if (request.file_size >= file_threshold_) {
-        if (!download_manager->insert_big_file(request,connection)) return false;
+        if (!download_manager->insert_big_file(request, connection)) return false;
 
         return true;
     } else {
-        if (download_manager->insert_small_file(request, connection)) return false;
+        if (!download_manager->insert_small_file(request, connection)) return false;
 
         return true;
     }

@@ -8,6 +8,7 @@
 
 #include "Connection.hpp"
 #include "RequestManager.hpp"
+#include "ProtocolMessageTest.hpp"
 
 enum server_state_type {
 	STOPPED,
