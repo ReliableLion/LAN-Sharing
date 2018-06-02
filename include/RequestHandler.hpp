@@ -1,41 +1,45 @@
 #pragma once
+
+#include "stdafx.h"
+
+#include <memory>
+#include <atomic>
+
 #include "Constants.hpp"
 #include "UploadManager.hpp"
 #include "Connection.hpp"
-
-#include <memory>
 #include "ConcurrentQueue.hpp"
-#include <atomic>
 #include "PacketManager.hpp"
 
 struct file_request {
-	std::string file_name;
-	std::string destination_address;
-	DWORD file_size;
-	size_t transferred_bytes = 0;
-	std::shared_ptr<connection::TCPConnection> connection;
+    std::string file_name;
+    std::string destination_address;
+    DWORD file_size;
+    size_t transferred_bytes = 0;
+    std::shared_ptr<connection::TCPConnection> connection;
 };
 
 class upload_manager;
 
 class request_handler {
+private:
+    // thread & synchronization variables
+    const int max_threads_ = REQUEST_THREADS;
+    const int max_request_attempts_ = MAX_REQUEST_ATTEMPTS;
 
-	// thread & synchronization variables
-	const int max_threads_ = REQUEST_THREADS;
-	const int max_request_attempts_ = MAX_REQUEST_ATTEMPTS;
+    // connection and download variable
+    std::list<file_request> requests_;
+    std::shared_ptr<upload_manager> upload_manager_;
 
-	// connection and download variable 
-	std::list<file_request> requests_;
-	std::shared_ptr<upload_manager> upload_manager_;
-
-	// synchronization variable decalration
-	std::atomic<bool> is_terminated_;
-	std::mutex mtx_;
-	std::condition_variable cv_;
-	std::vector<std::thread> thread_pool_;
+    // synchronization variable decalration
+    std::atomic<bool> is_terminated_;
+    std::mutex mtx_;
+    std::condition_variable cv_;
+    std::vector<std::thread> thread_pool_;
 
 public:
-	request_handler(const std::shared_ptr<upload_manager> upload_manager);
-	//~request_handler();
-	bool send_request(char* server, char *file_path);
+    request_handler(const std::shared_ptr<upload_manager> upload_manager);
+
+    //~request_handler();
+    bool send_request(std::string server, char *file_path);
 };

@@ -6,7 +6,7 @@ request_handler::request_handler(const std::shared_ptr<upload_manager> upload_ma
 	this->upload_manager_ = upload_manager;
 }
 
-bool request_handler::send_request(char* server, char *file_path) {
+bool request_handler::send_request(std::string server, char *file_path) {
 
 	int port2 = DEFAULT_LISTEN_PORT;
 

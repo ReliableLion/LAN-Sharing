@@ -43,7 +43,7 @@ bool DownloadManager::insert_big_file(request_struct request, connection::conn_p
     newRequest.conn = connection;
 
     std::unique_lock<std::mutex> ul(mtx_b_);
-    queue_insertion_res = big_file_q_.insertElement(newRequest);
+    queue_insertion_res = big_file_q_.insert_element(newRequest);
 
     if (queue_insertion_res)                                        // if the connection is insert correctly into the queue notify it to the threads and then return true otherwise return false;
     {
@@ -62,7 +62,7 @@ bool DownloadManager::insert_small_file(request_struct request, connection::conn
     newRequest.conn = connection;
 
     std::unique_lock<std::mutex> ul(mtx_s_);
-    queue_insertion_res = small_file_q_.insertElement(newRequest);
+    queue_insertion_res = small_file_q_.insert_element(newRequest);
 
     if (queue_insertion_res) {
         cv_s_.notify_all();
@@ -81,12 +81,12 @@ void DownloadManager::process_small_file() {
         ul.lock();
 
         cv_s_.wait(ul, [this] {
-            return (!small_file_q_.isEmpty() && !is_terminated_.load());
+            return (!small_file_q_.is_empty() && !is_terminated_.load());
         });
 
         // get the request struct from the queue than release the lock
         if (is_terminated_.load()) exit = true;
-        else small_file_q_.popElement(smallFileReq);
+        else small_file_q_.pop_element(smallFileReq);
 
         // release the queue lock
         ul.unlock();
@@ -139,11 +139,11 @@ void DownloadManager::process_big_file() {
         ul.lock();
 
         cv_b_.wait(ul, [this] {
-            return (!big_file_q_.isEmpty() && !is_terminated_.load());
+            return (!big_file_q_.is_empty() && !is_terminated_.load());
         });
 
         if (is_terminated_.load()) exit = true;
-        else small_file_q_.popElement(bigFileReq);
+        else small_file_q_.pop_element(bigFileReq);
 
         ul.unlock();
         /*

@@ -19,8 +19,8 @@ void RequestManager::terminate_service() {
     connection::conn_ptr connection;
     is_terminated_.store(true);                        // this flag is used to stop the threads computation
 
-    while (!connection_queue_.isEmpty()) {            // iterate the entire queue and close the pending connections
-        connection_queue_.popElement(connection);
+    while (!connection_queue_.is_empty()) {            // iterate the entire queue and close the pending connections
+        connection_queue_.pop_element(connection);
         connection->close_connection();
     }
 
@@ -37,7 +37,7 @@ bool RequestManager::add_connection(connection::conn_ptr new_connection, request
     if (!is_terminated_.load()) {
         std::lock_guard<std::mutex> l(mtx_);
 
-        if (!connection_queue_.insertElement(new_connection)) {
+        if (!connection_queue_.insert_element(new_connection)) {
             status = FULL_QUEUE;
             return false;            // the queue has reached the max number of element
         }
@@ -59,7 +59,7 @@ void RequestManager::extract_next_connection() {
         ul.lock();
 
         cv_.wait(ul, [this]() {                                                        // wait on the condition varaible
-            return (!connection_queue_.isEmpty() &&
+            return (!connection_queue_.is_empty() &&
                     !is_terminated_.load());            // unlock the condition variable only if the queue is not empty or the server has been closed
         });
 
@@ -67,7 +67,7 @@ void RequestManager::extract_next_connection() {
             exit = true;                                        // if the server has been closed this method must return in order to join the threads
         else {
             // get the connection from the queue and then release the lock
-            connection_queue_.popElement(connection);
+            connection_queue_.pop_element(connection);
             ul.unlock();
             download_request(connection);
         }
