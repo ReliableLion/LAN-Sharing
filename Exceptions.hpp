@@ -4,9 +4,9 @@
 #include <sstream>
 
 namespace udp_exception {
-    class udp_exception : public std::runtime_error {
+    class UdpException : public std::runtime_error {
     public:
-        explicit udp_exception(const std::string str) : runtime_error("UDP Service Exception"), error_message_(str) {};
+        explicit UdpException(const std::string str) : runtime_error("UDP Service Exception"), error_message_(str) {};
 
         const char *what() const throw() override { return error_message_.c_str(); }
 
@@ -15,9 +15,9 @@ namespace udp_exception {
     };
 }
 
-class tcp_exception : public std::exception {
+class TcpException : public std::exception {
 public:
-    explicit tcp_exception(const std::string str) : error_message_(str) {};
+    explicit TcpException(const std::string str) : error_message_(str) {};
 
     const char *what() const throw() override { return error_message_.c_str(); }
 
@@ -25,9 +25,9 @@ private:
     std::string error_message_;
 };
 
-class message_exception : public std::exception {
+class MessageException : public std::exception {
 public:
-    explicit message_exception(const std::string str) : error_message_(str) {};
+    explicit MessageException(const std::string str) : error_message_(str) {};
 
     const char *what() const throw() override { return error_message_.c_str(); }
 
@@ -82,13 +82,13 @@ class FileWriteException : public std::exception {
 };
 
 class TimeoutException : public std::exception {
-    virtual const char *what() const throw() {
+	const char *what() const throw() override {
         return "the connection reached the timeout";
     }
 };
 
 class SocketBufferException : public std::exception {
-    virtual const char *what() const throw() {
+	const char *what() const throw() override {
         return "error for the buffer";
     }
 };

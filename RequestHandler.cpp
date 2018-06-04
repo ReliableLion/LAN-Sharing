@@ -1,16 +1,17 @@
 #include "RequestHandler.hpp"
 #include "FileHandler.hpp"
 #include "WindowsFileHandler.hpp"
+#include <iostream>
 
-request_handler::request_handler(const std::shared_ptr<upload_manager> upload_manager) {
+RequestHandler::RequestHandler(const std::shared_ptr<UploadManager> upload_manager) {
 	this->upload_manager_ = upload_manager;
 }
 
-bool request_handler::send_request(std::string server, char *file_path) {
+bool RequestHandler::send_request(const std::string server, char *file_path) {
 
-	int port2 = DEFAULT_LISTEN_PORT;
+	const auto port2 = DEFAULT_LISTEN_PORT;
 
-	connection::TCPConnection tcp_connection(server, port2);
+	connection::TcpConnection tcp_connection(server, port2);
 
 	WindowsFileHandler file_handler(file_path);
 	
@@ -21,13 +22,13 @@ bool request_handler::send_request(std::string server, char *file_path) {
 
 	//if (tcp_connection.create_connection(server, port.c_str())) {
 
-		file_request file_request;
-		file_request.file_name = file_handler.get_file_path();
-		file_request.destination_address = server;
-		file_request.file_size = file_handler.get_file_size();
-		file_request.connection = std::make_shared<connection::TCPConnection>(tcp_connection);
+		FileRequest file_request;
+		file_request.file_name_ = file_handler.get_file_path();
+		file_request.destination_address_ = server;
+		file_request.file_size_ = file_handler.get_file_size();
+		file_request.connection_ = std::make_shared<connection::TcpConnection>(tcp_connection);
 
-		std::cout << file_request.file_name << " DESTINAZIONE: " << file_request.destination_address << std::endl << "DIMENSIONE: " << file_request.file_size << std::endl;
+		std::cout << file_request.file_name_ << " DESTINAZIONE: " << file_request.destination_address_ << std::endl << "DIMENSIONE: " << file_request.file_size_ << std::endl;
 
 		FILETIME write_time;
 		file_handler.get_file_time(nullptr, nullptr, &write_time);

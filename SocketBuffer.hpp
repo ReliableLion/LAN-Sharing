@@ -1,20 +1,15 @@
 #pragma once
 
-#include "stdafx.h"
-
-#include <memory>
-#include <vector>
 #include <cstring>
-
-#include "Exceptions.hpp"
 
 class SocketBuffer {
 protected:
     char *buffer_;
-    const int max_buff_ = 0;
+    const int MAX_BUFF_ = 0;
     int current_size_;
 public:
-    SocketBuffer();
+	virtual ~SocketBuffer() = default;
+	SocketBuffer();
 
     void add(const char *data, int size);
 
@@ -24,9 +19,9 @@ public:
 
     virtual char *get_buffer();
 
-    int get_size();
+    int get_size() const;
 
-    int get_max_size();
+    int get_max_size() const;
 };
 
 
@@ -41,7 +36,7 @@ public:
 
     char *get_buffer() override;
 
-    int get_bytes_sent();
+    int get_bytes_sent() const;
 
-    int get_remaining_bytes();
+    int get_remaining_bytes() const;
 };

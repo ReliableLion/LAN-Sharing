@@ -5,10 +5,10 @@
 
 using namespace std;
 
-class discovery {
+class Discovery {
 
 public:
-	explicit discovery(const string username): hello_message_(username){}
+	explicit Discovery(const string username): hello_message_(username){}
 
 	void start_discovery_service();
 
@@ -21,9 +21,9 @@ public:
 private:
 	void start_listening();
 
-	discovery_message hello_message_;
+	DiscoveryMessage hello_message_;
 	map<string, string> online_users_;
 	future<void> server_thread_;
 
-	udp_service::udp_client udp_client_;
+	udp_service::UdpClient udp_client_;
 };

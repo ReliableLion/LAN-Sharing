@@ -50,7 +50,7 @@
 #define MAX_FILE_ATTEMPTS 5
 #define TEMP_PATH std::string("C:\\users\\utentepc\\Appdata\\local\\temp")
 #define QUEUE_MAX_ELEMENTS 1000
-#define MAX_FILENAME_LENGTH_ 256
+#define MAX_FILENAME_LENGTH 256
 
 /* TCP SECTION */
 #define DEFAULT_LISTEN_PORT 1500

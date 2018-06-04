@@ -1,8 +1,10 @@
 #include "ProtocolMessageTest.hpp"
+#include "Exceptions.hpp"
 
+#include <iostream>
 
-void ProtocolMessageTest::download_request(connection::conn_ptr connection) {
-    PacketManager packet_manager(connection);
+void ProtocolMessageTest::download_request(const connection::conn_ptr connection) {
+	const PacketManager packet_manager(connection);
 
     try {
             ProtocolMessage packet = packet_manager.receive_packet();
@@ -10,15 +12,15 @@ void ProtocolMessageTest::download_request(connection::conn_ptr connection) {
 
             switch (packet.get_message_code()) {
 
-                case protocol::UNDEFINED : {
-                    packet_manager.send_error(protocol::ERR_1);
+                case protocol::undefined : {
+                    packet_manager.send_error(protocol::err_1);
                 }
                     break;
 
-                case protocol::OK : {
+                case protocol::ok : {
 
                     if (packet.compute_request()) {
-                       request_struct request = packet.get_message_request();
+	                    auto request = packet.get_message_request();
                     } else {
                         std::cout << "the request is not valid" << std::endl;
                     }

@@ -11,25 +11,25 @@
 #include "ConcurrentQueue.hpp"
 #include "PacketManager.hpp"
 
-struct file_request {
-    std::string file_name;
-    std::string destination_address;
-    DWORD file_size;
-    size_t transferred_bytes = 0;
-    std::shared_ptr<connection::TCPConnection> connection;
+struct FileRequest {
+    std::string file_name_;
+    std::string destination_address_;
+    DWORD file_size_;
+    size_t transferred_bytes_ = 0;
+    std::shared_ptr<connection::TcpConnection> connection_;
 };
 
-class upload_manager;
+class UploadManager;
 
-class request_handler {
+class RequestHandler {
 private:
     // thread & synchronization variables
-    const int max_threads_ = REQUEST_THREADS;
-    const int max_request_attempts_ = MAX_REQUEST_ATTEMPTS;
+    const int MAX_THREADS_ = REQUEST_THREADS;
+    const int MAX_REQUEST_ATTEMPTS_ = MAX_REQUEST_ATTEMPTS;
 
     // connection and download variable
-    std::list<file_request> requests_;
-    std::shared_ptr<upload_manager> upload_manager_;
+    std::list<FileRequest> requests_;
+    std::shared_ptr<UploadManager> upload_manager_;
 
     // synchronization variable decalration
     std::atomic<bool> is_terminated_;
@@ -38,7 +38,7 @@ private:
     std::vector<std::thread> thread_pool_;
 
 public:
-    request_handler(const std::shared_ptr<upload_manager> upload_manager);
+    RequestHandler(const std::shared_ptr<UploadManager> upload_manager);
 
     //~request_handler();
     bool send_request(std::string server, char *file_path);

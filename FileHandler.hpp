@@ -1,24 +1,20 @@
 #pragma once
 
-#include "stdafx.h"
-
 #include <fstream>
 #include <string>
-#include <sstream>
 #include <memory>
 
-
-#include "Exceptions.hpp"
 #include "Constants.hpp"
 #include "SocketBuffer.hpp"
 
 enum file_open_type {
-    WRITE, READ
+    write, read
 };
 
 class FileHandler {
 private:
-    FileHandler(FileHandler &source) {};
+    FileHandler(FileHandler &source): open_mode_() {
+	} ;
 
     //FileHandler &operator=(FileHandler &source) {};
 
@@ -27,7 +23,7 @@ protected:
     std::string filename_;
     std::string file_path_;
     std::fstream file_;                                    // generic file stream for write and read operation on files
-    const int max_attempts_ = MAX_FILE_ATTEMPTS;
+    const int MAX_ATTEMPTS_ = MAX_FILE_ATTEMPTS;
     file_open_type open_mode_;
 
 public:
@@ -39,18 +35,18 @@ public:
 
     bool close_file();
 
-    bool is_open();
+    bool is_open() const;
 
     bool remove_file();
 
-    bool copy_file(FileHandler &dest);
+    bool copy_file(FileHandler &dest) const;
 
     void write_data(std::shared_ptr<SocketBuffer> buffer);
 
     //  TODO not implemented
-    void read_data(std::shared_ptr<SocketBuffer> buffer);
+	static void read_data(std::shared_ptr<SocketBuffer> buffer);
 
-    std::string get_filename();
+    std::string get_filename() const;
 
     std::string get_filepath();
     /*FileHandler(char *filename, char *path);

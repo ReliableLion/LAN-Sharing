@@ -1,14 +1,9 @@
 #pragma once
 
-#include "stdafx.h"
-
 #include "Constants.hpp"
 #include "Connection.hpp"
 #include "DownloadManager.hpp"
 #include "ConcurrentQueue.hpp"
-#include "PacketManager.hpp"
-#include "FileHandler.hpp"
-#include "Exceptions.hpp"
 #include "PacketManager.hpp"
 #include "Message.hpp"
 
@@ -19,15 +14,15 @@
 #include <vector>
 
 enum request_status {
-    FULL_QUEUE = 0,
-    TERM_SIGNAL
+    full_queue = 0,
+    term_signal
 };
 
 class RequestManager {
     // thread & synchronization variables
-    const int max_threads_ = REQUEST_THREADS;
-    const int file_threshold_ = FILE_SIZE_THRESHOLD;
-    const int max_request_attempts_ = MAX_REQUEST_ATTEMPTS;
+    const int MAX_THREADS_ = REQUEST_THREADS;
+    const int FILE_THRESHOLD_ = FILE_SIZE_THRESHOLD;
+    const int MAX_REQUEST_ATTEMPTS_ = MAX_REQUEST_ATTEMPTS;
 
     // synchronization variable decalration
     std::atomic<bool> is_terminated_;
@@ -37,18 +32,18 @@ class RequestManager {
 
     // connection and download variable
     ConcurrentQueue<connection::conn_ptr> connection_queue_;
-    std::shared_ptr<DownloadManager> download_manager;
+    std::shared_ptr<DownloadManager> download_manager_;
 
     void extract_next_connection();
 
-    void download_request(connection::conn_ptr connection);
+    void download_request(connection::conn_ptr connection) const;
 
-    bool validate_request(PacketManager &packet_manager, request_struct request);
+	static bool validate_request(PacketManager &packet_manager, request_struct request);
 
-    bool forward_request(request_struct request, connection::conn_ptr connection);
+    bool forward_request(request_struct request, connection::conn_ptr connection) const;
     //bool send_response(PacketManager& res_packet_manager, connection::conn_ptr connection);
 public:
-    RequestManager(std::shared_ptr<DownloadManager> download_manager);
+	explicit RequestManager(std::shared_ptr<DownloadManager> download_manager);
 
     ~RequestManager();
 

@@ -2,12 +2,13 @@
 #include <chrono>
 #include <thread>
 #include <random>
+#include <iostream>
 
-void discovery::find_users() {
+void Discovery::find_users() {
 	udp_client_.send_broadcast(DISCOVERY_MSG);
 }
 
-map<string, string> discovery::get_online_users() const {
+map<string, string> Discovery::get_online_users() const {
 	return online_users_;
 }
 
@@ -16,14 +17,15 @@ void discovery::send_hello(){
 	udp_client_.send_broadcast(hello_message_.get_message_body().c_str());
 }*/
 
-void discovery::start_listening() {
+void Discovery::start_listening() {
 
-	udp_service::udp_server udp_server;
+	udp_service::UdpServer udp_server;
 
 	char buffer[MAXBUFL] = "";
-	char username[MAXBUFL] = "";
-	discovery_message packet;
-	struct sockaddr_in server_address, client_address;
+	//char username[MAXBUFL] = "";
+	DiscoveryMessage packet;
+	//struct sockaddr_in server_address;
+	struct sockaddr_in client_address;
 
 	const auto client_address_ptr = &client_address;
 	ZeroMemory(&client_address, sizeof(client_address));
@@ -65,8 +67,8 @@ void discovery::start_listening() {
 #pragma clang diagnostic pop
 }
 
-void discovery::start_discovery_service() {
-	server_thread_ = std::async(&discovery::start_listening, this);
+void Discovery::start_discovery_service() {
+	server_thread_ = std::async(&Discovery::start_listening, this);
 
 	cout << "-------------- Server started" << endl;
 }

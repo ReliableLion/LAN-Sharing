@@ -1,15 +1,14 @@
-#include "stdafx.h"
-
 #include "DownloadManager.hpp"
+#include "Exceptions.hpp"
 
 DownloadManager::DownloadManager() {
     is_terminated_.store(false);
 
-    for (int i = 0; i < max_thread_b_; i++) {                                                   // threads declarations for the big file download
+    for (auto i = 0; i < MAX_THREAD_B_; i++) {                                                   // threads declarations for the big file download
         thread_pool_b_.push_back(std::thread(&DownloadManager::process_big_file, this));        // pass to these threads the process big file methods
     }
 
-    for (int i = 0; i < max_thread_s_; i++) {                                                    // threads declarations for the small file download
+    for (auto i = 0; i < MAX_THREAD_S_; i++) {                                                    // threads declarations for the small file download
         thread_pool_s_.push_back(std::thread(&DownloadManager::process_small_file, this));       // pass to these threads the process small file methods
     }
 }
@@ -22,28 +21,27 @@ void DownloadManager::terminate_service() {
     is_terminated_.store(true);                                // set is terminated true in order to stop the threds execution
 
     // join all the threads
-    for (int i = 0; i < max_thread_s_; i++) {
+    for (auto i = 0; i < MAX_THREAD_S_; i++) {
         cv_s_.notify_all();                                    // "unlock" all the threads that waits on the condition variable
         thread_pool_s_[i].join();
     }
 
     // join all the threads
-    for (int i = 0; i < max_thread_b_; i++) {
+    for (auto i = 0; i < MAX_THREAD_B_; i++) {
         cv_b_.notify_all();                                    // "unlock" all the threads that waits on the condition variable
         thread_pool_b_[i].join();
     }
 }
 
-bool DownloadManager::insert_big_file(request_struct request, connection::conn_ptr connection) {
+bool DownloadManager::insert_big_file(const request_struct request, const connection::conn_ptr connection) {
     download_struct newRequest;
-    bool queue_insertion_res;
 
-    // fill the request struct with the date received by the client
+	// fill the request struct with the date received by the client
     newRequest.req = request;
     newRequest.conn = connection;
 
     std::unique_lock<std::mutex> ul(mtx_b_);
-    queue_insertion_res = big_file_q_.insert_element(newRequest);
+	const auto queue_insertion_res = big_file_q_.insert_element(newRequest);
 
     if (queue_insertion_res)                                        // if the connection is insert correctly into the queue notify it to the threads and then return true otherwise return false;
     {
@@ -54,15 +52,14 @@ bool DownloadManager::insert_big_file(request_struct request, connection::conn_p
     return false;
 }
 
-bool DownloadManager::insert_small_file(request_struct request, connection::conn_ptr connection) {
+bool DownloadManager::insert_small_file(const request_struct request, const connection::conn_ptr connection) {
     download_struct newRequest;
-    bool queue_insertion_res;
 
-    newRequest.req = request;
+	newRequest.req = request;
     newRequest.conn = connection;
 
     std::unique_lock<std::mutex> ul(mtx_s_);
-    queue_insertion_res = small_file_q_.insert_element(newRequest);
+	const auto queue_insertion_res = small_file_q_.insert_element(newRequest);
 
     if (queue_insertion_res) {
         cv_s_.notify_all();
@@ -75,7 +72,7 @@ bool DownloadManager::insert_small_file(request_struct request, connection::conn
 void DownloadManager::process_small_file() {
     std::unique_lock<std::mutex> ul(mtx_s_, std::defer_lock);
     download_struct smallFileReq;
-    bool exit = false;
+	auto exit = false;
 
     while (exit) {
         ul.lock();
@@ -132,8 +129,8 @@ void DownloadManager::process_small_file() {
 
 void DownloadManager::process_big_file() {
     std::unique_lock<std::mutex> ul(mtx_b_, std::defer_lock);
-    download_struct bigFileReq;
-    bool exit = false;
+    download_struct big_file_req;
+	auto exit = false;
 
     while (exit) {
         ul.lock();
@@ -143,7 +140,7 @@ void DownloadManager::process_big_file() {
         });
 
         if (is_terminated_.load()) exit = true;
-        else small_file_q_.pop_element(bigFileReq);
+        else small_file_q_.pop_element(big_file_req);
 
         ul.unlock();
         /*
@@ -182,15 +179,15 @@ void DownloadManager::process_big_file() {
 }
 
 bool DownloadManager::download_file(download_struct request, TemporaryFile &temporary_file) {
-    int left_bytes = (int) request.req.file_size;
-    int bytes_to_download = 0, downloaded_bytes = 0;
-    bool connection_closed = false;
+	auto left_bytes = static_cast<int>(request.req.file_size_);
+	auto bytes_to_download = 0, downloaded_bytes = 0;
+	auto connection_closed = false;
 
     std::shared_ptr<SocketBuffer> buffer;
-    const int buffer_max_size = buffer->get_max_size();
+    const auto buffer_max_size = buffer->get_max_size();
 
     try {
-        temporary_file.open_file(WRITE);                                // open the two files, if an exception is throw by the program then the file is closed by the destructor
+        temporary_file.open_file(write);                                // open the two files, if an exception is throw by the program then the file is closed by the destructor
 
         while (left_bytes != 0 && !connection_closed) {
             if (left_bytes >= buffer_max_size)                    // if the remaining data are greater than the max size of the buffer then the bytes to download are max buff lengh
@@ -220,7 +217,7 @@ bool DownloadManager::download_file(download_struct request, TemporaryFile &temp
 }
 
 bool DownloadManager::copy_file(TemporaryFile &temporary_file, FileHandler &destination_file) {
-    destination_file.open_file(WRITE);
+    destination_file.open_file(write);
 
     if (destination_file.copy_file(temporary_file)) {
         temporary_file.close_file();

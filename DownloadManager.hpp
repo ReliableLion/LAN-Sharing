@@ -9,7 +9,6 @@
 #include "FileHandler.hpp"
 #include "Connection.hpp"
 #include "Message.hpp"
-#include "SocketBuffer.hpp"
 
 typedef struct {
     request_struct req;
@@ -17,8 +16,8 @@ typedef struct {
 } download_struct;
 
 class DownloadManager {
-    const int max_thread_b_ = BIG_FILE_THREADS;
-    const int max_thread_s_ = SMALL_FILE_THREADS;
+    const int MAX_THREAD_B_ = BIG_FILE_THREADS;
+    const int MAX_THREAD_S_ = SMALL_FILE_THREADS;
     std::vector<std::thread> thread_pool_b_;
     std::vector<std::thread> thread_pool_s_;
     ConcurrentQueue<download_struct> big_file_q_;
@@ -30,15 +29,15 @@ class DownloadManager {
 
     // file variables
     std::string path_;
-    const std::string temp_path_ = TEMP_PATH;
+    const std::string TEMP_PATH_ = TEMP_PATH;
 
     void process_big_file();
 
     void process_small_file();
 
-    bool download_file(download_struct request, TemporaryFile &temporary_file);
+	static bool download_file(download_struct request, TemporaryFile &temporary_file);
 
-    bool copy_file(TemporaryFile &temporary_file, FileHandler &destination_file);
+	static bool copy_file(TemporaryFile &temporary_file, FileHandler &destination_file);
 
 public:
     DownloadManager();

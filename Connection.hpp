@@ -2,35 +2,33 @@
 
 #include "stdafx.h"
 
-#include <iostream>
 #include <memory>
 #include <iomanip>
 #include <ctime>
 #include <list>
 
-#include "Exceptions.hpp"
 #include "Constants.hpp"
 #include "SocketBuffer.hpp"
 
 namespace connection {
 
-    class TCPConnection {
+    class TcpConnection {
     private:
         SOCKET sock_;
         SOCKADDR_IN remote_address_;
-        const long sec_ = TIMEOUT_SEC;
-        const long usec_ = TIMEOUT_USEC;
-        bool alive;
+        const long SEC_ = TIMEOUT_SEC;
+        const long USEC_ = TIMEOUT_USEC;
+        bool alive_;
 
         // definition of the private methods
-        size_t readline_unbuffered(char *vptr, int maxlen);
+        size_t readline_unbuffered(char *vptr, int maxlen) const;
 
-        int read_select(char *read_buffer, int size);
+        int read_select(char *read_buffer, int size) const;
 
     public:
-        TCPConnection(const std::string host, const int port);
+        TcpConnection(const std::string host, const int port);
 
-        TCPConnection(SOCKET socket, SOCKADDR_IN socket_address);
+        TcpConnection(SOCKET socket, SOCKADDR_IN socket_address);
 
         void close_connection() const;
 
@@ -38,13 +36,13 @@ namespace connection {
 
         bool read_data(std::shared_ptr<SocketBuffer> buffer, int size);
 
-        bool send_data(std::shared_ptr<SendSocketBuffer> buffer);
+        bool send_data(std::shared_ptr<SendSocketBuffer> buffer) const;
 
-        bool read_line(std::shared_ptr<SocketBuffer> buffer);
+        bool read_line(std::shared_ptr<SocketBuffer> buffer) const;
     };
 
     // definition of the connection pointer type
-    typedef std::shared_ptr<TCPConnection> conn_ptr;
+    typedef std::shared_ptr<TcpConnection> conn_ptr;
 
     class Session {
     private:

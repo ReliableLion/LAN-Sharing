@@ -3,44 +3,46 @@
 #pragma warning(disable:4996)
 
 #include "Server.hpp"
+#include <iostream>
+#include "ProtocolMessageTest.hpp"
 
 /*
 * this constructor create a new socket that is setted on the defaul port 1500;
 * if you want to change it is possible to call the method change port and pass the new port number, t
 */
-Server::Server(int port) {
+Server::Server(const int port): server_status_() {
 
-    if (port < 0 || port > 65535) {
-        std::cout << "the value of the port passed as parameter is not valid" << std::endl;
-        exit(1);
-    }
+	if (port < 0 || port > 65535) {
+		std::cout << "the value of the port passed as parameter is not valid" << std::endl;
+		exit(1);
+	}
 
-    // create the data structure that contain the local address and the server port
-    local_address_.sin_addr.s_addr = htonl(INADDR_ANY);
-    local_address_.sin_port = htons((uint16_t) port);
-    local_address_.sin_family = AF_INET;
+	// create the data structure that contain the local address and the server port
+	local_address_.sin_addr.s_addr = htonl(INADDR_ANY);
+	local_address_.sin_port = htons(static_cast<uint16_t>(port));
+	local_address_.sin_family = AF_INET;
 
-    passive_socket_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	passive_socket_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-    if (bind(passive_socket_, (SOCKADDR *) &local_address_, sizeof(local_address_)) == SOCKET_ERROR) {
-        std::cout << "impossible to bind the socket with the specified address, error:"
-                     << std::to_string(WSAGetLastError()) << std::endl;
-        exit(1);
-    }
+	if (bind(passive_socket_, reinterpret_cast<SOCKADDR *>(&local_address_), sizeof(local_address_)) == SOCKET_ERROR) {
+		std::cout << "impossible to bind the socket with the specified address, error:"
+			<< std::to_string(WSAGetLastError()) << std::endl;
+		exit(1);
+	}
 
-    if (listen(passive_socket_, SOMAXCONN) == SOCKET_ERROR) {
-        std::cout << "server cannot listen for incoming request, error: "
-                     << std::to_string(WSAGetLastError())
-                  << std::endl;
-        exit(1);
-    }
+	if (listen(passive_socket_, SOMAXCONN) == SOCKET_ERROR) {
+		std::cout << "server cannot listen for incoming request, error: "
+			<< std::to_string(WSAGetLastError())
+			<< std::endl;
+		exit(1);
+	}
 
-    // conver the address from sockaddr type into a human readable format
-    char address_msg[1024];
-    inet_ntop(AF_INET, &(local_address_.sin_addr), address_msg, 1024);
+	// conver the address from sockaddr type into a human readable format
+	char address_msg[1024];
+	inet_ntop(AF_INET, &(local_address_.sin_addr), address_msg, 1024);
 
-    std::cout << "this server has address: " << address_msg << std::endl;
-    std::cout << "port number: " << ntohs(local_address_.sin_port) << std::endl << std::endl;
+	std::cout << "this server has address: " << address_msg << std::endl;
+	std::cout << "port number: " << ntohs(local_address_.sin_port) << std::endl << std::endl;
 }
 
 Server::~Server() {
@@ -51,13 +53,13 @@ void Server::run_server() {
 
     std::cout << "the server is running" << std::endl << std::endl;
 
-    while (server_status == RUNNING) {
+    while (server_status_ == running) {
         listen_new_connection();
     }
 }
 
-void Server::print_client_info(std::chrono::time_point<std::chrono::system_clock> time_point,
-                               connection::TCPConnection &connection) {
+void Server::print_client_info(const std::chrono::time_point<std::chrono::system_clock> time_point,
+                               connection::TcpConnection &connection) {
     auto time_stamp_t = std::chrono::system_clock::to_time_t(time_point);
 
     std::cout << "***************************************************" << std::endl;
@@ -68,19 +70,18 @@ void Server::print_client_info(std::chrono::time_point<std::chrono::system_clock
 }
 
 void Server::listen_new_connection() {
-    SOCKET accept_socket;
-    SOCKADDR_IN client_address;
+	SOCKADDR_IN client_address;
     int addrlen = sizeof(client_address);
 
     // accept an imcoming request
-    accept_socket = accept(passive_socket_, (SOCKADDR *) &client_address, &addrlen);
+	const auto accept_socket = accept(passive_socket_, reinterpret_cast<SOCKADDR *>(&client_address), &addrlen);
 
     if (WSAGetLastError() == WSAEINVAL) {
-        server_status = STOPPED;
+        server_status_ = stopped;
         return;
     }
 
-    connection::TCPConnection new_connection(accept_socket, client_address);
+    connection::TcpConnection new_connection(accept_socket, client_address);
 
     // print some informations about the remote end-point, the time stamp when the connection has been accepted and more...
     print_client_info(std::chrono::system_clock::now(), new_connection);
@@ -89,7 +90,7 @@ void Server::listen_new_connection() {
 
     // TODO da rimuovere dopo aver fatto il test
     ProtocolMessageTest proto;
-    proto.download_request(std::make_shared<connection::TCPConnection>(new_connection));
+    proto.download_request(std::make_shared<connection::TcpConnection>(new_connection));
 
 
     // add the request inside the request manager
@@ -109,11 +110,11 @@ void Server::listen_new_connection() {
 }
 
 void Server::start_server() {
-    // TODO cambiare in make shared
-    download_manager_ = std::shared_ptr<DownloadManager>(new DownloadManager());
-    request_manager_ = std::shared_ptr<RequestManager>(new RequestManager(download_manager_));
 
-    server_status = RUNNING;
+	download_manager_ = std::make_shared<DownloadManager>();
+    request_manager_ = std::make_shared<RequestManager>(download_manager_);
+
+    server_status_ = running;
     server_main_thread_ = std::thread(&Server::run_server, this);
 }
 

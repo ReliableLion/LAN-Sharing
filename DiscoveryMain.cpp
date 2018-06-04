@@ -5,6 +5,7 @@
 #include <stdlib.h>     //for using the function sleep
 #include "Server.hpp"
 #include "RequestHandler.hpp"
+#include "Exceptions.hpp"
 
 using namespace std;
 

@@ -4,14 +4,13 @@
 #include "RequestHandler.hpp"
 
 
-struct file_request;
+struct FileRequest;
 
-class upload_manager {
+class UploadManager {
 
 	std::vector<std::thread> thread_pool_;
 
 public:
-	void upload_file(std::shared_ptr<file_request>);
-	bool upload(std::shared_ptr<file_request>);
-
+	void upload_file(std::shared_ptr<FileRequest>);
+	bool upload(std::shared_ptr<FileRequest>);
 };

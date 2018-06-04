@@ -4,15 +4,13 @@
 
 #include <thread>
 #include <mutex>
-#include <ctime>
 
 #include "Connection.hpp"
 #include "RequestManager.hpp"
-#include "ProtocolMessageTest.hpp"
 
 enum server_state_type {
-    STOPPED,
-    RUNNING
+    stopped,
+    running
 };
 
 
@@ -23,7 +21,7 @@ class Server {
 
     std::thread server_main_thread_;
 
-    server_state_type server_status;
+    server_state_type server_status_;
 
     std::shared_ptr<RequestManager> request_manager_;
     std::shared_ptr<DownloadManager> download_manager_;
@@ -32,11 +30,11 @@ class Server {
 
     void run_server();
 
-    void print_client_info(std::chrono::time_point<std::chrono::system_clock> time_stamp,
-                           connection::TCPConnection &connection);
+	static void print_client_info(std::chrono::time_point<std::chrono::system_clock> time_stamp,
+                           connection::TcpConnection &connection);
 
 public:
-    Server(int port = DEFAULT_LISTEN_PORT);
+	explicit Server(int port = DEFAULT_LISTEN_PORT);
 
     ~Server();
 

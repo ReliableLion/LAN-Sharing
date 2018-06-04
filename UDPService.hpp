@@ -2,7 +2,6 @@
 
 #include <WinSock2.h>
 #include <ws2tcpip.h>
-#include <iostream>
 
 #include "Constants.hpp"
 #include <map>
@@ -16,11 +15,11 @@ namespace udp_service {
 
     std::string get_client_address(struct sockaddr_in *client_address_ptr);
 
-    class udp_client {
+    class UdpClient {
 
     public:
 
-        udp_client();
+        UdpClient();
 
         bool get_adapter();
 
@@ -34,10 +33,10 @@ namespace udp_service {
 
         map<string, string> get_online_users();
 
-        ~udp_client();
+        ~UdpClient();
 
     private:
-        int sock;
+        int sock_;
         char buffer_[MAXBUFL] = "";
         char server_address_[INET_ADDRSTRLEN];
         char client_address_[INET_ADDRSTRLEN] = "";
@@ -46,16 +45,16 @@ namespace udp_service {
 
     };
 
-    class udp_server {
+    class UdpServer {
 
     public:
-        udp_server();
+        UdpServer();
 
         int send_datagram(const char *buffer, const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
 
         socklen_t receive_datagram(char *buffer, const struct sockaddr_in *caddr, size_t len) const;
 
-        ~udp_server();
+        ~UdpServer();
 
     private:
         int server_sock_;

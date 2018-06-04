@@ -1,19 +1,20 @@
 #include "PacketManager.hpp"
+#include "Exceptions.hpp"
 
 // this class has only a default constructor
-PacketManager::PacketManager(connection::conn_ptr connection) : connection(connection) {}
+PacketManager::PacketManager(const connection::conn_ptr connection) : connection_(connection) {}
 
 PacketManager::~PacketManager() {}
 
 /*
  * return the information about the status code of the packet
  */
-ProtocolMessage PacketManager::receive_packet() {
+ProtocolMessage PacketManager::receive_packet() const {
     std::shared_ptr<SocketBuffer> buffer(new SocketBuffer);
     ProtocolMessage request_packet;
 
 
-    if (!connection->read_line(buffer)) throw ConnectionCloseException();
+    if (!connection_->read_line(buffer)) throw ConnectionCloseException();
 
     //  TODO controllare se il buffer finisce con il \r\n
     request_packet.append(buffer->get_buffer(),
@@ -57,7 +58,7 @@ ProtocolMessage PacketManager::receive_packet() {
 /*
  * send
  */
-bool PacketManager::send_packet(WindowsFileHandler file_handler) {
+bool PacketManager::send_packet(WindowsFileHandler file_handler) const {
 
     std::shared_ptr<SendSocketBuffer> buffer(new SendSocketBuffer);
     ProtocolMessage req_packet;
@@ -75,7 +76,7 @@ bool PacketManager::send_packet(WindowsFileHandler file_handler) {
 
     // TODO Check correctness about protocol message to send
 
-    return connection->send_data(buffer);
+    return connection_->send_data(buffer);
 }
 
 /*
@@ -85,17 +86,17 @@ bool PacketManager::send_packet(WindowsFileHandler file_handler) {
 //    return request;
 //}
 
-bool PacketManager::send_reply(protocol::message_code msgType) {
-    ProtocolMessage res_packet(msgType);
+bool PacketManager::send_reply(const protocol::message_code msg_type) {
+    ProtocolMessage res_packet(msg_type);
 
     res_packet.compute_request();
     // TODO in this part the class must forward the packet to the end
     return false;
 }
 
-bool PacketManager::send_error(protocol::error_code errorType) {
-    int sentByte;
-    ProtocolMessage response_packet(errorType);
+bool PacketManager::send_error(const protocol::error_code error_type) {
+    int sent_byte;
+    ProtocolMessage response_packet(error_type);
 
     std::shared_ptr<SendSocketBuffer> buffer(new SendSocketBuffer);
     // TODO da sistemare

@@ -1,10 +1,6 @@
 #pragma once
 
-#include <fstream>
 #include <string>
-#include <sstream>
-#include "Exceptions.hpp"
-#include "Constants.hpp"
 #include "stdafx.h"
 
 class WindowsFileHandler {
@@ -18,14 +14,14 @@ protected:
 	static std::string get_file_name_from_full_path(const std::string& file_path);
 
 public:
-	WindowsFileHandler(std::string path);
+	explicit WindowsFileHandler(std::string path);
 	~WindowsFileHandler();
 	bool get_file_handle();
 	void close_file() const;
-	void readFile(char *buffer, std::size_t size);
+	static void read_file(char *buffer, std::size_t size);
 	DWORD get_file_size() const;
-	bool get_file_time(_Out_opt_ LPFILETIME lpCreationTime, _Out_opt_ LPFILETIME lpLastAccessTime, _Out_opt_ LPFILETIME lpLastWriteTime) const;
-	std::string format_file_time(FILETIME);
+	bool get_file_time(_Out_opt_ LPFILETIME lp_creation_time, _Out_opt_ LPFILETIME lp_last_access_time, _Out_opt_ LPFILETIME lp_last_write_time) const;
+	static std::string format_file_time(FILETIME);
 	std::string get_filename() const;
 	std::string get_file_path() const;
 };

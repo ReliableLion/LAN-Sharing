@@ -4,28 +4,26 @@
 
 #include <sstream>
 #include <vector>
-#include <iostream>
 
 #include "Protocol.hpp"
 #include "Constants.hpp"
-#include "Exceptions.hpp"
 
 
 typedef struct {
-    __int64 file_size;
-    FILETIME file_timestamp;
-    std::string file_name;
+    __int64 file_size_;
+    FILETIME file_timestamp_;
+    std::string file_name_;
 } request_struct;
 
-class message {
+class Message {
 public:
 
-    message();
+    Message();
 
-    message(const char *buffer, const int size);    // Will use existing allocated buffer and create packet from i
+    Message(const char *buffer, const int size);    // Will use existing allocated buffer and create packet from i
     // Packet(const Packet & p); 					// Will allocate new buffer but copy buffer from packet argument
 
-    message(const protocol::message_code m);                     // Used for when sending a packet that only contains a packet type (Ex. End of File Packet)
+	explicit Message(const protocol::message_code m);                     // Used for when sending a packet that only contains a packet type (Ex. End of File Packet)
 
     void append(const protocol::message_code mt);
 
@@ -33,7 +31,7 @@ public:
 
     void append(const std::size_t m);
 
-    void append(const message &m);
+    void append(const Message &m);
 
     void append(const std::string &str);
 
@@ -43,58 +41,58 @@ public:
 
     void clear();
 
-    std::vector<int8_t> m_buffer; // Message Packet Buffer
+    std::vector<int8_t> m_buffer_; // Message Packet Buffer
 
 protected:
     std::string message_body_;
     std::stringstream stream_;
-    const std::string end_message_ = "\r\n";
+    const std::string END_MESSAGE_ = "\r\n";
     size_t message_size_;
 };
 
-class RequestMessage : public message {
+class RequestMessage : public Message {
 public:
 
     // This is used to create a RequestMessage, which it's supposed will be sent
-    RequestMessage(__int64 fileSize, FILETIME fileTimestamp, std::string fileName);
+    RequestMessage(__int64 file_size, FILETIME file_timestamp, std::string file_name);
 
     // This is used to create an empty RequestMessage, which it's supposed will be received
     RequestMessage() {};
 
     __int64 get_file_size() const {
-        return this->requestBody.file_size;
+        return this->request_body_.file_size_;
     }
 
     FILETIME get_file_time_stamp() const {
-        return this->requestBody.file_timestamp;
+        return this->request_body_.file_timestamp_;
     }
 
     std::string get_file_name() const {
-        return this->requestBody.file_name;
+        return this->request_body_.file_name_;
     }
 
     void prepare_message();
 
     request_struct get_request_data();
 
-    void get_packet_type(char *packetType);
+    void get_packet_type(char *packet_type);
 
     std::string get_packet_data();
 
 private:
-    request_struct requestBody;
-    ULARGE_INTEGER timeStamp;
+    request_struct request_body_;
+    ULARGE_INTEGER time_stamp_;
 };
 
-class discovery_message : public message {
+class DiscoveryMessage : public Message {
 public:
-    discovery_message(const std::string username) {
+	explicit DiscoveryMessage(const std::string username) {
         append(HELLO_MSG);
         append(username);
-        append(end_message_);
+        append(END_MESSAGE_);
     }
 
-    discovery_message() {};
+    DiscoveryMessage() {};
 
     std::string get_username();
 
@@ -103,23 +101,24 @@ public:
     std::string get_message_body();
 };
 
-class ProtocolMessage : public message {
+class ProtocolMessage : public Message {
     protocol::message_code message_code_;
     protocol::error_code error_code_;
     request_struct request_body_;
     ULARGE_INTEGER time_stamp_;
 
-    int const min_size_request_ = (4 + (2 * sizeof(__int64)) + 1);
-    int const max_size_request_ = (4 + (2 * sizeof(__int64)) + MAX_FILENAME_LENGTH_);
+    int const MIN_SIZE_REQUEST_ = (4 + (2 * sizeof(__int64)) + 1);
+    int const MAX_SIZE_REQUEST_ = (4 + (2 * sizeof(__int64)) + MAX_FILENAME_LENGTH);
 
     void prepare_send_message();
 
 public:
     ProtocolMessage(__int64 file_size, FILETIME file_timestamp, std::string file_name);     // This is used to create a RequestMessage, which it's supposed will be sent
-    ProtocolMessage(protocol::message_code message_code);
+	explicit ProtocolMessage(protocol::message_code message_code);
 
-    ProtocolMessage(protocol::error_code error);                                            // this constructor is used to build up an error message
-    ProtocolMessage() {};                                                                   // This is used to create an empty RequestMessage, which it's supposed will be received
+	explicit ProtocolMessage(protocol::error_code error);                                            // this constructor is used to build up an error message
+    ProtocolMessage(): message_code_(), error_code_() {
+	} ;                                                                   // This is used to create an empty RequestMessage, which it's supposed will be received
 
 
     /*__int64 ProtocolMessage::get_file_size() const {
@@ -138,11 +137,11 @@ public:
 
     bool compute_request();
 
-    std::vector<int8_t> get_packet_data() { return m_buffer; }
+    std::vector<int8_t> get_packet_data() const { return m_buffer_; }
 
-    request_struct get_message_request() { return request_body_; };
+    request_struct get_message_request() const { return request_body_; };
 
-    protocol::message_code get_message_code() { return message_code_; };
+    protocol::message_code get_message_code() const { return message_code_; };
 
-    protocol::error_code get_error_code() { return error_code_; }
+    protocol::error_code get_error_code() const { return error_code_; }
 };

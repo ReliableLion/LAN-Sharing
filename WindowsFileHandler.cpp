@@ -1,5 +1,6 @@
 #include "WindowsFileHandler.hpp"
 #include <iomanip>
+#include <sstream>
 
 WindowsFileHandler::WindowsFileHandler(const std::string path) : file_path_(path) {
 	filename_ = get_file_name_from_full_path(file_path_);
@@ -20,7 +21,7 @@ void WindowsFileHandler::close_file() const {
 		CloseHandle(file_handle_);
 }
 
-void WindowsFileHandler::readFile(char *buffer, std::size_t size) {
+void WindowsFileHandler::read_file(char *buffer, std::size_t size) {
 
 }
 
@@ -30,8 +31,8 @@ DWORD WindowsFileHandler::get_file_size() const {
 	return 0;
 }
 
-bool WindowsFileHandler::get_file_time(LPFILETIME lpCreationTime, LPFILETIME lpLastAccessTime, LPFILETIME lpLastWriteTime) const {
-	return GetFileTime(file_handle_, lpCreationTime, lpLastAccessTime, lpLastWriteTime);
+bool WindowsFileHandler::get_file_time(const LPFILETIME lp_creation_time, const LPFILETIME lp_last_access_time, const LPFILETIME lp_last_write_time) const {
+	return GetFileTime(file_handle_, lp_creation_time, lp_last_access_time, lp_last_write_time);
 }
 
 std::string WindowsFileHandler::format_file_time(FILETIME filetime) {
