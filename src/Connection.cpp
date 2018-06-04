@@ -72,14 +72,15 @@ void TCPConnection::close_connection() const {
 
 void TCPConnection::print_endpoint_info() const {
     char client_address[1024];
-    inet_ntop(AF_INET, &(remote_address_.sin_addr), client_address, 1024);
+    //inet_ntop(AF_INET, &(remote_address_.sin_addr), client_address, 1024);
+    //inet_ntoa(remote_address_.sin_addr);
 
     if (sock_ == 0) {
         std::cout << "socket not connected" << std::endl;
         return;
     }
 
-    std::cout << "IP address: " << client_address << std::endl;
+    std::cout << "IP address: " << inet_ntoa(remote_address_.sin_addr) << std::endl;
     std::cout << "port number: " << ntohs(remote_address_.sin_port) << std::endl << std::endl;
 }
 

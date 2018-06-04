@@ -5,14 +5,14 @@
 namespace protocol {
 
     // enumerator declaration
-    const enum message_code {
+    enum message_code {
         SEND,                        // code used to send the request to the server
         OK,                            // code to responde affermatively to the request
         ERR,                        // code that specify a error
         UNDEFINED                    // message code not recognized
     };
 
-    const enum error_code {
+    enum error_code {
         ERR_1
     };
 

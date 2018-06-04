@@ -53,7 +53,7 @@ namespace connection {
         // the constructor of copy and the assign operator are deleted
         Session(const Session &source) {}
 
-        Session& operator=(const Session &source) {}
+        //Session& operator=(const Session &source) {}
 
     public:
         Session();

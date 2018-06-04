@@ -20,7 +20,7 @@ class FileHandler {
 private:
     FileHandler(FileHandler &source) {};
 
-    FileHandler &operator=(FileHandler &source) {};
+    //FileHandler &operator=(FileHandler &source) {};
 
 protected:
     std::string file_dir_;                                // TODO remember to write \\ instead of \ when you write the file path
