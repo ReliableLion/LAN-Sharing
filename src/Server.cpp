@@ -9,10 +9,13 @@
 * if you want to change it is possible to call the method change port and pass the new port number, t
 */
 Server::Server(int port) {
-    // TODO da cambiare l'eccezione
-    if (port < 0 || port > 65535) throw SocketException(1);
 
-    // create the data structure that contain the local address and the port of the server
+    if (port < 0 || port > 65535) {
+        std::cout << "the value of the port passed as parameter is not valid" << std::endl;
+        exit(1);
+    }
+
+    // create the data structure that contain the local address and the server port
     local_address_.sin_addr.s_addr = htonl(INADDR_ANY);
     local_address_.sin_port = htons((uint16_t) port);
     local_address_.sin_family = AF_INET;
@@ -21,16 +24,18 @@ Server::Server(int port) {
 
     if (bind(passive_socket_, (SOCKADDR *) &local_address_, sizeof(local_address_)) == SOCKET_ERROR) {
         std::cout << "impossible to bind the socket with the specified address, error:"
-                  << std::to_string(WSAGetLastError()) << std::endl;
+                     << std::to_string(WSAGetLastError()) << std::endl;
         exit(1);
     }
 
     if (listen(passive_socket_, SOMAXCONN) == SOCKET_ERROR) {
-        std::cout << "server cannot listen for incoming request, error: " << std::to_string(WSAGetLastError())
+        std::cout << "server cannot listen for incoming request, error: "
+                     << std::to_string(WSAGetLastError())
                   << std::endl;
         exit(1);
     }
 
+    // conver the address from sockaddr type into a human readable format
     char address_msg[1024];
     inet_ntop(AF_INET, &(local_address_.sin_addr), address_msg, 1024);
 

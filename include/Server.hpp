@@ -36,7 +36,7 @@ class Server {
                            connection::TCPConnection &connection);
 
 public:
-    Server(int port);
+    Server(int port = DEFAULT_LISTEN_PORT);
 
     ~Server();
 

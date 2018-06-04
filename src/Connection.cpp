@@ -21,9 +21,11 @@ TCPConnection::TCPConnection(const std::string host, const int port) : alive(tru
         std::cout << "Error within getaddrinfo(): " << WSAGetLastError() << std::endl;
 
     sock_ = -1;
+
     for (res = res0; res != nullptr; res = res->ai_next) {
 
         sock_ = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+
         if (sock_ == INVALID_SOCKET) {
             std::cout << "(%s) socket() failed" << std::endl;
             continue;
