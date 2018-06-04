@@ -330,3 +330,6 @@ ASALocalRun/
 /LAN-Sharing.vcxproj.filters
 /LAN-Sharing.vcxproj
 /LAN-Sharing.sln
+/*.vcxproj.filters
+/*.vcxproj
+/*.sln
