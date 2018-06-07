@@ -8,7 +8,7 @@ WindowsFileHandler::WindowsFileHandler(const std::string path) : file_path_(path
 
 WindowsFileHandler::~WindowsFileHandler() { close_file(); }
 
-bool WindowsFileHandler::get_file_handle() {
+bool WindowsFileHandler::open_file() {
 
 	if ((file_handle_ = CreateFile(file_path_.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, nullptr)) != INVALID_HANDLE_VALUE)
 		return true;

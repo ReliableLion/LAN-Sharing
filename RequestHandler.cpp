@@ -15,7 +15,7 @@ bool RequestHandler::send_request(const std::string server, char *file_path) {
 
 	WindowsFileHandler file_handler(file_path);
 	
-	if (!file_handler.get_file_handle())
+	if (!file_handler.open_file())
 		return false;
 	
 	//std::string port = std::to_string(DEFAULT_LISTEN_PORT);

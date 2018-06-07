@@ -1,8 +1,10 @@
 #pragma once
+#include "stdafx.h"
 #include <thread>
 #include <vector>
 #include "RequestHandler.hpp"
 #include "WindowsFileHandler.hpp"
+#include "PacketManager.hpp"
 
 
 struct FileRequest;
@@ -12,6 +14,6 @@ class UploadManager {
 	//std::vector<std::thread> thread_pool_;
 
 public:
-	void upload_file(std::shared_ptr<FileRequest>, WindowsFileHandler);
+	void upload_file(std::shared_ptr<FileRequest>, WindowsFileHandler, PacketManager);
 	bool upload(std::shared_ptr<FileRequest>, WindowsFileHandler);
 };

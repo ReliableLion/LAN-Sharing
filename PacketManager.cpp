@@ -71,7 +71,6 @@ bool PacketManager::send_packet(WindowsFileHandler file_handler) const {
         // TODO is not possible to return the ftWrite
         return false;
     }
-	std::cout << file_handler.get_file_size() << " CUMPARE MIU " << file_handler.get_filename();
 
     ProtocolMessage request_message(file_handler.get_file_size(), ftWrite, file_handler.get_filename());
     buffer->replace(reinterpret_cast<const char*>(request_message.get_packet_data().data()), request_message.get_packet_data().size());
