@@ -50,40 +50,6 @@ protected:
     size_t message_size_;
 };
 
-class RequestMessage : public Message {
-public:
-
-    // This is used to create a RequestMessage, which it's supposed will be sent
-    RequestMessage(__int64 file_size, FILETIME file_timestamp, std::string file_name);
-
-    // This is used to create an empty RequestMessage, which it's supposed will be received
-    RequestMessage() {};
-
-    __int64 get_file_size() const {
-        return this->request_body_.file_size_;
-    }
-
-    FILETIME get_file_time_stamp() const {
-        return this->request_body_.file_timestamp_;
-    }
-
-    std::string get_file_name() const {
-        return this->request_body_.file_name_;
-    }
-
-    void prepare_message();
-
-    request_struct get_request_data();
-
-    void get_packet_type(char *packet_type);
-
-    std::string get_packet_data();
-
-private:
-    request_struct request_body_;
-    ULARGE_INTEGER time_stamp_;
-};
-
 class DiscoveryMessage : public Message {
 public:
 	explicit DiscoveryMessage(const std::string username) {
@@ -111,15 +77,19 @@ class ProtocolMessage : public Message {
     int const MAX_SIZE_REQUEST_ = (4 + (2 * sizeof(__int64)) + MAX_FILENAME_LENGTH);
 
     void prepare_send_message();
+	// this method is used to send out a packet
+	void prepare_out_packet();
 
 public:
     ProtocolMessage(__int64 file_size, FILETIME file_timestamp, std::string file_name);     // This is used to create a RequestMessage, which it's supposed will be sent
 	explicit ProtocolMessage(protocol::message_code message_code);
 
 	explicit ProtocolMessage(protocol::error_code error);                                            // this constructor is used to build up an error message
+
     ProtocolMessage(): message_code_(), error_code_() {
 	} ;                                                                   // This is used to create an empty RequestMessage, which it's supposed will be received
 
+	std::stringstream stream_;
 
     /*__int64 ProtocolMessage::get_file_size() const {
     return this->requestBody.file_size;
@@ -129,13 +99,10 @@ public:
      this->requestBody.file_name;
     }*/
 
-    // this method is used to send out a packet
-    void prepare_out_packet();
-
     // this two methods are used to decode a single packet
     void compute_packet_type();
 
-    bool compute_request();
+    bool compute_send_request();
 
     std::vector<int8_t> get_packet_data() const { return m_buffer_; }
 
@@ -144,4 +111,16 @@ public:
     protocol::message_code get_message_code() const { return message_code_; };
 
     protocol::error_code get_error_code() const { return error_code_; }
+
+	__int64 get_file_size() const {
+		return this->request_body_.file_size_;
+	}
+
+	FILETIME get_file_time_stamp() const {
+		return this->request_body_.file_timestamp_;
+	}
+
+	std::string get_file_name() const {
+		return this->request_body_.file_name_;
+	}
 };

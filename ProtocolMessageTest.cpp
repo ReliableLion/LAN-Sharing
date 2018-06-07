@@ -19,7 +19,7 @@ void ProtocolMessageTest::download_request(const connection::conn_ptr connection
 
                 case protocol::ok : {
 
-                    if (packet.compute_request()) {
+                    if (packet.compute_send_request()) {
 	                    auto request = packet.get_message_request();
                     } else {
                         std::cout << "the request is not valid" << std::endl;
@@ -36,12 +36,15 @@ void ProtocolMessageTest::download_request(const connection::conn_ptr connection
         std::cout << "request received correclty" << std::endl;
 
     } catch (TimeoutException &te) {
+		UNREFERENCED_PARAMETER(te);
         std::cout << "server reached the timeout, close the connection" << std::endl;
         connection->close_connection();
     } catch (SocketException &se) {
+		UNREFERENCED_PARAMETER(se);
         std::cout << "server encourred in a socket exception, close the connection" << std::endl;
         connection->close_connection();
     } catch (ConnectionCloseException &ce) {
+		UNREFERENCED_PARAMETER(ce);
         std::cout << "the connection has been closed by the peer" << std::endl;
     }
 

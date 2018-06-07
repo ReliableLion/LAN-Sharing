@@ -54,7 +54,6 @@ bool UdpClient::get_adapter()
 	PIP_ADAPTER_INFO p_adapter_info;
 	PIP_ADAPTER_INFO p_adapter = nullptr;
 	DWORD dw_ret_val = 0;
-	UINT i;
 
 	ULONG ul_out_buf_len = sizeof(IP_ADAPTER_INFO);
 	p_adapter_info = static_cast<IP_ADAPTER_INFO *>(MALLOC(sizeof(IP_ADAPTER_INFO)));

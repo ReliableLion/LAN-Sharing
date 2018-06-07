@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "Message.hpp"
 #include "Exceptions.hpp"
+#include <sstream>
+#include <iostream>
+#include "WindowsFileHandler.hpp"
 
 Message::Message() : message_body_(""), message_size_(0) {}
 
@@ -44,97 +47,6 @@ void Message::append(const std::size_t s) {
 }
 
 void Message::clear() { m_buffer_.clear(); }
-
-/********************/
-/* 	REQUEST MESSAGE */
-/********************/
-
-
-RequestMessage::RequestMessage(const __int64 file_size, const FILETIME file_timestamp, const std::string file_name) {
-
-    message_body_.append(protocol::MessageType::get_message_type(protocol::send));
-
-    this->request_body_.file_size_ = file_size;
-    this->request_body_.file_timestamp_ = file_timestamp;
-    this->request_body_.file_name_ = file_name;
-}
-
-request_struct RequestMessage::get_request_data() {
-
-    const std::vector<int8_t>::const_iterator begin = m_buffer_.begin() + 4;
-
-    /************************
-     *  GETTING FILE SIZE	*
-     ************************/
-    auto first = begin;
-    auto last = first + sizeof(__int64);
-    std::vector<int8_t> file_size(first, last);
-
-    memcpy(&request_body_.file_size_, file_size.data(), file_size.size());
-    request_body_.file_size_ = ntohll(request_body_.file_size_);
-
-    /****************************
-    *  GETTING FILE TIME STAMP	*
-    *****************************/
-    first = begin + sizeof(__int64);
-    last = begin + 2 * sizeof(__int64);
-    std::vector<int8_t> file_time_stamp(first, last);
-
-    memcpy(&time_stamp_.QuadPart, file_time_stamp.data(), file_time_stamp.size());
-    time_stamp_.QuadPart = ntohll(time_stamp_.QuadPart);
-    this->request_body_.file_timestamp_.dwLowDateTime = time_stamp_.LowPart;
-    this->request_body_.file_timestamp_.dwHighDateTime = time_stamp_.HighPart;
-
-    /************************
-    *  GETTING FILE NAME	*
-    *************************/
-    first = begin + 2 * sizeof(__int64);
-    last = m_buffer_.end();
-    std::vector<int8_t> file_name(first, last);
-
-    char name[256];
-    memcpy(name, file_name.data(), file_name.size());
-    name[file_name.size() - 2] = '\0'; // Needs to remove \r\n
-    this->request_body_.file_name_ = std::string(name);
-
-    return this->request_body_;
-}
-
-void RequestMessage::prepare_message() {
-
-    append(static_cast<const char *>(message_body_.c_str()));
-
-    __int64 file_size = htonll(this->request_body_.file_size_);
-    append(reinterpret_cast<const char *>(&file_size), sizeof(__int64));
-
-    time_stamp_.LowPart = this->request_body_.file_timestamp_.dwLowDateTime;
-    time_stamp_.HighPart = this->request_body_.file_timestamp_.dwHighDateTime;
-
-    __int64 file_timestamp = htonll(time_stamp_.QuadPart);
-    append(reinterpret_cast<const char *>(&file_timestamp), sizeof(__int64));
-
-    append(static_cast<const char *>(this->request_body_.file_name_.c_str()), this->request_body_.file_name_.size());
-
-    append(static_cast<const char *>(END_MESSAGE_.c_str()));
-}
-
-void RequestMessage::get_packet_type(char *packet_type) {
-
-    try {
-        memcpy(static_cast<void *>(packet_type), static_cast<void *>(&(*m_buffer_.begin())), 4);
-        packet_type[4] = '\0';
-    } catch (std::exception &e) {
-        throw std::exception("Exception during packet type getting!");
-    }
-
-}
-
-std::string RequestMessage::get_packet_data() {
-    const auto temp = reinterpret_cast<char *>((m_buffer_.data()));
-    return std::string(temp, m_buffer_.size());
-}
-
-
 
 /**********************/
 /* 	DISCOVERY MESSAGE */
@@ -192,18 +104,23 @@ ProtocolMessage::ProtocolMessage(const __int64 file_size, const FILETIME file_ti
 	this->request_body_.file_size_ = file_size;
 	this->request_body_.file_timestamp_ = file_timestamp;
 	this->request_body_.file_name_ = file_name;
+
+	prepare_out_packet();
 }
 
 ProtocolMessage::ProtocolMessage(const protocol::message_code message_code): error_code_() {
 	this->message_code_ = message_code;
+	prepare_out_packet();
 }
 
 ProtocolMessage::ProtocolMessage(const protocol::error_code error) {
     this->message_code_ = protocol::err;
     this->error_code_ = error;
+
+	prepare_out_packet();
 }
 
-bool ProtocolMessage::compute_request() {
+bool ProtocolMessage::compute_send_request() {
 
     // TODO check if the buffer contain the exact size of data
     if (m_buffer_.size() < MIN_SIZE_REQUEST_ ||
@@ -211,31 +128,28 @@ bool ProtocolMessage::compute_request() {
         return false;
     }
 
-    const std::vector<int8_t>::const_iterator begin = m_buffer_.begin() + 4;
+	// Check if the string is terminated correctly
+	if (!stream_.str().find("\r\n"))
+		return false;
 
-    std::vector<int8_t>::const_iterator first = begin;
-    std::vector<int8_t>::const_iterator last = first + sizeof(__int64);
-    std::vector<int8_t> file_size(first, last);
+	// Clean the stream
+	stream_.str(std::string());
+	// Copy the buffer within the stream without 'SEND '
+	stream_ << m_buffer_.data() + 5;
 
-    memcpy(&request_body_.file_size_, file_size.data(), file_size.size());
-    request_body_.file_size_ = ntohll(request_body_.file_size_);
-    first = begin + sizeof(__int64);
-    last = begin + 2 * sizeof(__int64);
-    std::vector<int8_t> file_time_stamp(first, last);
+	// Get file size, separated by ' ' from the timestamp
+	std::string message;
+	std::getline(stream_, message, ' ');
+	this->request_body_.file_size_ = ntohll(strtoll(message.c_str(), nullptr, 0));
 
-    memcpy(&time_stamp_.QuadPart, file_time_stamp.data(), file_time_stamp.size());
-    time_stamp_.QuadPart = ntohll(time_stamp_.QuadPart);
-    this->request_body_.file_timestamp_.dwLowDateTime = time_stamp_.LowPart;
-    this->request_body_.file_timestamp_.dwHighDateTime = time_stamp_.HighPart;
+	// Get the timestamp
+	std::getline(stream_, message, ' ');
+	time_stamp_.QuadPart = ntohll(strtoll(message.c_str(), nullptr, 0));
+	this->request_body_.file_timestamp_.dwLowDateTime = time_stamp_.LowPart;
+	this->request_body_.file_timestamp_.dwHighDateTime = time_stamp_.HighPart;
 
-    first = begin + 2 * sizeof(__int64);
-    last = m_buffer_.end();
-    std::vector<int8_t> file_name(first, last);
-
-    char name[256];
-    memcpy(name, file_name.data(), file_name.size());
-    name[file_name.size() - 2] = '\0'; // Needs to remove \r\n
-    this->request_body_.file_name_ = std::string(name);
+	// Get the filename
+	std::getline(stream_, this->request_body_.file_name_, '\r');
 
     return true;
 }
@@ -256,6 +170,7 @@ void ProtocolMessage::compute_packet_type() {
         message_code_ = protocol::MessageType::get_message_type(std::string(packet_type));
     }
     catch (std::exception &e) {
+		UNREFERENCED_PARAMETER(e);
         message_code_ = protocol::undefined;
     }
 }
@@ -288,24 +203,26 @@ void ProtocolMessage::prepare_send_message() {
     // append the send
     append(protocol::send);
 
-    append(static_cast<const char *>(message_body_.c_str()));
+	stream_.str(std::string());
 
     // append the file size
-    __int64 fileSize = htonll(this->request_body_.file_size_);
-    append(reinterpret_cast<const char *>(&fileSize), sizeof(__int64));
+	const __int64 file_size = htonll(this->request_body_.file_size_);
+	stream_ << ' ' << file_size << ' ';
 
     // append the file timestamp
     time_stamp_.LowPart = this->request_body_.file_timestamp_.dwLowDateTime;
     time_stamp_.HighPart = this->request_body_.file_timestamp_.dwHighDateTime;
 
-    __int64 fileTimestamp = htonll(time_stamp_.QuadPart);
-    append(reinterpret_cast<const char *>(&fileTimestamp), sizeof(__int64));
+	const __int64 file_timestamp = htonll(time_stamp_.QuadPart);
+	stream_ << file_timestamp << ' ';
 
     // append the file name
-    append(static_cast<const char *>(this->request_body_.file_name_.c_str()), this->request_body_.file_name_.size());
+	stream_ << this->request_body_.file_name_;
 
     // append the request terminator \r\n
-    append(static_cast<const char *>(END_MESSAGE_.c_str()));
+	stream_ << END_MESSAGE_;
+
+	append(stream_.str());
 }
 
 

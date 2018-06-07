@@ -6,11 +6,14 @@
 #include "Server.hpp"
 #include "RequestHandler.hpp"
 #include "Exceptions.hpp"
+#include "Discovery.hpp"
 
 using namespace std;
 
 void test1();
 void testServer();
+void test2();
+void start_server();
 
 
 int main(int argc, char* argv[]) {
@@ -23,7 +26,7 @@ int main(int argc, char* argv[]) {
 		exit(0);
 	}
 
-	testServer();
+	test2();
 	return 0;
 }
 
@@ -44,6 +47,7 @@ void test1() {
 		std::cerr << "Exception: " << e.what() << std::endl;
 	}
 }
+
 void testServer() {
 
 	try {
@@ -54,93 +58,113 @@ void testServer() {
 		std::cout << "ciao!" << std::endl;
 		server.close_server();
 
-	} catch (SocketException &se) {
+	}
+	catch (SocketException& se) {
+		UNREFERENCED_PARAMETER(se);
 		std::cout << "the server returned an exception" << std::endl;
 	}
 
 }
 
-/*
- * 		discovery discovery_service = discovery("davide");
+void test2() {
+	/*
+	Discovery discovery_service = Discovery("davide");
 
-		cout << "Starting discovery service" << endl;
+	cout << "Starting discovery service" << endl;
 
-		discovery_service.start_discovery_service();
+	discovery_service.start_discovery_service();
 
-		cout << "Discovery service started" << endl;
+	cout << "Discovery service started" << endl;
 
-		Sleep(3000);
+	Sleep(3000);
 
-		if (discovery_service.get_online_users().size() == 0)
-			cout << "NO USERS" << endl;
-		else
-			for (auto user : discovery_service.get_online_users()) {
-				cout << "USER: " << user.first << ":" << user.second << endl;
-			}
+	if (discovery_service.get_online_users().size() == 0)
+		cout << "NO USERS" << endl;
+	else
+		for (auto user : discovery_service.get_online_users()) {
+			cout << "USER: " << user.first << ":" << user.second << endl;
+		}
 
-		cout << "Sending discovery..." << endl;
+	cout << "Sending discovery..." << endl;
 
-		discovery_service.find_users();
+	discovery_service.find_users();
 
-		cout << "Discovery sent!" << endl;
-		Sleep(3000);
+	cout << "Discovery sent!" << endl;
+	Sleep(3000);
 
-		if (discovery_service.get_online_users().size() == 0)
-			cout << "NO USERS" << endl;
-		else
-			for (auto user : discovery_service.get_online_users()) {
-				cout << "USER: " << user.first << ":" << user.second << endl;
-			}
+	if (discovery_service.get_online_users().size() == 0)
+		cout << "NO USERS" << endl;
+	else
+		for (auto user : discovery_service.get_online_users()) {
+			cout << "USER: " << user.first << ":" << user.second << endl;
+		}
+		*/
 
-		/*
-		auto f1 = std::async(start_server);
+	//auto f1 = std::async(start_server);
 
-		Sleep(2000);         //make the programme waiting for 5 seconds
+	/*	Sleep(2000);         //make the programme waiting for 5 seconds
 		cout << "Started client" << endl;
-
-		udp_service::udp_client client;
-
+	
+		udp_service::UdpClient client;
+	
 		client.get_server_info("192.168.1.102", std::to_string(UDP_PORT));
-
+	
 		//client.send_datagram("prova");
 		client.send_broadcast(DISCOVERY_MSG);
-		cout << "Datagram sent" << endl;
+		cout << "Datagram sent" << endl;*/
 
-		//client.receive_datagram();
+	//client.receive_datagram();
 
-		*/
+/*	connection::TcpConnection connection("192.168.1.14", DEFAULT_LISTEN_PORT);
+	cout << "Trying to connect" << endl;
+	cout << "Connected!" << endl;
 
-/*
-		session::TCPConnection connection;
-		cout << "Trying to connect" << endl;
-		if(connection.connect_to("192.168.1.14", DEFAULT_LISTEN_PORT)) {
+	FILETIME filetime;
+	filetime.dwLowDateTime = 1;
+	filetime.dwHighDateTime = 0;
 
-			cout << "Connected!" << endl;
+	RequestMessage message(1, filetime, "prova");
+	message.prepare_message();
 
-			FILETIME filetime;
-			filetime.dwLowDateTime = 1;
-			filetime.dwHighDateTime = 0;
+	request_struct structure = message.get_request_data();
 
-			RequestMessage message(1, filetime,"prova");
-			message.prepare_message();
+	cout << "Message prepared! Trying to send it..." << endl;
 
-			request_struct structure = message.get_request_data();
+	SendSocketBuffer buffer;
+	std::shared_ptr<SendSocketBuffer> bufferPtr = std::make_shared<SendSocketBuffer>(buffer);
+	bufferPtr->replace(reinterpret_cast<const char*>(message.get_packet_data().data()), message.get_packet_data().size());
+	connection.send_data(bufferPtr);
+	cout << "Message sent!" << endl;
 
-			cout << "Message prepared! Trying to send it..." << endl;
-			connection.send_all(reinterpret_cast<const char*>(message.get_packet_data().data()), message.get_packet_data().size());
-			cout << "Message sent!" << endl;
+	connection.close_connection();*/
 
-			connection.close_connection();
 
-		} else
-			cout << "Connection error" << endl;
 
-		*/
+	try {
 
-/*
-void start_server() {
+		UploadManager upload;
+		RequestHandler request(make_shared<UploadManager>(upload));
 
-	udp_service::udp_server server;
+		cout << "Ora creo la richiesta e quindi leggo il file" << endl;
+
+		request.send_request("192.168.1.14", "D:\\Documenti\\test\\test.txt");
+
+
+		cout << "Richiesta creata e file letto" << endl;
+
+		Sleep(10000);
+	}
+	catch (std::exception& e) {
+		std::cerr << "Exception: " << e.what() << std::endl;
+	}
+
+
+}
+
+
+/*void start_server() {
+
+	udp_service::UdpServer server;
 
 	cout << "Started server" << endl;
 

@@ -38,10 +38,12 @@ bool RequestHandler::send_request(const std::string server, char *file_path) {
 		requests_.push_back(file_request);
 
 		// TODO packet manager must be changed and initialized here every time
-/*		if (packet_manager_.send_packet(std::make_shared<connection::TCPConnection>(tcp_connection), file_handler) == READ_OK) {
-			upload_manager_->upload_file(std::make_shared<::file_request>(file_request));
+		PacketManager packet_manager(std::make_shared<connection::TcpConnection>(tcp_connection));
+
+		if (packet_manager.send_packet(file_handler)) {
+			//upload_manager_->upload_file(std::make_shared<FileRequest>(file_request));
 			return true;
-		}*/
+		}
 		// TODO call upload manager to handle the request in another thread
 
 		return false;

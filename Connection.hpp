@@ -39,27 +39,10 @@ namespace connection {
         bool send_data(std::shared_ptr<SendSocketBuffer> buffer) const;
 
         bool read_line(std::shared_ptr<SocketBuffer> buffer) const;
+
+		SOCKET get_handle_socket();
     };
 
     // definition of the connection pointer type
     typedef std::shared_ptr<TcpConnection> conn_ptr;
-
-    class Session {
-    private:
-        std::list<conn_ptr> connection_pool_;
-
-        // the constructor of copy and the assign operator are deleted
-        Session(const Session &source) {}
-
-        //Session& operator=(const Session &source) {}
-
-    public:
-        Session();
-
-        ~Session();
-
-        void add_connection_to_session();
-    };
-
-
 }

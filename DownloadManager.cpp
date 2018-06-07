@@ -208,9 +208,11 @@ bool DownloadManager::download_file(download_struct request, TemporaryFile &temp
         return true;
 
     } catch (FileOpenException &foe) {
+		UNREFERENCED_PARAMETER(foe);
         // TODO fare qualcosa
         return false;
     } catch (FileWriteException &fwe) {
+		UNREFERENCED_PARAMETER(fwe);
         // TODO fare qualcosa
         return false;
     }

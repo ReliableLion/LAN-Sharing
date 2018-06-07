@@ -118,7 +118,7 @@ void RequestManager::download_request(const connection::conn_ptr connection) con
 //                    }
 
 
-                    if (packet.compute_request()) {
+                    if (packet.compute_send_request()) {
 	                    const auto req = packet.get_message_request();
 
                         if (validate_request(packet_manager, req)) {
@@ -156,14 +156,17 @@ void RequestManager::download_request(const connection::conn_ptr connection) con
         std::cout << "request received correclty" << std::endl;
 
     } catch (TimeoutException &te) {
+		UNREFERENCED_PARAMETER(te);
         std::cout << "server reached the timeout, close the connection" << std::endl;
         packet_manager.send_error(protocol::err_1);
         connection->close_connection();
     } catch (SocketException &se) {
+		UNREFERENCED_PARAMETER(se);
         std::cout << "server encourred in a socket exception, close the connection" << std::endl;
         packet_manager.send_error(protocol::err_1);
         connection->close_connection();
     } catch (ConnectionCloseException &ce) {
+		UNREFERENCED_PARAMETER(ce);
         std::cout << "the connection has been closed by the peer" << std::endl;
     }
 }

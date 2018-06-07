@@ -115,10 +115,12 @@ bool TcpConnection::read_data(std::shared_ptr<SocketBuffer> buffer, const int si
         }
     }
     catch (SocketException &se) {
+		UNREFERENCED_PARAMETER(se);
         delete[] local_buffer;
         throw;
     }
     catch (TimeoutException &te) {
+		UNREFERENCED_PARAMETER(te);
         delete[] local_buffer;
         throw;
     }
@@ -178,6 +180,10 @@ bool TcpConnection::read_line(std::shared_ptr<SocketBuffer> buffer) const {
 
     buffer->add(local_buffer, read_byte);
     return true;
+}
+
+SOCKET TcpConnection::get_handle_socket() {
+	return sock_;
 }
 
 size_t TcpConnection::readline_unbuffered(char *vptr, const int maxlen) const {
