@@ -120,6 +120,9 @@ ProtocolMessage::ProtocolMessage(const protocol::error_code error) {
 	prepare_out_packet();
 }
 
+/**
+ * This method compute the data contained in a packate which type is SEND
+ */
 bool ProtocolMessage::compute_send_request() {
 
     // TODO check if the buffer contain the exact size of data
@@ -134,6 +137,7 @@ bool ProtocolMessage::compute_send_request() {
 
 	// Clean the stream
 	stream_.str(std::string());
+
 	// Copy the buffer within the stream without 'SEND '
 	stream_ << m_buffer_.data() + 5;
 
@@ -151,23 +155,25 @@ bool ProtocolMessage::compute_send_request() {
 	// Get the filename
 	std::getline(stream_, this->request_body_.file_name_, '\r');
 
+	if (this->request_body_.file_name_.size() > 256)
+		return false;
+
     return true;
 }
 
 void ProtocolMessage::compute_packet_type() {
 
-    // use this buffer to load the data packet type conversion
-    char packet_type[5];
-    packet_type[4] = '\0';
-
     try {
 
         if (m_buffer_.empty()) message_code_ = protocol::undefined;
 
-        memcpy(static_cast<void *>(packet_type), static_cast<void *>(&(*m_buffer_.begin())), 4);
+		// Clean the stream
+		stream_.str(std::string());
+		std::string message;
+		std::getline(stream_, message, ' ');
 
         // TODO check if the conversion goes wrong
-        message_code_ = protocol::MessageType::get_message_type(std::string(packet_type));
+        message_code_ = protocol::MessageType::get_message_type(message);
     }
     catch (std::exception &e) {
 		UNREFERENCED_PARAMETER(e);

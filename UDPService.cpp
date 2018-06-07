@@ -306,7 +306,7 @@ UdpServer::UdpServer() {
 
 	struct sockaddr_in server_address, client_address;
 
-	const auto client_address_ptr = &client_address;
+	//const auto client_address_ptr = &client_address;
 	ZeroMemory(&client_address, sizeof(client_address));
 
 	/* create socket */
