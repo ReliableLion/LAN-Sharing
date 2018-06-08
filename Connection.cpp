@@ -243,7 +243,7 @@ int TcpConnection::read_select(char *read_buffer, const int size) const {
     if (result == 0) throw TimeoutException();
 
 	 //receive the data from the socket 
-    if (result > 0) return recv(sock_, read_buffer, size, 0);
+    if (result > 0) return recv(sock_, read_buffer, size, MSG_WAITALL);
 
 	//return recv(sock_, read_buffer, size, 0);
 

@@ -105,7 +105,7 @@ void DownloadManager::process_small_file() {
                 if (download_file(small_file_req, temporary_file)) {
 
 					// TODO rimuovere il test path dopo il debug
-                    FileHandler destination_file(small_file_req.req.file_name_, TEST_PATH);
+                    FileHandler destination_file(small_file_req.req.file_name_, TEMP_PATH_);
 
                     if (!copy_file(temporary_file, destination_file)) {
                         destination_file.remove_file();
@@ -130,6 +130,7 @@ void DownloadManager::process_small_file() {
 			std::cout << sbe.what() << std::endl;
 		}
 
+		std::cout << "siamo qui" << std::endl;
         small_file_req.conn->close_connection(); 
     }
 }
@@ -150,60 +151,60 @@ void DownloadManager::process_big_file() {
         else small_file_q_.pop_element(big_file_req);
 
         ul.unlock();
-        /*
-        try
-        {
-            if (!exit)
-            {
+        
+        try {
+            if (!exit) {
                 // create a new temp file that
-                TemporaryFile temporary_file(bigFileReq.req.file_name, temp_path_);
+                TemporaryFile temporary_file(big_file_req.req.file_name_, TEMP_PATH_);
 
-                if (download_file(bigFileReq, temporary_file))
-                {
-                    // create aa new file and copy the content the temporary one it into this
-                    FileHandler destination_file();
-                    if (!copy_file(temporary_file, destination_file))
-                    {
-                        destination_file.remove();
-                        std::cout << "impossible to copy the file to the destination folder";
-                    }
+                if (download_file(big_file_req, temporary_file)) {
+//                    // create aa new file and copy the content the temporary one it into this
+//                    FileHandler destination_file();
+//
+//                    if (!copy_file(temporary_file, destination_file))
+//                    {
+//                        destination_file.remove();
+//                        std::cout << "impossible to copy the file to the destination folder";
+//                    }
 
                 }
                 else
                     std::cout << "impossible to complete the download of the file..." << std::endl;
 
             }
-        } catch (SocketException &se)
-        {
+        } catch (SocketException &se) {
             std::cout << "server error: " << se.what() << std::endl;
-        } catch (TimeoutException &te)
-        {
+        } catch (TimeoutException &te) {
             std::cout << "connection reached timeout, closing the connection" << std::endl;
         }
 
-        bigFileReq.conn->close_connection(); */
+        big_file_req.conn->close_connection(); 
     }
 }
 
 bool DownloadManager::download_file(download_struct request, TemporaryFile &temporary_file) {
+
 	auto left_bytes = static_cast<int>(request.req.file_size_);
 	auto bytes_to_download = 0, downloaded_bytes = 0;
 	auto connection_closed = false;
 
 	SocketBuffer buffer_object;
 	std::shared_ptr<SocketBuffer> buffer = std::make_shared<SocketBuffer> (buffer_object);
+
     const auto buffer_max_size = buffer->get_max_size();
 
     try {
         temporary_file.open_file(write);										// open the two files, if an exception is throw by the program then the file is closed by the destructor
 
+		// itererate in order to download all the files
         while (left_bytes != 0 && !connection_closed) {
             if (left_bytes >= buffer_max_size)									// if the remaining data are greater than the max size of the buffer then the bytes to download are max buff lengh
                 bytes_to_download = buffer_max_size;
             else
                 bytes_to_download = left_bytes;									// if the remaining data are smaller than the max, set the remaining bytes value
 
-            if (request.conn->read_data(buffer, bytes_to_download))  {			// check if the connection is closed
+			// check if the connection is closed
+            if (request.conn->read_data(buffer, bytes_to_download))  {			
 				left_bytes -= buffer->get_size();
                 temporary_file.write_data(buffer);
 				//temporary_file.write_data2();
@@ -219,17 +220,16 @@ bool DownloadManager::download_file(download_struct request, TemporaryFile &temp
         return false;
 
     } catch (FileOpenException &foe) {
-		UNREFERENCED_PARAMETER(foe);
-        // TODO fare qualcosa
+		std::cout << "exception during file opening " << std::endl;
         return false;
     } catch (FileWriteException &fwe) {
-		UNREFERENCED_PARAMETER(fwe);
-        // TODO fare qualcosa
+		std::cout << "exception during file write" << std::endl;
         return false;
     } 
 }
 
 bool DownloadManager::copy_file(TemporaryFile &temporary_file, FileHandler &destination_file) {
+	// try to open the file
 	temporary_file.open_file(read);
     destination_file.open_file(write);
 
@@ -240,8 +240,10 @@ bool DownloadManager::copy_file(TemporaryFile &temporary_file, FileHandler &dest
 	else
 		result = false;
 
+	// close the file
 	temporary_file.close_file();
 	destination_file.close_file();
 
+	// return the result of the copy
 	return result;
 }

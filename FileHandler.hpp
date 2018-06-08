@@ -42,8 +42,6 @@ public:
 
     void write_data(std::shared_ptr<SocketBuffer> buffer);
 
-	void write_data2();
-
     //  TODO not implemented
 	static void read_data(std::shared_ptr<SocketBuffer> buffer);
 
