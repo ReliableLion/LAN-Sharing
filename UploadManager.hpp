@@ -1,5 +1,4 @@
 #pragma once
-#include "stdafx.h"
 #include <thread>
 #include <vector>
 #include "RequestHandler.hpp"

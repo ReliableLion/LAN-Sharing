@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "Message.hpp"
 #include "Exceptions.hpp"
 #include <sstream>

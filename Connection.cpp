@@ -1,4 +1,3 @@
-#include "stdafx.h"
 
 #include "Exceptions.hpp"
 #include "Connection.hpp"
