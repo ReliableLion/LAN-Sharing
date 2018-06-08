@@ -75,8 +75,12 @@ void DownloadManager::process_small_file() {
     download_struct small_file_req;
 	auto exit = false;
 
+	
+
     while (exit) {
         ul.lock();
+
+		std::cout << "download thread is running " << std::endl;
 
         cv_s_.wait(ul, [this] {
             return (!small_file_q_.is_empty() && !is_terminated_.load());
@@ -92,6 +96,9 @@ void DownloadManager::process_small_file() {
         
         try {
             if (!exit) {
+
+				std::cout << "SIAMO QUI>" << std::endl;
+
                 // create a temporary file for the download
                 TemporaryFile temporary_file(std::string("ciao.txt"));
                 if (download_file(small_file_req, temporary_file)) {

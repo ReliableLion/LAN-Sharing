@@ -11,12 +11,16 @@ private:
     //const int buffer_length = MAXBUFL;
     //request_struct request;
     connection::conn_ptr connection_;
+	std::shared_ptr<SendSocketBuffer> send_buffer_;
 
     //protocol::message_code last_message_code;
     //protocol::message_code last_error_code;
 
 public:
-	explicit PacketManager(connection::conn_ptr connection);
+	explicit PacketManager(connection::conn_ptr connection) {
+		SendSocketBuffer buffer;
+		send_buffer_ = std::make_shared<SendSocketBuffer>(buffer);
+	}
 
     ~PacketManager();
 
@@ -25,9 +29,9 @@ public:
     //request_struct get_request();
     bool send_packet(WindowsFileHandler file_handler) const;
 
-	static bool send_reply(protocol::message_code msg_type);            // used to send an ok message
+	bool send_packet(protocol::message_code msg_type);            // used to send an ok message
 
-	static bool send_error(protocol::error_code error_type);            // used to send an error message
+	bool send_error(protocol::error_code error_type);            // used to send an error message
 };
 
 

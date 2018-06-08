@@ -2,8 +2,6 @@
 #include "Exceptions.hpp"
 #include <iostream>
 
-// this class has only a default constructor
-PacketManager::PacketManager(const connection::conn_ptr connection) : connection_(connection) {}
 
 PacketManager::~PacketManager() {}
 
@@ -61,9 +59,7 @@ ProtocolMessage PacketManager::receive_packet() const {
  */
 bool PacketManager::send_packet(WindowsFileHandler file_handler) const {
 
-    std::shared_ptr<SendSocketBuffer> buffer(new SendSocketBuffer);
     ProtocolMessage req_packet;
-
     FILETIME ftWrite;
 
     // Retrieve the file times for the file.
@@ -73,11 +69,9 @@ bool PacketManager::send_packet(WindowsFileHandler file_handler) const {
     }
 
     ProtocolMessage request_message(file_handler.get_file_size(), ftWrite, file_handler.get_filename());
-    buffer->replace(reinterpret_cast<const char*>(request_message.get_packet_data().data()), request_message.get_packet_data().size());
+    send_buffer_->replace(reinterpret_cast<const char*>(request_message.get_packet_data().data()), request_message.get_packet_data().size());
 
-    // TODO Check correctness about protocol message to send
-
-    return connection_->send_data(buffer);
+    return connection_->send_data(send_buffer_);
 }
 
 /*
@@ -87,12 +81,11 @@ bool PacketManager::send_packet(WindowsFileHandler file_handler) const {
 //    return request;
 //}
 
-bool PacketManager::send_reply(const protocol::message_code msg_type) {
-    ProtocolMessage res_packet(msg_type);
+bool PacketManager::send_packet(const protocol::message_code msg_type) {
+	ProtocolMessage response_packet(msg_type);
 
-    res_packet.compute_send_request();
-    // TODO in this part the class must forward the packet to the end
-    return false;
+	send_buffer_->replace(reinterpret_cast<const char*>(response_packet.get_packet_data().data()), response_packet.get_packet_data().size());
+	return connection_->send_data(send_buffer_);
 }
 
 bool PacketManager::send_error(const protocol::error_code error_type) {

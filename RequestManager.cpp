@@ -127,6 +127,8 @@ void RequestManager::download_request(const connection::conn_ptr connection) con
                        if (validate_request(packet_manager, req)) {
 
                           if (forward_request(req, connection)) {
+							  packet_manager.send_packet(protocol::ok);
+
                               exit = true;
                           } else {
                               packet_manager.send_error(protocol::err_1);
