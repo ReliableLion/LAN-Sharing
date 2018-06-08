@@ -59,7 +59,7 @@ ProtocolMessage PacketManager::receive_packet() const {
 /*
  * send
  */
-bool PacketManager::send_packet(WindowsFileHandler file_handler) const {
+bool PacketManager::send_packet(WindowsFileHandler &file_handler) const {
 
     std::shared_ptr<SendSocketBuffer> buffer(new SendSocketBuffer);
     ProtocolMessage req_packet;

@@ -170,9 +170,10 @@ void ProtocolMessage::compute_packet_type() {
 		// Clean the stream
 		stream_.str(std::string());
 		std::string message;
+		stream_ << m_buffer_.data();
+
 		std::getline(stream_, message, ' ');
 
-        // TODO check if the conversion goes wrong
         message_code_ = protocol::MessageType::get_message_type(message);
     }
     catch (std::exception &e) {

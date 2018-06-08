@@ -1,6 +1,7 @@
 #include "WindowsFileHandler.hpp"
 #include <iomanip>
 #include <sstream>
+#include <iostream>
 
 WindowsFileHandler::WindowsFileHandler(const std::string path) : file_path_(path) {
 	filename_ = get_file_name_from_full_path(file_path_);
@@ -17,8 +18,14 @@ bool WindowsFileHandler::open_file() {
 }
 
 void WindowsFileHandler::close_file() const {
-	if(file_handle_ != INVALID_HANDLE_VALUE)
-		CloseHandle(file_handle_);
+	std::cout << "PD TI STO CHIAMANDO" << std::endl;
+	if (file_handle_ != INVALID_HANDLE_VALUE) {
+		try {
+			CloseHandle(file_handle_);
+		} catch(std::exception e) {
+			std::cout << e.what() << "ERROR CLOSE FILE" << std::endl;
+		}
+	}
 }
 
 void WindowsFileHandler::read_file(char *buffer, std::size_t size) {
