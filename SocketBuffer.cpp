@@ -2,6 +2,7 @@
 
 #include "SocketBuffer.hpp"
 #include "Exceptions.hpp"
+#include <iostream>
 
 SocketBuffer::SocketBuffer() : current_size_(0) {
     buffer_ = new char(MAX_BUFF_);
@@ -26,6 +27,7 @@ void SocketBuffer::replace(const char *data, const int size) {
 
     if (size > MAX_BUFF_ || size < 0) {
         // TODO lanciare eccezione
+		throw SocketBufferException();
     }
 
     memset(buffer_, 0, MAX_BUFF_);
@@ -47,7 +49,7 @@ int SocketBuffer::get_size() const {
     return current_size_;
 }
 
-char *SocketBuffer::get_buffer() {
+char *SocketBuffer::get_remaining_data() {
     return buffer_;
 }
 
@@ -55,10 +57,11 @@ void SendSocketBuffer::send(int n) {
     if (n < 1)
         return;
 
-    if (n > current_size_ || n > send_position_ - current_size_) {
-        //TODO lauch a new exception
+    if (n > current_size_ || n > current_size_ - send_position_) {
+        //TODO launch a new exception
+	    std::cout << "ERROR in socketbuffer send" << std::endl;
     } else {
-        read_buffer_ += n;
+        remaining_data_buffer_ += n;
         send_position_ += n;
     }
 }
@@ -67,8 +70,8 @@ int SendSocketBuffer::get_bytes_sent() const {
     return send_position_;
 }
 
-char *SendSocketBuffer::get_buffer() {
-    return read_buffer_;
+char *SendSocketBuffer::get_remaining_data() {
+    return remaining_data_buffer_;
 }
 
 

@@ -149,10 +149,9 @@ void test2() {
 
 		request.send_request("192.168.1.14", "D:\\Documenti\\test\\test.txt");
 
-
 		cout << "Richiesta creata e file letto" << endl;
 
-		Sleep(10000);
+		Sleep(1000);
 	}
 	catch (std::exception& e) {
 		std::cerr << "Exception: " << e.what() << std::endl;

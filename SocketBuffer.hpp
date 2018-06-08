@@ -1,11 +1,12 @@
 #pragma once
 
 #include <cstring>
+#include "Constants.hpp"
 
 class SocketBuffer {
 protected:
     char *buffer_;
-    const int MAX_BUFF_ = 0;
+    const int MAX_BUFF_ = CHUNK;
     int current_size_;
 public:
 	virtual ~SocketBuffer() = default;
@@ -17,7 +18,7 @@ public:
 
     void replace(const char *data, int size);
 
-    virtual char *get_buffer();
+    virtual char *get_remaining_data();
 
     int get_size() const;
 
@@ -28,13 +29,13 @@ public:
 class SendSocketBuffer : public SocketBuffer {
 private:
     int send_position_;
-    char *read_buffer_;
+    char *remaining_data_buffer_;
 public:
-    SendSocketBuffer() : SocketBuffer(), send_position_(0) { read_buffer_ = buffer_; };
+    SendSocketBuffer() : SocketBuffer(), send_position_(0) { remaining_data_buffer_ = buffer_; };
 
     void send(int n);
 
-    char *get_buffer() override;
+    char *get_remaining_data() override;
 
     int get_bytes_sent() const;
 

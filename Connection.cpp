@@ -136,8 +136,8 @@ bool TcpConnection::send_data(std::shared_ptr<SendSocketBuffer> buffer) const {
 	auto sent_bytes = 0;
 
     while (buffer->get_bytes_sent() < total_bytes) {
-
-        sent_bytes = send(sock_, buffer->get_buffer(), buffer->get_remaining_bytes(), 0);
+		auto temp = buffer->get_bytes_sent();
+        sent_bytes = send(sock_, buffer->get_remaining_data(), buffer->get_remaining_bytes(), 0);
 
         if (sent_bytes == 0) return false;
 

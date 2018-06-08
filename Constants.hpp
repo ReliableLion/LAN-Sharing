@@ -11,9 +11,9 @@
  /**
  * \brief Timeout used by the SELECT()
  */
-#define TIMEOUT 3
+#define TIMEOUT 120
 
-#define TIMEOUT_SEC 10				// 10 seconds
+#define TIMEOUT_SEC 120				// 10 seconds
 #define TIMEOUT_USEC 0				// 0 milliseconds
 
 /* UDP SECTION */
