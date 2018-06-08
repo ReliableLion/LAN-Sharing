@@ -1,5 +1,3 @@
-#include "stdafx.h"
-
 #pragma warning(disable:4996)
 
 #include "Server.hpp"
@@ -14,7 +12,7 @@ Server::Server(const int port): server_status_() {
 
 	if (port < 0 || port > 65535) {
 		std::cout << "the value of the port passed as parameter is not valid" << std::endl;
-		exit(1);
+		
 	}
 
 	// create the data structure that contain the local address and the server port

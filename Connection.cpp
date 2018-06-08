@@ -1,5 +1,3 @@
-#include "stdafx.h"
-
 #include "Exceptions.hpp"
 #include "Connection.hpp"
 #include <iostream>
@@ -50,7 +48,7 @@ TcpConnection::TcpConnection(const std::string host, const int port) : alive_(tr
     if (res == nullptr) {    /* errno set from final connect() */
         std::cout << "Couldn't connect to " << host << ":" << port << " because of error " << WSAGetLastError()
                   << std::endl;
-        throw SocketException(1);
+        throw SocketException(WSAGetLastError());
     }
 }
 
@@ -88,7 +86,7 @@ void TcpConnection::print_endpoint_info() const {
 
 bool TcpConnection::read_data(std::shared_ptr<SocketBuffer> buffer, const int size) {
 
-    if (size > buffer->get_max_size()) throw SocketException(1);
+    if (size > buffer->get_max_size()) throw SocketBufferException(std::string("the size of the data to be download is greater than the buffer size"));
 
     auto *local_buffer = new char[buffer->get_max_size()];
     memset(local_buffer, 0, static_cast<size_t>(buffer->get_max_size()));
@@ -100,18 +98,18 @@ bool TcpConnection::read_data(std::shared_ptr<SocketBuffer> buffer, const int si
         while (bytes_received < size && alive_) {
             bytes_read = read_select(local_buffer, buffer->get_max_size());
 
-            if (bytes_read == SOCKET_ERROR) {
-                delete[] local_buffer;
-                throw SocketException(WSAGetLastError());
-            }
-
+            if (bytes_read == SOCKET_ERROR) throw SocketException(WSAGetLastError());
+            
             // the connection is closed
             if (bytes_read == 0) alive_ = false;
-            else {
-                bytes_received += bytes_read;                    // increment the number of bytes received
-                buffer->add(local_buffer, bytes_read);
-            }
 
+			if (bytes_read == 1 && local_buffer[0] == '\0') {
+				std::cout << "the receive return an empty buffer" << std::endl;
+			}
+			else {
+				bytes_received += bytes_read;                    // increment the number of bytes received
+				buffer->add(local_buffer, bytes_read);
+			}
         }
     }
     catch (SocketException &se) {
@@ -124,6 +122,11 @@ bool TcpConnection::read_data(std::shared_ptr<SocketBuffer> buffer, const int si
         delete[] local_buffer;
         throw;
     }
+	catch (SocketBufferException &sbe) {
+		UNREFERENCED_PARAMETER(sbe);
+		delete[] local_buffer;
+		throw;
+	}
 
     // deallocate the local buffer
     delete[] local_buffer;
@@ -134,6 +137,11 @@ bool TcpConnection::read_data(std::shared_ptr<SocketBuffer> buffer, const int si
 bool TcpConnection::send_data(std::shared_ptr<SendSocketBuffer> buffer) const {
     const auto total_bytes = buffer->get_size();
 	auto sent_bytes = 0;
+
+	if (total_bytes == 0) {
+		std::cout << "the buffer is empty " << std::endl;
+		return true;
+	}
 
     while (buffer->get_bytes_sent() < total_bytes) {
 		auto temp = buffer->get_bytes_sent();
@@ -179,6 +187,12 @@ bool TcpConnection::read_line(std::shared_ptr<SocketBuffer> buffer) const {
     if (read_byte == 0) return false;
 
     if (read_byte < 0) throw SocketException(WSAGetLastError());
+
+	// if an empty string is received than is not insert into the buffer
+	if (read_byte == 1 && local_buffer[0] == '\n') {
+		std::cout << "received an empty buffer" << std::endl;
+		return true;
+	}
 
 	// add the result of the readline 
     buffer->add(local_buffer, read_byte);

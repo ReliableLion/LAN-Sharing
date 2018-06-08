@@ -1,5 +1,6 @@
 #include "DownloadManager.hpp"
 #include "Exceptions.hpp"
+#include <iostream>
 
 DownloadManager::DownloadManager() {
     is_terminated_.store(false);
@@ -53,13 +54,13 @@ bool DownloadManager::insert_big_file(const request_struct request, const connec
 }
 
 bool DownloadManager::insert_small_file(const request_struct request, const connection::conn_ptr connection) {
-    download_struct newRequest;
+    download_struct new_request;
 
-	newRequest.req = request;
-    newRequest.conn = connection;
+	new_request.req = request;
+    new_request.conn = connection;
 
     std::unique_lock<std::mutex> ul(mtx_s_);
-	const auto queue_insertion_res = small_file_q_.insert_element(newRequest);
+	const auto queue_insertion_res = small_file_q_.insert_element(new_request);
 
     if (queue_insertion_res) {
         cv_s_.notify_all();
@@ -71,7 +72,7 @@ bool DownloadManager::insert_small_file(const request_struct request, const conn
 
 void DownloadManager::process_small_file() {
     std::unique_lock<std::mutex> ul(mtx_s_, std::defer_lock);
-    download_struct smallFileReq;
+    download_struct small_file_req;
 	auto exit = false;
 
     while (exit) {
@@ -83,35 +84,29 @@ void DownloadManager::process_small_file() {
 
         // get the request struct from the queue than release the lock
         if (is_terminated_.load()) exit = true;
-        else small_file_q_.pop_element(smallFileReq);
+
+        else small_file_q_.pop_element(small_file_req);
 
         // release the queue lock
         ul.unlock();
-        /*
-        try
-        {
-            if (!exit)
-            {
-
+        
+        try {
+            if (!exit) {
                 // create a temporary file for the download
-                TemporaryFile temporary_file();
-                if (download_file(smallFileReq, temporary_file()))
-                {
+                TemporaryFile temporary_file(std::string("ciao.txt"));
+                if (download_file(small_file_req, temporary_file)) {
 
-                    FileHandler destination_file();
-                    if (!copy_file(temporary_file, destination_file))
-                    {
-                        destination_file.remove();
+					// TODO rimuovere il test path dopo il debug
+                    FileHandler destination_file(small_file_req.req.file_name_, TEST_PATH);
+
+                    if (!copy_file(temporary_file, destination_file)) {
+                        destination_file.remove_file();
                         std::cout << "impossible to copy the file to destination" << std::endl;
                     }
                 }
                 else
-                {
                     std::cout << "impossible to complete the download of the file..." << std::endl;
-                }
-
             }
-
         }
         catch (SocketException &se) {
             std::cout << "server error: " << se.what() << std::endl;
@@ -123,7 +118,7 @@ void DownloadManager::process_small_file() {
             std::cout << "connection reached timeout, closing the connection" << std::endl;
         }
 
-        smallFileReq.conn->close_connection(); */
+        small_file_req.conn->close_connection(); 
     }
 }
 
@@ -203,9 +198,9 @@ bool DownloadManager::download_file(download_struct request, TemporaryFile &temp
 
         }
 
-        if (left_bytes != 0) return false;
-
-        return true;
+        if (left_bytes == 0) return true;
+		
+        return false;
 
     } catch (FileOpenException &foe) {
 		UNREFERENCED_PARAMETER(foe);

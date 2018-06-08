@@ -48,6 +48,7 @@
 #define REQUEST_THREADS 4
 #define MAX_REQUEST_ATTEMPTS 3
 #define MAX_FILE_ATTEMPTS 5
+#define TEST_PATH std::string("C:\\Users\\utente pc\\test_project")
 #define TEMP_PATH std::string("C:\\users\\utentepc\\Appdata\\local\\temp")
 #define QUEUE_MAX_ELEMENTS 1000
 #define MAX_FILENAME_LENGTH 256

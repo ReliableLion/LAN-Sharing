@@ -13,8 +13,7 @@ enum file_open_type {
 
 class FileHandler {
 private:
-    FileHandler(FileHandler &source): open_mode_() {
-	} ;
+    FileHandler(FileHandler &source): open_mode_() {} ;
 
     //FileHandler &operator=(FileHandler &source) {};
 
@@ -74,7 +73,9 @@ void write_data(const char *buffer, std::size_t size);
 
 class TemporaryFile : public FileHandler {
 public:
-    TemporaryFile(std::string filename, std::string path);
+	TemporaryFile::TemporaryFile(const std::string filename)  : FileHandler(filename, TEMP_DIR_PATH_) {};
 
     ~TemporaryFile();
+private:
+	const std::string TEMP_DIR_PATH_ = TEMP_PATH;
 };

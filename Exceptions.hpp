@@ -16,6 +16,16 @@ namespace udp_exception {
     };
 }
 
+class ServerException : public std::exception {
+public:
+	const char *what() const throw() override {
+		return msg.c_str();
+	}
+private: 
+	const std::string msg = "impossible to create an instance of the server ";
+};
+
+
 class TcpException : public std::exception {
 public:
     explicit TcpException(const std::string str) : error_message_(str) {};

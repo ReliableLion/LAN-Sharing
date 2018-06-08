@@ -193,12 +193,12 @@ bool RequestManager::forward_request(const request_struct request, connection::c
 
     // if is not possible to inset the request into the queue return an error
     if (request.file_size_ >= FILE_THRESHOLD_) {
-        if (!download_manager->insert_big_file(request, connection)) return false;
+        if (!download_manager_->insert_big_file(request, connection)) return false;
 
         std::cout << "the request is forwarded to the big file queue" << std::endl;
         return true;
     } else {
-       if (!download_manager->insert_small_file(request, connection)) return false;
+       if (!download_manager_->insert_small_file(request, connection)) return false;
 
         std::cout << "the request is forwarded to the small file queue"  << std::endl;
         return true;
