@@ -5,6 +5,8 @@
 DownloadManager::DownloadManager() {
     is_terminated_.store(false);
 
+	std::cout << "download Manger created" << std::endl;
+
     for (auto i = 0; i < MAX_THREAD_B_; i++) {                                                   // threads declarations for the big file download
         thread_pool_b_.push_back(std::thread(&DownloadManager::process_big_file, this));        // pass to these threads the process big file methods
     }
@@ -75,9 +77,7 @@ void DownloadManager::process_small_file() {
     download_struct small_file_req;
 	auto exit = false;
 
-	
-
-    while (exit) {
+    while (!exit) {
         ul.lock();
 
 		std::cout << "download thread is running " << std::endl;
@@ -124,6 +124,8 @@ void DownloadManager::process_small_file() {
         catch (TimeoutException &te) {
             std::cout << "connection reached timeout, closing the connection" << std::endl;
         }
+
+		std::cout << "the file has been downloaded" << std::endl;
 
         small_file_req.conn->close_connection(); 
     }
@@ -185,7 +187,8 @@ bool DownloadManager::download_file(download_struct request, TemporaryFile &temp
 	auto bytes_to_download = 0, downloaded_bytes = 0;
 	auto connection_closed = false;
 
-    std::shared_ptr<SocketBuffer> buffer;
+	SocketBuffer buffer_object;
+	std::shared_ptr<SocketBuffer> buffer = std::make_shared<SocketBuffer> (buffer_object);
     const auto buffer_max_size = buffer->get_max_size();
 
     try {

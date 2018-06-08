@@ -17,12 +17,12 @@ private:
     //protocol::message_code last_error_code;
 
 public:
-	explicit PacketManager(connection::conn_ptr connection) {
+	explicit PacketManager(connection::conn_ptr connection) : connection_(connection) {
 		SendSocketBuffer buffer;
 		send_buffer_ = std::make_shared<SendSocketBuffer>(buffer);
 	}
 
-    ~PacketManager();
+	~PacketManager() {};
 
     ProtocolMessage receive_packet() const;
 

@@ -80,6 +80,7 @@ class ProtocolMessage : public Message {
 
 public:
     ProtocolMessage(__int64 file_size, FILETIME file_timestamp, std::string file_name);     // This is used to create a RequestMessage, which it's supposed will be sent
+	
 	explicit ProtocolMessage(protocol::message_code message_code);
 
 	explicit ProtocolMessage(protocol::error_code error);                                            // this constructor is used to build up an error message
@@ -90,12 +91,12 @@ public:
 	std::stringstream stream_;
 
     /*__int64 ProtocolMessage::get_file_size() const {
-    return this->requestBody.file_size;
-}
+		return this->requestBody.file_size;
+	}
 
-    std::string ProtocolMessage::get_file_name() const {
-     this->requestBody.file_name;
-    }*/
+	std::string ProtocolMessage::get_file_name() const {
+		this->requestBody.file_name;
+	}*/
 
     // this two methods are used to decode a single packet
     void compute_packet_type();

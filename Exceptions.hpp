@@ -70,7 +70,7 @@ public:
 
     const char *what() const throw() override {
         std::stringstream s;
-        s << msg_ << error_;
+		s << msg_ << error_ << std::endl;
         return s.str().c_str();
     }
 

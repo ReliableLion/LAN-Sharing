@@ -3,8 +3,6 @@
 #include <iostream>
 
 
-PacketManager::~PacketManager() {}
-
 /*
  * return the information about the status code of the packet
  */
@@ -55,7 +53,7 @@ ProtocolMessage PacketManager::receive_packet() const {
 //    }
 
 /*
- * send
+ * SEND file_request
  */
 bool PacketManager::send_packet(WindowsFileHandler file_handler) const {
 
@@ -75,12 +73,8 @@ bool PacketManager::send_packet(WindowsFileHandler file_handler) const {
 }
 
 /*
- * return the request of the
+ * send a packet with the correspondenet msg type
  */
-//request_struct PacketManager::get_request() {
-//    return request;
-//}
-
 bool PacketManager::send_packet(const protocol::message_code msg_type) {
 	ProtocolMessage response_packet(msg_type);
 

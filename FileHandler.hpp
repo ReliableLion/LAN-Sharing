@@ -73,9 +73,7 @@ void write_data(const char *buffer, std::size_t size);
 
 class TemporaryFile : public FileHandler {
 public:
-	TemporaryFile::TemporaryFile(const std::string filename)  : FileHandler(filename, TEMP_DIR_PATH_) {};
+	TemporaryFile::TemporaryFile(std::string filename) : FileHandler(filename, TEMP_PATH) {};
 
     ~TemporaryFile();
-private:
-	const std::string TEMP_DIR_PATH_ = TEMP_PATH;
 };

@@ -190,6 +190,9 @@ void ProtocolMessage::prepare_out_packet() {
             break;
         case protocol::ok : {
             append(protocol::ok);
+			stream_.str(std::string());
+			stream_ << END_MESSAGE_;
+			append(stream_.str());
         }
             break;
         case protocol::err : {

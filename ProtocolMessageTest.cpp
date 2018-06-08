@@ -13,7 +13,7 @@ void ProtocolMessageTest::download_request(const connection::conn_ptr connection
             switch (packet.get_message_code()) {
 
                 case protocol::undefined : {
-                    packet_manager.send_error(protocol::err_1);
+                   // packet_manager.send_error(protocol::err_1);
                 }
                     break;
 
