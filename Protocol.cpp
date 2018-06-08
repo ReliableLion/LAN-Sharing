@@ -1,13 +1,13 @@
 #include "Protocol.hpp"
+#include "Message.hpp"
 
 protocol::message_code protocol::MessageType::get_message_type(const std::string msg_type) {
 
-	if (MESSAGE_TYPE_MAP.at(msg_type) == send)
-		return send;
-	if (MESSAGE_TYPE_MAP.at(msg_type) == ok)
-		return ok;
-	if (MESSAGE_TYPE_MAP.at(msg_type) == err)
-		return err;
+	auto it = MESSAGE_TYPE_MAP.find(msg_type);
+
+	if(it != MESSAGE_TYPE_MAP.end()) {
+		return MESSAGE_TYPE_MAP.find(msg_type)->second;
+	}
 
 	return undefined;
 }
@@ -37,13 +37,13 @@ std::string protocol::MessageType::get_error_type(const protocol::error_code err
 	return std::string("");
 }
 
-const std::map<std::string, int> protocol::MessageType::MESSAGE_TYPE_MAP = {
-	std::make_pair(std::string("SEND"), 0), // Used when we want to send a file
-	std::make_pair(std::string("+OK "), 1), // Used when the server accept the request
-	std::make_pair(std::string("-ERR"), 2)  // Used to signal an error
+std::map<std::string, protocol::message_code> protocol::MessageType::MESSAGE_TYPE_MAP = {
+	std::make_pair(std::string("SEND"), send), // Used when we want to send a file
+	std::make_pair(std::string("+OK "), ok), // Used when the server accept the request
+	std::make_pair(std::string("-ERR"), err)  // Used to signal an error
 };
 
 
-const std::map<std::string, int> protocol::MessageType::ERROR_TYPE_MAP = {
-	std::make_pair(std::string("ERR_1"), 0)
+std::map<std::string, protocol::error_code> protocol::MessageType::ERROR_TYPE_MAP = {
+	std::make_pair(std::string("ERR_1"), err_1)
 };

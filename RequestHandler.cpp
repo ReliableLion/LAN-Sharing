@@ -41,6 +41,7 @@ bool RequestHandler::send_request(const std::string server, char *file_path) {
 		PacketManager packet_manager(std::make_shared<connection::TcpConnection>(tcp_connection));
 
 		if (packet_manager.send_packet(file_handler)) {
+			std::cout << "Packet sent! Now upload" << std::endl;
 			upload_manager_->upload_file(std::make_shared<FileRequest>(file_request), std::move(file_handler), packet_manager);
 			return true;
 		}

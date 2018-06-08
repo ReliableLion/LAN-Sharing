@@ -18,8 +18,8 @@ namespace protocol {
 
     class MessageType {
     private:
-        static const std::map<std::string, int> MESSAGE_TYPE_MAP;
-        static const std::map<std::string, int> ERROR_TYPE_MAP;
+        static std::map<std::string, message_code> MESSAGE_TYPE_MAP;
+        static std::map<std::string, error_code> ERROR_TYPE_MAP;
     public:
         static message_code get_message_type(std::string msg_type);
 

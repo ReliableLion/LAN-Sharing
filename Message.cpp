@@ -164,19 +164,20 @@ void ProtocolMessage::compute_packet_type() {
 
     try {
 
-        if (m_buffer_.empty()) message_code_ = protocol::undefined;
+		stream_.str(std::string());
+		stream_ << m_buffer_.data();
+
+        if (m_buffer_.empty() && !stream_.str().find("\r\n")) message_code_ = protocol::undefined;
 
 		// Clean the stream
-		stream_.str(std::string());
 		std::string message;
-		stream_ << m_buffer_.data();
 
 		std::getline(stream_, message, ' ');
 
         message_code_ = protocol::MessageType::get_message_type(message);
     }
     catch (std::exception &e) {
-		UNREFERENCED_PARAMETER(e);
+		std::cout << "EXCEPTION MESSAGE: " << e.what() << std::endl;
         message_code_ = protocol::undefined;
     }
 }
