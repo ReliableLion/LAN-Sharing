@@ -17,13 +17,23 @@ void ProtocolMessageTest::download_request(const connection::conn_ptr connection
                 }
                     break;
 
+				case protocol::send : {
+					if (packet.compute_send_request()) {
+						auto request = packet.get_message_request();
+
+						std::cout << "Send request received correclty !" << std::endl;
+						std::cout << "the file name is " << packet.get_file_name() << std::endl;
+						std::cout << "the file size " << packet.get_file_size() << std::endl;
+					}
+					else {
+						std::cout << "the request is not valid" << std::endl;
+					}
+					
+				}
+
                 case protocol::ok : {
 
-                    if (packet.compute_send_request()) {
-	                    auto request = packet.get_message_request();
-                    } else {
-                        std::cout << "the request is not valid" << std::endl;
-                    }
+					std::cout << "received ok" << std::endl;
 
                 }
                     break;

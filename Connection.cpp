@@ -155,7 +155,7 @@ bool TcpConnection::read_line(std::shared_ptr<SocketBuffer> buffer) const {
     // TODO ricordarsi di controllare se il buffer finisce con \r\n
 	auto read_byte = 0;
     auto *local_buffer = new char[buffer->get_max_size()];
-    memset(local_buffer, 0, static_cast<std::size_t>(buffer->get_max_size()));
+    memset(local_buffer, 0, static_cast<std::size_t> (buffer->get_max_size()));
 
     struct timeval time;
     FD_SET read_sock;
@@ -172,12 +172,15 @@ bool TcpConnection::read_line(std::shared_ptr<SocketBuffer> buffer) const {
 
     if (result == 0) throw TimeoutException();
 
+	// use the function readline to read until a \r\n is reached
     if (result > 0) read_byte = readline_unbuffered(local_buffer, buffer->get_max_size());
 
+	// it means that the connection has been closed
     if (read_byte == 0) return false;
 
     if (read_byte < 0) throw SocketException(WSAGetLastError());
 
+	// add the result of the readline 
     buffer->add(local_buffer, read_byte);
     return true;
 }
@@ -226,6 +229,7 @@ int TcpConnection::read_select(char *read_buffer, const int size) const {
 
     if (result == 0) throw TimeoutException();
 
+	// receive the data from the socket 
     if (result > 0) return recv(sock_, read_buffer, size, 0);
 
 	return 0;
