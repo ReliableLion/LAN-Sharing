@@ -18,6 +18,8 @@ namespace connection {
         const long USEC_ = TIMEOUT_USEC;
         bool alive_;
 
+		char *receive_buffer_;
+
         // definition of the private methods
         size_t readline_unbuffered(char *vptr, int maxlen) const;
 
@@ -27,6 +29,8 @@ namespace connection {
         TcpConnection(const std::string host, const int port);
 
         TcpConnection(SOCKET socket, SOCKADDR_IN socket_address);
+
+		~TcpConnection();
 
         void close_connection() const;
 

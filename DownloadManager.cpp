@@ -37,17 +37,16 @@ void DownloadManager::terminate_service() {
 }
 
 bool DownloadManager::insert_big_file(const request_struct request, const connection::conn_ptr connection) {
-    download_struct newRequest;
+    download_struct new_request;
 
 	// fill the request struct with the date received by the client
-    newRequest.req = request;
-    newRequest.conn = connection;
+    new_request.req = request;
+    new_request.conn = connection;
 
     std::unique_lock<std::mutex> ul(mtx_b_);
-	const auto queue_insertion_res = big_file_q_.insert_element(newRequest);
+	const auto queue_insertion_res = big_file_q_.insert_element(new_request);
 
-    if (queue_insertion_res)                                        // if the connection is insert correctly into the queue notify it to the threads and then return true otherwise return false;
-    {
+    if (queue_insertion_res) {                                      // if the connection is insert correctly into the queue notify it to the threads and then return true otherwise return false; 
         cv_b_.notify_all();
         return true;
     }
@@ -87,9 +86,10 @@ void DownloadManager::process_small_file() {
         });
 
         // get the request struct from the queue than release the lock
-        if (is_terminated_.load()) exit = true;
-
-        else small_file_q_.pop_element(small_file_req);
+        if (is_terminated_.load())
+			exit = true;
+        else 
+			small_file_q_.pop_element(small_file_req);
 
         // release the queue lock
         ul.unlock();
@@ -97,10 +97,11 @@ void DownloadManager::process_small_file() {
         try {
             if (!exit) {
 
-				std::cout << "SIAMO QUI>" << std::endl;
+				std::cout << "SIAMO QUI" << std::endl;
 
                 // create a temporary file for the download
-                TemporaryFile temporary_file(std::string("ciao.txt"));
+                TemporaryFile temporary_file(std::string("ciao.txt"), path_);
+
                 if (download_file(small_file_req, temporary_file)) {
 
 					// TODO rimuovere il test path dopo il debug
@@ -110,6 +111,7 @@ void DownloadManager::process_small_file() {
                         destination_file.remove_file();
                         std::cout << "impossible to copy the file to destination" << std::endl;
                     }
+
                 }
                 else
                     std::cout << "impossible to complete the download of the file..." << std::endl;
@@ -123,9 +125,10 @@ void DownloadManager::process_small_file() {
         }
         catch (TimeoutException &te) {
             std::cout << "connection reached timeout, closing the connection" << std::endl;
-        }
-
-		std::cout << "the file has been downloaded" << std::endl;
+        } 
+		catch (SocketBufferException &sbe) {
+			std::cout << sbe.what() << std::endl;
+		}
 
         small_file_req.conn->close_connection(); 
     }
@@ -192,24 +195,27 @@ bool DownloadManager::download_file(download_struct request, TemporaryFile &temp
     const auto buffer_max_size = buffer->get_max_size();
 
     try {
-        temporary_file.open_file(write);                                // open the two files, if an exception is throw by the program then the file is closed by the destructor
+        temporary_file.open_file(write);										// open the two files, if an exception is throw by the program then the file is closed by the destructor
 
         while (left_bytes != 0 && !connection_closed) {
-            if (left_bytes >= buffer_max_size)                    // if the remaining data are greater than the max size of the buffer then the bytes to download are max buff lengh
+            if (left_bytes >= buffer_max_size)									// if the remaining data are greater than the max size of the buffer then the bytes to download are max buff lengh
                 bytes_to_download = buffer_max_size;
             else
-                bytes_to_download = left_bytes;                // if the remaining data are smaller than the max, set the remaining bytes value
+                bytes_to_download = left_bytes;									// if the remaining data are smaller than the max, set the remaining bytes value
 
-            if (request.conn->read_data(buffer, bytes_to_download))            // check if the connection is
-            {
-                left_bytes -= buffer->get_size();
+            if (request.conn->read_data(buffer, bytes_to_download))  {			// check if the connection is closed
+				left_bytes -= buffer->get_size();
                 temporary_file.write_data(buffer);
-            } else connection_closed = true;
-
+				//temporary_file.write_data2();
+            } else 
+				connection_closed = true;
         }
+
+		temporary_file.close_file();
 
         if (left_bytes == 0) return true;
 		
+		std::cout << "the left byte are: " << left_bytes << std::endl;
         return false;
 
     } catch (FileOpenException &foe) {
@@ -220,17 +226,22 @@ bool DownloadManager::download_file(download_struct request, TemporaryFile &temp
 		UNREFERENCED_PARAMETER(fwe);
         // TODO fare qualcosa
         return false;
-    }
+    } 
 }
 
 bool DownloadManager::copy_file(TemporaryFile &temporary_file, FileHandler &destination_file) {
+	temporary_file.open_file(read);
     destination_file.open_file(write);
 
-    if (destination_file.copy_file(temporary_file)) {
-        temporary_file.close_file();
-        destination_file.close_file();
-    } else
-        return false;
+	bool result;
 
-    return true;
+    if (temporary_file.copy_file(destination_file)) 
+		result = true;
+	else
+		result = false;
+
+	temporary_file.close_file();
+	destination_file.close_file();
+
+	return result;
 }

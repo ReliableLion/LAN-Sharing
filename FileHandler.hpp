@@ -42,6 +42,8 @@ public:
 
     void write_data(std::shared_ptr<SocketBuffer> buffer);
 
+	void write_data2();
+
     //  TODO not implemented
 	static void read_data(std::shared_ptr<SocketBuffer> buffer);
 
@@ -73,7 +75,8 @@ void write_data(const char *buffer, std::size_t size);
 
 class TemporaryFile : public FileHandler {
 public:
-	TemporaryFile::TemporaryFile(std::string filename) : FileHandler(filename, TEMP_PATH) {};
+	// TODO sostituire il path dopo il debug
+	TemporaryFile::TemporaryFile(std::string filename, std::string path) : FileHandler(filename, TEMP_PATH) {};
 
     ~TemporaryFile();
 };

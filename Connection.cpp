@@ -50,27 +50,46 @@ TcpConnection::TcpConnection(const std::string host, const int port) : alive_(tr
                   << std::endl;
         throw SocketException(WSAGetLastError());
     }
+
+	// allocate a receive buffer
+	receive_buffer_ = new char[CHUNK];
 }
 
 
 TcpConnection::TcpConnection(const SOCKET socket, const SOCKADDR_IN socket_address) : alive_(true) {
     sock_ = socket;
     remote_address_ = socket_address;
+
+	int chunk = 65536;
+
+	setsockopt(sock_, SOL_SOCKET, SO_RCVBUF, (char*) &chunk, sizeof(chunk));
+
+	receive_buffer_ = new char[CHUNK];
+}
+
+TcpConnection::~TcpConnection() {
+	delete[] receive_buffer_;
 }
 
 
+/* 
+ * close the conneciton 
+ */
 void TcpConnection::close_connection() const {
 
     if (alive_) {
         if (closesocket(sock_) == SOCKET_ERROR) {
             if (WSAGetLastError() == WSAENOTSOCK)
-                std::cout << "Failed to close the socket. Winsock Error: " + std::to_string(WSAGetLastError()) + "!"
-                          << std::endl;
+                std::cout << "Failed to close the socket. Winsock Error: "
+        					<<  std::to_string(WSAGetLastError()) << "!" << std::endl;
         }
     }
 
 }
 
+/*
+ * print the information about the remote end point
+ */
 void TcpConnection::print_endpoint_info() const {
     char client_address[1024];
     inet_ntop(AF_INET, &(remote_address_.sin_addr), client_address, 1024);
@@ -86,50 +105,30 @@ void TcpConnection::print_endpoint_info() const {
 
 bool TcpConnection::read_data(std::shared_ptr<SocketBuffer> buffer, const int size) {
 
-    if (size > buffer->get_max_size()) throw SocketBufferException(std::string("the size of the data to be download is greater than the buffer size"));
+    if (size > buffer->get_max_size())
+		throw SocketBufferException(std::string("the size of the data to be download is greater than the buffer size"));
 
-    auto *local_buffer = new char[buffer->get_max_size()];
-    memset(local_buffer, 0, static_cast<size_t>(buffer->get_max_size()));
 	auto bytes_received = 0, bytes_read = 0;
 
-    buffer->clear();
+	// clear the buffer before we read data
+	buffer->clear();
 
-    try {
-        while (bytes_received < size && alive_) {
-            bytes_read = read_select(local_buffer, buffer->get_max_size());
+	while (bytes_received < size && alive_) {
+		bytes_read = read_select(receive_buffer_, buffer->get_max_size());
+		//std::cout << buffer->get_max_size() << "   di cui ricevuti   " << bytes_read << std::endl;
 
-            if (bytes_read == SOCKET_ERROR) throw SocketException(WSAGetLastError());
-            
-            // the connection is closed
-            if (bytes_read == 0) alive_ = false;
+		if (bytes_read == SOCKET_ERROR) throw SocketException(WSAGetLastError());
 
-			if (bytes_read == 1 && local_buffer[0] == '\0') {
-				std::cout << "the receive return an empty buffer" << std::endl;
-			}
-			else {
-				bytes_received += bytes_read;                    // increment the number of bytes received
-				buffer->add(local_buffer, bytes_read);
-			}
-        }
-    }
-    catch (SocketException &se) {
-		UNREFERENCED_PARAMETER(se);
-        delete[] local_buffer;
-        throw;
-    }
-    catch (TimeoutException &te) {
-		UNREFERENCED_PARAMETER(te);
-        delete[] local_buffer;
-        throw;
-    }
-	catch (SocketBufferException &sbe) {
-		UNREFERENCED_PARAMETER(sbe);
-		delete[] local_buffer;
-		throw;
+		// the connection is closed
+		if (bytes_read == 0) alive_ = false;
+
+		if (bytes_read == 1 && receive_buffer_[0] == '\0')
+			std::cout << "the receive return an empty buffer" << std::endl;
+		else {
+			bytes_received += bytes_read;                    // increment the number of bytes received
+			buffer->replace(receive_buffer_, bytes_read);
+		}
 	}
-
-    // deallocate the local buffer
-    delete[] local_buffer;
 
     return alive_;
 }
@@ -243,8 +242,10 @@ int TcpConnection::read_select(char *read_buffer, const int size) const {
 
     if (result == 0) throw TimeoutException();
 
-	// receive the data from the socket 
+	 //receive the data from the socket 
     if (result > 0) return recv(sock_, read_buffer, size, 0);
+
+	//return recv(sock_, read_buffer, size, 0);
 
 	return 0;
 }
