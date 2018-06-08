@@ -2,6 +2,7 @@
 
 #include "Constants.hpp"
 #include <map>
+#include <string>
 
 // link with Ws2_32.lib
 #pragma comment (lib, "Ws2_32.lib")
@@ -46,6 +47,10 @@ namespace udp_service {
 
     public:
         UdpServer();
+
+		std::string print() { return std::to_string(server_sock_);}
+
+		void stop();
 
         int send_datagram(const char *buffer, const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
 

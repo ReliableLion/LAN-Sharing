@@ -13,6 +13,13 @@ namespace udp_exception {
     private:
         std::string error_message_;
     };
+
+	class UdpShutdownException : public std::runtime_error {
+	public:
+		explicit UdpShutdownException() : runtime_error("UDP Service Shutdown Exception") {};
+
+		const char *what() const throw() override { return "UDP Service Shutdown Exception"; }
+	};
 }
 
 class TcpException : public std::exception {

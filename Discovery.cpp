@@ -3,6 +3,7 @@
 #include <thread>
 #include <random>
 #include <iostream>
+#include "Exceptions.hpp"
 
 void Discovery::find_users() {
 	udp_client_.send_broadcast(DISCOVERY_MSG);
@@ -12,14 +13,26 @@ map<string, string> Discovery::get_online_users() const {
 	return online_users_;
 }
 
+boolean Discovery::stop_discovery_service() {
+
+	try {
+		udp_server_.stop();
+
+		if (discovery_thread_.joinable())
+			discovery_thread_.join();
+
+		return true;
+	} catch(exception& e) {
+		return false;
+	}
+}
+
 /*
 void discovery::send_hello(){
 	udp_client_.send_broadcast(hello_message_.get_message_body().c_str());
 }*/
 
 void Discovery::start_listening() {
-
-	udp_service::UdpServer udp_server;
 
 	char buffer[MAXBUFL] = "";
 	//char username[MAXBUFL] = "";
@@ -30,23 +43,29 @@ void Discovery::start_listening() {
 	const auto client_address_ptr = &client_address;
 	ZeroMemory(&client_address, sizeof(client_address));
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-noreturn"
 	while (true) {
 
-		const auto address_len = udp_server.receive_datagram(buffer, client_address_ptr, MAXBUFL);
+		socklen_t address_len;
+		try {
+			address_len = udp_server_.receive_datagram(buffer, client_address_ptr, MAXBUFL);
+		} catch(udp_exception::UdpShutdownException& e) {
+			break;
+		}
 
         packet.append(buffer, strlen(buffer));
 
 		if (packet.get_packet_type() == DISCOVERY_MSG) {
-			cout << "HERE THE DISCOVERY RECEIVED: " << packet.get_message_body() << endl;
-		
-			//Wait random time before sending the hello message. So that the hosts won't be flooded
-			std::mt19937_64 eng{ std::random_device{}() };  // or seed however you want
-			const std::uniform_int_distribution<> distance{ 50, 200 };
-			std::this_thread::sleep_for(std::chrono::milliseconds{ distance(eng) });
 
-			udp_server.send_datagram(hello_message_.get_message_body().c_str(), &client_address, address_len, strlen(hello_message_.get_message_body().c_str()));
+			if (!hide_me_) {
+				cout << "HERE THE DISCOVERY RECEIVED: " << packet.get_message_body() << endl;
+
+				//Wait random time before sending the hello message. So that the hosts won't be flooded
+				std::mt19937_64 eng{ std::random_device{}() };  // or seed however you want
+				const std::uniform_int_distribution<> distance{ 50, 200 };
+				std::this_thread::sleep_for(std::chrono::milliseconds{ distance(eng) });
+
+				udp_server_.send_datagram(hello_message_.get_message_body().c_str(), &client_address, address_len, strlen(hello_message_.get_message_body().c_str()));
+			}
 		}
 		else if (packet.get_packet_type() == HELLO_MSG) {
 			cout << "HERE THE HELLO RECEIVED: " << packet.get_message_body() << "The username obviously is: " << packet.get_username() << endl;
@@ -64,11 +83,10 @@ void Discovery::start_listening() {
 
 		//send_datagram(buffer_, client_address_ptr, address_len, strlen(buffer_));
 	}
-#pragma clang diagnostic pop
 }
 
 void Discovery::start_discovery_service() {
-	server_thread_ = std::async(&Discovery::start_listening, this);
+	discovery_thread_ = std::thread(&Discovery::start_listening, this);
 
 	cout << "-------------- Server started" << endl;
 }

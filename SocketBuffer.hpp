@@ -11,7 +11,7 @@ protected:
 public:
 	virtual ~SocketBuffer() = default;
 	
-	SocketBuffer(): current_size_(0) { buffer_ = new char(MAX_BUFF_);};
+	SocketBuffer(): current_size_(0) { buffer_ = new char[MAX_BUFF_];};
 
     void add(const char *data, int size);
 

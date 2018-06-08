@@ -328,6 +328,14 @@ UdpServer::UdpServer() {
 	cout << "--- Listening on " << server_address_ << ":" << ntohs(server_address.sin_port) << endl;
 }
 
+void UdpServer::stop() {
+	if (closesocket(server_sock_) == 0) {
+		return;
+	}
+
+	throw udp_exception::UdpException("Error when shutdown the server socket!");
+}
+
 int UdpServer::send_datagram(const char *buffer, const struct sockaddr_in *saddr, const socklen_t addr_len, const size_t len) const {
 
 	int n;
@@ -345,6 +353,12 @@ socklen_t UdpServer::receive_datagram(char *buffer, const struct sockaddr_in *ca
 	socklen_t address_len = sizeof(*caddr);
 
 	const size_t n = recvfrom(server_sock_, buffer, length, 0, const_cast<struct sockaddr*>(reinterpret_cast<const struct sockaddr*>(caddr)), &address_len);
+
+	if (n == SOCKET_ERROR) {
+		if (WSAGetLastError() == WSAENOTSOCK) {
+			throw udp_exception::UdpShutdownException();
+		}
+	}
 
 	if (n > (length))
 		cout << "--- Some bytes lost!" << endl;

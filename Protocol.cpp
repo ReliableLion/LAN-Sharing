@@ -39,7 +39,7 @@ std::string protocol::MessageType::get_error_type(const protocol::error_code err
 
 std::map<std::string, protocol::message_code> protocol::MessageType::MESSAGE_TYPE_MAP = {
 	std::make_pair(std::string("SEND"), send), // Used when we want to send a file
-	std::make_pair(std::string("+OK "), ok), // Used when the server accept the request
+	std::make_pair(std::string("+OK"), ok), // Used when the server accept the request
 	std::make_pair(std::string("-ERR"), err)  // Used to signal an error
 };
 
