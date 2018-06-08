@@ -4,10 +4,6 @@
 #include "Exceptions.hpp"
 #include <iostream>
 
-SocketBuffer::SocketBuffer() : current_size_(0) {
-    buffer_ = new char(MAX_BUFF_);
-}
-
 void SocketBuffer::add(const char *data, const int size) {
     if (size == 0)
         return;
