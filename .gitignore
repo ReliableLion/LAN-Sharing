@@ -333,3 +333,4 @@ ASALocalRun/
 /*.vcxproj.filters
 /*.vcxproj
 /*.sln
+/LanSharingMain.cpp
