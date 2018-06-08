@@ -18,14 +18,14 @@ bool WindowsFileHandler::open_file() {
 }
 
 void WindowsFileHandler::close_file() const {
-	std::cout << "PD TI STO CHIAMANDO" << std::endl;
 	if (file_handle_ != INVALID_HANDLE_VALUE) {
 		try {
 			CloseHandle(file_handle_);
 		} catch(std::exception e) {
 			std::cout << e.what() << "ERROR CLOSE FILE" << std::endl;
 		}
-	}
+	} else
+		std::cout << "WINDOWS FILE HANDLE INVALID" << std::endl;
 }
 
 void WindowsFileHandler::read_file(char *buffer, std::size_t size) {

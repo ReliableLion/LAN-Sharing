@@ -1,5 +1,6 @@
 #include "UploadManager.hpp"
 #include <iostream>
+#include <stdlib.h>     //for using the function sleep
 
 #pragma comment(lib, "Mswsock.lib")
 
@@ -15,7 +16,14 @@ void UploadManager::upload_file(std::shared_ptr<FileRequest> file_request, Windo
 	if (packet.get_message_code() == protocol::ok) {
 		std::cout << "File sending..." << std::endl;
 
-		TransmitFile(file_request->connection_->get_handle_socket(), file_handler.get_file_handle(), file_request->file_size_, 0, nullptr, nullptr, TF_USE_SYSTEM_THREAD);
+		if(!TransmitFile(file_request->connection_->get_handle_socket(), file_handler.get_file_handle(), file_request->file_size_, 65535, nullptr, nullptr, TF_USE_SYSTEM_THREAD)) {
+			std::cout << "ERROR TRANSMIT FILE: " << WSAGetLastError() << std::endl;
+			file_request->connection_->close_connection();
+			return;
+		}
+
+		std::cout << "VADO IN SLEEP" << std::endl;
+		Sleep(5000);
 
 		std::cout << "File sent!" << std::endl;
 		file_request->connection_->close_connection();
