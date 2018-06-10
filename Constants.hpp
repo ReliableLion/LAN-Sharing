@@ -7,7 +7,7 @@
 /**
  * \brief Minimum unit of payload within a TCP packet
  */
-#define CHUNK 1460
+#define CHUNK 1024 * 1024
  /**
  * \brief Timeout used by the SELECT()
  */
@@ -44,11 +44,12 @@
 /* FILE SECTION */
 #define BIG_FILE_THREADS 3
 #define SMALL_FILE_THREADS 2
-#define FILE_SIZE_THRESHOLD 1024 * 1024		// 1MB
+#define FILE_SIZE_THRESHOLD 1024 * 1024	* 600	// 1MB
 #define REQUEST_THREADS 4
 #define MAX_REQUEST_ATTEMPTS 3
 #define MAX_FILE_ATTEMPTS 5
-#define TEMP_PATH std::string("C:\\users\\utentepc\\Appdata\\local\\temp")
+#define TEST_PATH std::string("C:\\Users\\utente pc\\test_project")
+#define TEMP_PATH std::string("C:\\Users\\utente pc\\test_project")							// "C:\\users\\utentepc\\Appdata\\local\\temp"
 #define QUEUE_MAX_ELEMENTS 1000
 #define MAX_FILENAME_LENGTH 256
 

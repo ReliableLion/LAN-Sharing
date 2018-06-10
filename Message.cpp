@@ -171,6 +171,7 @@ void ProtocolMessage::compute_packet_type() {
 
 		// Clean the stream
 		std::string message;
+		stream_ << m_buffer_.data();
 
 		std::getline(stream_, message, ' ');
 
@@ -190,6 +191,9 @@ void ProtocolMessage::prepare_out_packet() {
             break;
         case protocol::ok : {
             append(protocol::ok);
+			stream_.str(std::string());
+			stream_ << END_MESSAGE_;
+			append(stream_.str());
         }
             break;
         case protocol::err : {

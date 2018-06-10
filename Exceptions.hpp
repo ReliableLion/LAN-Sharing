@@ -5,6 +5,7 @@
 #include <iostream>
 
 namespace udp_exception {
+
     class UdpException : public std::runtime_error {
     public:
         explicit UdpException(const std::string str) : runtime_error("UDP Service Exception: " + str) {};
@@ -15,6 +16,16 @@ namespace udp_exception {
 		explicit UdpShutdownException() : runtime_error("UDP Service Shutdown Exception") {};
 	};
 }
+
+class ServerException : public std::exception {
+public:
+	const char *what() const throw() override {
+		return msg.c_str();
+	}
+private: 
+	const std::string msg = "impossible to create an instance of the server ";
+};
+
 
 class TcpException : public std::runtime_error {
 public:
@@ -45,6 +56,7 @@ public:
 };
 
 class FileWriteException : public std::exception {
+public:
     const char *what() const throw() override {
         return "is not possible to write the file";
     }
@@ -57,12 +69,19 @@ class TimeoutException : public std::exception {
 };
 
 class SocketBufferException : public std::exception {
+public:
+	SocketBufferException(std::string msg) : user_msg_(msg) {};
+
 	const char *what() const throw() override {
-        return "error for the buffer";
+		return user_msg_.c_str();
     }
+
+private:
+	std::string user_msg_;
 };
 
 class ConnectionCloseException : public std::exception {
+public:
     virtual const char *waht() const throw() {
         return "connection has been closed";
     }

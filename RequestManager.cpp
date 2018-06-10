@@ -80,6 +80,8 @@ void RequestManager::download_request(const connection::conn_ptr connection) con
 	auto exit = false, received_correctly = false;
 	auto i = 0;
 
+	std::cout << "try to receive the request" << std::endl;
+
     PacketManager packet_manager(connection);
 
     // TODO declare here the requestManager and ReplyManager
@@ -103,9 +105,14 @@ void RequestManager::download_request(const connection::conn_ptr connection) con
                     packet_manager.send_error(protocol::err_1);
                     exit = false;
                 }
-                    break;
+				break;
 
-                case protocol::ok : {
+				case protocol::ok : {
+					std::cout << "received ok!" << std::endl;
+				}
+				break;
+
+				case protocol::send: {
 //                    if (process_request(packet_manager, connection)) {
 //                        exit = true;
 //                        received_correctly = true;
@@ -116,27 +123,31 @@ void RequestManager::download_request(const connection::conn_ptr connection) con
 //                        std::cout << "impossible to recognize the request format " << std::endl;
 //                        packet_manager.send_error(connection, MessageType::ERR_1);
 //                    }
+                   if (packet.compute_send_request()) {
+	                   const auto req = packet.get_message_request();
 
+                       if (validate_request(packet_manager, req)) {
 
-                    if (packet.compute_send_request()) {
-	                    const auto req = packet.get_message_request();
+						   std::cout << "sono qui " << std::endl;
 
-                        if (validate_request(packet_manager, req)) {
+                          if (forward_request(req, connection)) {
+							  if (!packet_manager.send_packet(protocol::ok)) {
+								  std::cout << "the packet is not sent" << std::endl;
+							  }
 
-                           if (forward_request(req, connection)) {
-                               exit = true;
-                           } else {
-                               packet_manager.send_error(protocol::err_1);
-                               exit = false;
-                           }
+                              exit = true;
+                          } else {
+                              packet_manager.send_error(protocol::err_1);
+                              exit = false;
+                          }
 
-                        }
-                        else exit = false;
-                    } else {
+                       }
+                       else exit = false;
+                   } else {
                         // if the request is not valid send an error
-                        packet_manager.send_error(protocol::err_1);
-                        exit = false;
-                    }
+                       packet_manager.send_error(protocol::err_1);
+                       exit = false;
+                   }
 
                 }
                     break;
@@ -183,19 +194,19 @@ bool RequestManager::validate_request(PacketManager &packet_manager, request_str
         packet_manager.send_error(protocol::err_1);
         return false;
     }
-	return false;
+	return true;
 }
 
 bool RequestManager::forward_request(const request_struct request, connection::conn_ptr connection) const {
 
     // if is not possible to inset the request into the queue return an error
     if (request.file_size_ >= FILE_THRESHOLD_) {
-        //if (!download_manager->insert_big_file(request, connection)) return false;
+        if (!download_manager_->insert_big_file(request, connection)) return false;
 
         std::cout << "the request is forwarded to the big file queue" << std::endl;
         return true;
     } else {
-       // if (!download_manager->insert_small_file(request, connection)) return false;
+       if (!download_manager_->insert_small_file(request, connection)) return false;
 
         std::cout << "the request is forwarded to the small file queue"  << std::endl;
         return true;

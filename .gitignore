@@ -334,3 +334,4 @@ ASALocalRun/
 /*.vcxproj
 /*.sln
 /LanSharingMain.cpp
+/stdafx.cpp

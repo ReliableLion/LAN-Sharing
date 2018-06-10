@@ -17,12 +17,12 @@ private:
     //protocol::message_code last_error_code;
 
 public:
-	explicit PacketManager(connection::conn_ptr connection): connection_(connection) {
+	explicit PacketManager(connection::conn_ptr connection) : connection_(connection) {
 		SendSocketBuffer buffer;
 		send_buffer_ = std::make_shared<SendSocketBuffer>(buffer);
 	}
 
-    ~PacketManager();
+	~PacketManager() {};
 
     ProtocolMessage receive_packet() const;
 
@@ -31,8 +31,9 @@ public:
 
 	bool PacketManager::send_packet(const protocol::message_code msg_type);
 
-	static bool send_reply(protocol::message_code msg_type);            // used to send an ok message
-	static bool send_error(protocol::error_code error_type);            // used to send an error message
+	bool send_packet(protocol::message_code msg_type);            // used to send an ok message
+
+	bool send_error(protocol::error_code error_type);            // used to send an error message
 };
 
 

@@ -88,24 +88,24 @@ void Server::listen_new_connection() {
 
 
     // TODO da rimuovere dopo aver fatto il test
-    ProtocolMessageTest proto;
-    proto.download_request(std::make_shared<connection::TcpConnection>(new_connection));
+//    ProtocolMessageTest proto;
+//    proto.download_request(std::make_shared<connection::TcpConnection>(new_connection));
 
 
-    // add the request inside the request manager
-//	request_status status;
-//	if (request_manager_->add_connection(std::make_shared<connection::TCPConnection> (new_connection), status))
-//	{
-//		switch (status)
-//		{
-//		case FULL_QUEUE:
-//			std::cout << "impossible to add the connection, the queue is full" << std::endl;
-//			break;
-//		case TERM_SIGNAL:
-//			std::cout << "impossibleto add the connection becase the request manager hase reveived the shutdown request" << std::endl;
-//			break;
-//		}
-//	}
+     //add the request inside the request manager
+	request_status status;
+	if (request_manager_->add_connection(std::make_shared<connection::TcpConnection> (new_connection), status))
+	{
+		switch (status)
+		{
+		case full_queue :
+			std::cout << "impossible to add the connection, the queue is full" << std::endl;
+			break;
+		case term_signal :
+			std::cout << "impossibleto add the connection becase the request manager hase reveived the shutdown request" << std::endl;
+			break;
+		}
+	}
 }
 
 void Server::start_server() {

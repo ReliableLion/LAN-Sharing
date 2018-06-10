@@ -2,8 +2,6 @@
 #include "Exceptions.hpp"
 #include <iostream>
 
-PacketManager::~PacketManager() {}
-
 /*
  * return the information about the status code of the packet
  */
@@ -15,8 +13,7 @@ ProtocolMessage PacketManager::receive_packet() const {
     if (!connection_->read_line(buffer)) throw ConnectionCloseException();
 
     //  TODO controllare se il buffer finisce con il \r\n
-    request_packet.append(buffer->get_remaining_data(),
-                          buffer->get_size());
+    request_packet.append(buffer->get_remaining_data(), buffer->get_size());
 
     return request_packet;
 }
@@ -54,10 +51,11 @@ ProtocolMessage PacketManager::receive_packet() const {
 //    }
 
 /*
- * send
+ * SEND file_request
  */
 bool PacketManager::send_packet(WindowsFileHandler &file_handler) const {
 
+    std::shared_ptr<SendSocketBuffer> buffer(new SendSocketBuffer);
     ProtocolMessage req_packet;
 
     FILETIME ftWrite;
@@ -77,12 +75,8 @@ bool PacketManager::send_packet(WindowsFileHandler &file_handler) const {
 }
 
 /*
- * return the request of the
+ * send a packet with the correspondenet msg type
  */
-//request_struct PacketManager::get_request() {
-//    return request;
-//}
-
 bool PacketManager::send_packet(const protocol::message_code msg_type) {
 	ProtocolMessage response_packet(msg_type);
 
@@ -91,7 +85,6 @@ bool PacketManager::send_packet(const protocol::message_code msg_type) {
 }
 
 bool PacketManager::send_error(const protocol::error_code error_type) {
-    //int sent_byte;
     ProtocolMessage response_packet(error_type);
 
     std::shared_ptr<SendSocketBuffer> buffer(new SendSocketBuffer);

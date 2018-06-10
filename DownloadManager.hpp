@@ -28,7 +28,9 @@ class DownloadManager {
     std::condition_variable cv_b_, cv_s_;
 
     // file variables
-    std::string path_;
+	// TODO qeusta variabile deve essere settata dal'esterno per definire la cartella dove scaricare il file
+	std::string path_;
+
     const std::string TEMP_PATH_ = TEMP_PATH;
 
     void process_big_file();
