@@ -2,6 +2,7 @@
 #include "FileHandler.hpp"
 #include "WindowsFileHandler.hpp"
 #include <iostream>
+#include "Exceptions.hpp"
 
 RequestHandler::RequestHandler(const std::shared_ptr<UploadManager> upload_manager) {
 	this->upload_manager_ = upload_manager;
@@ -16,7 +17,7 @@ bool RequestHandler::send_request(const std::string server, char *file_path) {
 	WindowsFileHandler file_handler(file_path);
 	
 	if (!file_handler.open_file())
-		return false;
+		throw WindowsFileHandlerException(std::string(file_path));
 	
 	//std::string port = std::to_string(DEFAULT_LISTEN_PORT);
 

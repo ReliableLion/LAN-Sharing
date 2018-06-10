@@ -2,77 +2,39 @@
 
 #include <exception>
 #include <sstream>
+#include <iostream>
 
 namespace udp_exception {
     class UdpException : public std::runtime_error {
     public:
-        explicit UdpException(const std::string str) : runtime_error("UDP Service Exception"), error_message_(str) {};
-
-        const char *what() const throw() override { return error_message_.c_str(); }
-
-    private:
-        std::string error_message_;
+        explicit UdpException(const std::string str) : runtime_error("UDP Service Exception: " + str) {};
     };
 
 	class UdpShutdownException : public std::runtime_error {
 	public:
 		explicit UdpShutdownException() : runtime_error("UDP Service Shutdown Exception") {};
-
-		const char *what() const throw() override { return "UDP Service Shutdown Exception"; }
 	};
 }
 
-class TcpException : public std::exception {
+class TcpException : public std::runtime_error {
 public:
-    explicit TcpException(const std::string str) : error_message_(str) {};
-
-    const char *what() const throw() override { return error_message_.c_str(); }
-
-private:
-    std::string error_message_;
+    explicit TcpException(const std::string str) :runtime_error("TCP Exception: " + str) {};
 };
 
-class MessageException : public std::exception {
+class MessageException : public std::runtime_error {
 public:
-    explicit MessageException(const std::string str) : error_message_(str) {};
-
-    const char *what() const throw() override { return error_message_.c_str(); }
-
-private:
-    std::string error_message_;
+    explicit MessageException(const std::string str) : runtime_error("Message Exception: " + str) {};
 };
 
 
-class FileTransmissionException : public std::exception {
+class FileTransmissionException : public std::runtime_error {
 public:
-    explicit FileTransmissionException(const int error) {
-        this->error_ = error;
-    }
-
-    const char *what() const throw() override {
-        std::stringstream s;
-        s << "problem with socket, error: " << error_;
-        return s.str().c_str();
-    }
-
-private:
-    int error_;
+	explicit FileTransmissionException(const int error) : runtime_error("Problem with file transmission Exception: " + error) {}
 };
 
-class SocketException : public std::exception {
+class SocketException : public std::runtime_error {
 public:
-    explicit SocketException(const int error) {
-        this->error_ = error;
-    }
-
-    const char *what() const throw() override {
-        std::stringstream s;
-        s << "problem with socket, error: " << error_;
-        return s.str().c_str();
-    }
-
-private:
-    int error_;
+    explicit SocketException(const int error): runtime_error(("Problem with socket Exception: " + error)) {}
 };
 
 class FileOpenException : public std::exception {
@@ -104,4 +66,9 @@ class ConnectionCloseException : public std::exception {
     virtual const char *waht() const throw() {
         return "connection has been closed";
     }
+};
+
+class WindowsFileHandlerException : public std::runtime_error {
+public:
+	explicit WindowsFileHandlerException(const std::string file_name): runtime_error("Cannot open: " + file_name)  {}
 };
