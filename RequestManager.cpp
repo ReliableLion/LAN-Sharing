@@ -80,6 +80,8 @@ void RequestManager::download_request(const connection::conn_ptr connection) con
 	auto exit = false, received_correctly = false;
 	auto i = 0;
 
+	std::cout << "try to receive the request" << std::endl;
+
     PacketManager packet_manager(connection);
 
     // TODO declare here the requestManager and ReplyManager
@@ -103,7 +105,7 @@ void RequestManager::download_request(const connection::conn_ptr connection) con
                     packet_manager.send_error(protocol::err_1);
                     exit = false;
                 }
-                    break;
+				break;
 
 				case protocol::ok : {
 					std::cout << "received ok!" << std::endl;
@@ -125,6 +127,8 @@ void RequestManager::download_request(const connection::conn_ptr connection) con
 	                   const auto req = packet.get_message_request();
 
                        if (validate_request(packet_manager, req)) {
+
+						   std::cout << "sono qui " << std::endl;
 
                           if (forward_request(req, connection)) {
 							  if (!packet_manager.send_packet(protocol::ok)) {

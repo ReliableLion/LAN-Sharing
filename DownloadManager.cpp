@@ -105,13 +105,16 @@ void DownloadManager::process_small_file() {
 
                 if (download_file(small_file_req, temporary_file)) {
 
-					// TODO rimuovere il test path dopo il debug
-                    FileHandler destination_file(small_file_req.req.file_name_, TEMP_PATH_);
+//					// TODO rimuovere il test path dopo il debug
+//                    FileHandler destination_file(small_file_req.req.file_name_, TEMP_PATH_);
+//
+//                    if (!copy_file(temporary_file, destination_file)) {
+//                        destination_file.remove_file();
+//                        std::cout << "impossible to copy the file to destination" << std::endl;
+//                    }
 
-                    if (!copy_file(temporary_file, destination_file)) {
-                        destination_file.remove_file();
-                        std::cout << "impossible to copy the file to destination" << std::endl;
-                    }
+					// TODO mettere un lock per gestire la concorrenza nel caso in cui ci siano più file con lo stesso nome
+					
 
                 }
                 else

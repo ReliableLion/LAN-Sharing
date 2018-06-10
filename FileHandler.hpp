@@ -48,9 +48,8 @@ public:
     std::string get_filename() const;
 
     std::string get_filepath();
-    /*FileHandler(char *filename, char *path);
-    FileHandler(const FileHandler&& filehandler);
-    FileHandler(const FileHandler& filehandler);*/
+
+	bool rename_file(std::string new_name);
 };
 
 /*class InputFileHandler : public FileHandler

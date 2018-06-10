@@ -7,7 +7,7 @@
 /**
  * \brief Minimum unit of payload within a TCP packet
  */
-#define CHUNK 1460
+#define CHUNK 1024 * 1024
  /**
  * \brief Timeout used by the SELECT()
  */
