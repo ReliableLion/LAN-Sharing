@@ -44,8 +44,6 @@ public:
 
 	void close_file() const;
 
-	static void read_file(char *buffer, std::size_t size);
-
 	DWORD get_file_size() const;
 
 	bool get_file_time(_Out_opt_ LPFILETIME lp_creation_time, _Out_opt_ LPFILETIME lp_last_access_time, _Out_opt_ LPFILETIME lp_last_write_time) const;

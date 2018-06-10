@@ -89,6 +89,8 @@ public:
     ProtocolMessage(): message_code_(), error_code_() {
 	} ;                                                                   // This is used to create an empty RequestMessage, which it's supposed will be received
 
+	void replace(ProtocolMessage);
+
 	std::stringstream stream_;
 
     /*__int64 ProtocolMessage::get_file_size() const {

@@ -14,5 +14,5 @@ class UploadManager {
 
 public:
 	void upload_file(std::shared_ptr<FileRequest>, WindowsFileHandler, PacketManager);
-	bool upload(std::shared_ptr<FileRequest>, WindowsFileHandler);
+	bool upload(std::shared_ptr<FileRequest>, HANDLE);
 };
