@@ -1,6 +1,7 @@
 #include "DownloadManager.hpp"
 #include "Exceptions.hpp"
 #include <iostream>
+#include "PacketManager.hpp"
 
 DownloadManager::DownloadManager() {
     is_terminated_.store(false);
@@ -198,14 +199,18 @@ bool DownloadManager::download_file(download_struct request, TemporaryFile &temp
 
 		// itererate in order to download all the files
         while (left_bytes != 0 && !connection_closed) {
-            if (left_bytes >= buffer_max_size)									// if the remaining data are greater than the max size of the buffer then the bytes to download are max buff lengh
+           
+        	if (left_bytes >= buffer_max_size)									// if the remaining data are greater than the max size of the buffer then the bytes to download are max buff lengh
                 bytes_to_download = buffer_max_size;
             else
                 bytes_to_download = left_bytes;									// if the remaining data are smaller than the max, set the remaining bytes value
 
+			//std::cout << "sono prima della read data" << std::endl;
+
 			// check if the connection is closed
-            if (request.conn->read_data(buffer, bytes_to_download))  {			
+            if (request.conn->read_data(buffer))  {			
 				left_bytes -= buffer->get_size();
+				//std::cout << "i byte rimasti sono " << left_bytes << std::endl;
                 temporary_file.write_data(buffer);
 				//temporary_file.write_data2();
             } else 
@@ -213,6 +218,12 @@ bool DownloadManager::download_file(download_struct request, TemporaryFile &temp
         }
 
 		temporary_file.close_file();
+
+		std::cout << "try to send ok message" << std::endl;
+
+		PacketManager packet_manager(request.conn);
+		packet_manager.send_packet(protocol::ok);
+
 
         if (left_bytes == 0) return true;
 		

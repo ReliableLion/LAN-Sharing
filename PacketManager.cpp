@@ -2,7 +2,6 @@
 #include "Exceptions.hpp"
 #include <iostream>
 
-
 /*
  * return the information about the status code of the packet
  */
@@ -14,8 +13,7 @@ ProtocolMessage PacketManager::receive_packet() const {
     if (!connection_->read_line(buffer)) throw ConnectionCloseException();
 
     //  TODO controllare se il buffer finisce con il \r\n
-    request_packet.append(buffer->get_remaining_data(),
-                          buffer->get_size());
+    request_packet.append(buffer->get_remaining_data(), buffer->get_size());
 
     return request_packet;
 }
@@ -83,7 +81,6 @@ bool PacketManager::send_packet(const protocol::message_code msg_type) {
 }
 
 bool PacketManager::send_error(const protocol::error_code error_type) {
-    //int sent_byte;
     ProtocolMessage response_packet(error_type);
 
     std::shared_ptr<SendSocketBuffer> buffer(new SendSocketBuffer);

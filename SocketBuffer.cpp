@@ -3,11 +3,10 @@
 #include <iostream>
 
 void SocketBuffer::add(const char *data, const int size) {
-    if (size < 1)
-        return;
-
-	if (size == 1 && data[0] == '\0')
+    if (size < 1) {
+		clear();
 		return;
+    }
 
     if (current_size_ + size > MAX_BUFF_) 
 		throw SocketBufferException(std::string("the buffer doesn't have enought space to add data"));
@@ -18,15 +17,14 @@ void SocketBuffer::add(const char *data, const int size) {
 }
 
 void SocketBuffer::replace(const char *data, const int size) {
-    if (size < 1)
-        return;
-
-	if (size == 1 && data[0] == '\0') {
+	if (size < 1) {
 		clear();
 		return;
 	}
 
-	if (size > MAX_BUFF_ || size < 0)
+	// TODO potrebbe lanciare un'eccezione
+
+	if (size > MAX_BUFF_)
 		throw SocketBufferException(std::string("the size of the data to be insert is greater than the buffer size"));
 
     memset(buffer_, 0, MAX_BUFF_);

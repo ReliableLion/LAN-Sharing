@@ -36,9 +36,13 @@ namespace connection {
 
         void print_endpoint_info() const;
 
-        bool read_data(std::shared_ptr<SocketBuffer> buffer, int size);
+        bool read_data(std::shared_ptr<SocketBuffer> buffer);
 
         bool send_data(std::shared_ptr<SendSocketBuffer> buffer) const;
+
+		bool read_data2(int size);
+
+		char* getReceiveBuffer();
 
         bool read_line(std::shared_ptr<SocketBuffer> buffer) const;
 

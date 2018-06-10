@@ -1,6 +1,7 @@
 #include "Exceptions.hpp"
 #include "Connection.hpp"
 #include <iostream>
+#include <fstream>
 #include <string>
 
 using namespace connection;
@@ -60,9 +61,9 @@ TcpConnection::TcpConnection(const SOCKET socket, const SOCKADDR_IN socket_addre
     sock_ = socket;
     remote_address_ = socket_address;
 
-	int chunk = 65536;
-
-	setsockopt(sock_, SOL_SOCKET, SO_RCVBUF, (char*) &chunk, sizeof(chunk));
+//	int chunk = 65536;
+//
+//	setsockopt(sock_, SOL_SOCKET, SO_RCVBUF, (char*) &chunk, sizeof(chunk));
 
 	receive_buffer_ = new char[CHUNK];
 }
@@ -103,32 +104,24 @@ void TcpConnection::print_endpoint_info() const {
     std::cout << "port number: " << ntohs(remote_address_.sin_port) << std::endl << std::endl;
 }
 
-bool TcpConnection::read_data(std::shared_ptr<SocketBuffer> buffer, const int size) {
+bool TcpConnection::read_data(std::shared_ptr<SocketBuffer> buffer) {
 
-    if (size > buffer->get_max_size())
-		throw SocketBufferException(std::string("the size of the data to be download is greater than the buffer size"));
-
-	auto bytes_received = 0, bytes_read = 0;
+	auto bytes_read = 0;
 
 	// clear the buffer before we read data
 	buffer->clear();
 
-	while (bytes_received < size && alive_) {
-		bytes_read = read_select(receive_buffer_, buffer->get_max_size());
-		//std::cout << buffer->get_max_size() << "   di cui ricevuti   " << bytes_read << std::endl;
+	bytes_read = read_select(receive_buffer_, buffer->get_max_size());
 
-		if (bytes_read == SOCKET_ERROR) throw SocketException(WSAGetLastError());
+	if (bytes_read == SOCKET_ERROR) throw SocketException(WSAGetLastError());
 
-		// the connection is closed
-		if (bytes_read == 0) alive_ = false;
+	// the connection is closed
+	if (bytes_read == 0) alive_ = false;
 
-		if (bytes_read == 1 && receive_buffer_[0] == '\0')
-			std::cout << "the receive return an empty buffer" << std::endl;
-		else {
-			bytes_received += bytes_read;                    // increment the number of bytes received
-			buffer->replace(receive_buffer_, bytes_read);
-		}
-	}
+	if (bytes_read == 1 && receive_buffer_[0] == '\0')
+		std::cout << "the receive return an empty buffer" << std::endl;
+	else 
+		buffer->replace(receive_buffer_, bytes_read);
 
     return alive_;
 }
@@ -161,8 +154,8 @@ bool TcpConnection::read_line(std::shared_ptr<SocketBuffer> buffer) const {
 
     // TODO ricordarsi di controllare se il buffer finisce con \r\n
 	auto read_byte = 0;
-    auto *local_buffer = new char[buffer->get_max_size()];
-    memset(local_buffer, 0, static_cast<std::size_t> (buffer->get_max_size()));
+//    auto *local_buffer = new char[buffer->get_max_size()];
+//    memset(local_buffer, 0, static_cast<std::size_t> (buffer->get_max_size()));
 
     struct timeval time;
     FD_SET read_sock;
@@ -180,7 +173,7 @@ bool TcpConnection::read_line(std::shared_ptr<SocketBuffer> buffer) const {
     if (result == 0) throw TimeoutException();
 
 	// use the function readline to read until a \r\n is reached
-    if (result > 0) read_byte = readline_unbuffered(local_buffer, buffer->get_max_size());
+    if (result > 0) read_byte = readline_unbuffered(receive_buffer_, buffer->get_max_size());
 
 	// it means that the connection has been closed
     if (read_byte == 0) return false;
@@ -188,13 +181,14 @@ bool TcpConnection::read_line(std::shared_ptr<SocketBuffer> buffer) const {
     if (read_byte < 0) throw SocketException(WSAGetLastError());
 
 	// if an empty string is received than is not insert into the buffer
-	if (read_byte == 1 && local_buffer[0] == '\n') {
+	if (read_byte == 1 && receive_buffer_[0] == '\0') {
+		buffer->clear();
 		std::cout << "received an empty buffer" << std::endl;
 		return true;
 	}
 
 	// add the result of the readline 
-    buffer->add(local_buffer, read_byte);
+    buffer->replace(receive_buffer_, read_byte);
     return true;
 }
 
@@ -243,9 +237,7 @@ int TcpConnection::read_select(char *read_buffer, const int size) const {
     if (result == 0) throw TimeoutException();
 
 	 //receive the data from the socket 
-    if (result > 0) return recv(sock_, read_buffer, size, MSG_WAITALL);
-
-	//return recv(sock_, read_buffer, size, 0);
+    if (result > 0) return recv(sock_, read_buffer, size, 0);
 
 	return 0;
 }
