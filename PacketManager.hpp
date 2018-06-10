@@ -29,8 +29,6 @@ public:
     //request_struct get_request();
     bool send_packet(WindowsFileHandler &file_handler) const;
 
-	bool PacketManager::send_packet(const protocol::message_code msg_type);
-
 	bool send_packet(protocol::message_code msg_type);            // used to send an ok message
 
 	bool send_error(protocol::error_code error_type);            // used to send an error message
