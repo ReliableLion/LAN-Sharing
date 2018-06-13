@@ -11,33 +11,26 @@ protected:
 	HANDLE file_handle_ = INVALID_HANDLE_VALUE;
 
 	static std::string get_file_name_from_full_path(const std::string& file_path);
-	WindowsFileHandler(const WindowsFileHandler& source) {}
+
+	// This object cannot be moved or assigned or assigned with movement
+	WindowsFileHandler(const WindowsFileHandler&) {}
+	// ReSharper disable once CppFunctionIsNotImplemented
+	WindowsFileHandler& operator=(const WindowsFileHandler&);
+	WindowsFileHandler& operator=(WindowsFileHandler&& source);
 
 public:
 	explicit WindowsFileHandler(std::string path);
 
 	~WindowsFileHandler();
 
-	WindowsFileHandler::WindowsFileHandler(WindowsFileHandler&& source) noexcept {
+	// Movement constructor
+	WindowsFileHandler(WindowsFileHandler&& source) noexcept {
 		this->file_handle_ = source.file_handle_;
 		this->filename_ = source.filename_;
 		this->file_dir_ = source.file_dir_;
 		this->file_path_ = source.file_path_;
 
 		source.file_handle_ = INVALID_HANDLE_VALUE;
-	}
-
-	WindowsFileHandler& operator=(WindowsFileHandler&& source) noexcept {
-		if (this != &source) {
-			this->file_handle_ = source.file_handle_;
-			this->filename_ = source.filename_;
-			this->file_dir_ = source.file_dir_;
-			this->file_path_ = source.file_path_;
-
-			source.file_handle_ = INVALID_HANDLE_VALUE;
-		}
-
-		return *this;
 	}
 
 	bool open_file();

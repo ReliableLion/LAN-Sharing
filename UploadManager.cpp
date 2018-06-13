@@ -4,12 +4,16 @@
 
 #pragma comment(lib, "Mswsock.lib")
 
-void UploadManager::upload_file(std::shared_ptr<FileRequest> file_request, WindowsFileHandler file_handler, PacketManager packet_manager) {
+void UploadManager::upload_file(std::shared_ptr<FileRequest> file_request, WindowsFileHandler file_handler) {
 
 	//std::thread thread;
 
 	//thread_pool_.push_back(std::thread(&UploadManager::upload, this, std::ref(file_request)));
+	PacketManager packet_manager(file_request->connection_);
 	ProtocolMessage packet_;
+
+	if(!packet_manager.send_packet(file_handler))
+		throw FileTransmissionException(1);
 
 	packet_.replace(packet_manager.receive_packet());
 	packet_.compute_packet_type();
@@ -17,7 +21,7 @@ void UploadManager::upload_file(std::shared_ptr<FileRequest> file_request, Windo
 	switch(packet_.get_message_code()) {
 		case protocol::ok: {
 			std::cout << "File sending..." << std::endl;
-			if(upload(file_request, file_handler.get_file_handle()))
+			if(upload(*file_request, file_handler.get_file_handle()))
 				file_request->transferred_bytes_ = file_request->file_size_;
 			else {
 				file_request->transferred_bytes_ = 0;
@@ -50,9 +54,11 @@ void UploadManager::upload_file(std::shared_ptr<FileRequest> file_request, Windo
 	}
 }
 
-bool UploadManager::upload(std::shared_ptr<FileRequest> file_request, HANDLE file_handle) {
+bool UploadManager::upload(const FileRequest &file_request, HANDLE file_handle) {
 
-	if (!TransmitFile(file_request->connection_->get_handle_socket(), file_handle, file_request->file_size_, 0, nullptr, nullptr, TF_USE_KERNEL_APC)) {
+
+	// Todo controllo dimensione massima file
+	if (!TransmitFile(file_request.connection_->get_handle_socket(), file_handle, file_request.file_size_, 0, nullptr, nullptr, TF_USE_KERNEL_APC)) {
 		std::cout << "ERROR TRANSMIT FILE: " << WSAGetLastError() << std::endl;
 		return false;
 	}
