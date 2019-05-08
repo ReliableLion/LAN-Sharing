@@ -90,4 +90,3 @@ void Discovery::start_discovery_service() {
 
 	cout << "-------------- Server started" << endl;
 }
-

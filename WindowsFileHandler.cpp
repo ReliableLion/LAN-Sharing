@@ -1,12 +1,10 @@
 #include "WindowsFileHandler.hpp"
 #include <iomanip>
 #include <sstream>
-#include <algorithm>
+#include <iostream>
 
 WindowsFileHandler::WindowsFileHandler(const std::string path) : file_path_(path) {
 	filename_ = get_file_name_from_full_path(file_path_);
-	file_dir_ = file_path_;
-	file_dir_ = file_dir_.substr(0, file_dir_.size() - filename_.size() - 1);
 }
 
 WindowsFileHandler::~WindowsFileHandler() { close_file(); }
@@ -21,8 +19,17 @@ bool WindowsFileHandler::open_file() {
 
 void WindowsFileHandler::close_file() const {
 	if (file_handle_ != INVALID_HANDLE_VALUE) {
-		CloseHandle(file_handle_);
-	}
+		try {
+			CloseHandle(file_handle_);
+		} catch(std::exception e) {
+			std::cout << e.what() << "ERROR CLOSE FILE" << std::endl;
+		}
+	} else
+		std::cout << "WINDOWS FILE HANDLE INVALID" << std::endl;
+}
+
+void WindowsFileHandler::read_file(char *buffer, std::size_t size) {
+
 }
 
 DWORD WindowsFileHandler::get_file_size() const {
@@ -49,17 +56,12 @@ std::string WindowsFileHandler::format_file_time(FILETIME filetime) {
 	return ss.str();
 }
 
-std::string WindowsFileHandler::get_filename() const {
-	return this->filename_;
-}
+std::string WindowsFileHandler::get_filename() const { return this->filename_; }
 
 std::string WindowsFileHandler::get_file_path() const {
 	return file_path_;
 }
 
-/*
- * Extract file name from the pull path. This algorithm extract the name starting from the end of the string representing the path
- */
 std::string WindowsFileHandler::get_file_name_from_full_path(const std::string& file_path) {
 	std::string file_name;
 
@@ -70,6 +72,6 @@ std::string WindowsFileHandler::get_file_name_from_full_path(const std::string& 
 		std::reverse(file_name.begin(), file_name.end());
 		return file_name;
 	}
-	
-	return file_name;
+	else
+		return file_name;
 }

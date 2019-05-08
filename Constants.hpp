@@ -44,9 +44,6 @@
 /* FILE SECTION */
 #define BIG_FILE_THREADS 3
 #define SMALL_FILE_THREADS 2
-/* Todo We should delete the above constants and use the following approach*/
-#define THREAD_POOL std::thread::hardware_concurrency()
-
 #define FILE_SIZE_THRESHOLD 1024 * 1024	* 600	// 1MB
 #define REQUEST_THREADS 4
 #define MAX_REQUEST_ATTEMPTS 3

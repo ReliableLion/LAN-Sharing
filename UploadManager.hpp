@@ -13,6 +13,6 @@ class UploadManager {
 	//std::vector<std::thread> thread_pool_;
 
 public:
-	void upload_file(std::shared_ptr<FileRequest>, WindowsFileHandler);
-	bool upload(const FileRequest &file_request, HANDLE);
+	void upload_file(std::shared_ptr<FileRequest>, WindowsFileHandler, PacketManager);
+	bool upload(std::shared_ptr<FileRequest>, WindowsFileHandler);
 };

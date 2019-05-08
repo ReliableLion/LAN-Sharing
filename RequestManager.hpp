@@ -18,6 +18,11 @@ enum request_status {
     term_signal
 };
 
+typedef struct QueueConnectionElement {
+	connection::conn_ptr connection;
+	int attempts;
+};
+
 class RequestManager {
     // thread & synchronization variables
     const int MAX_THREADS_ = REQUEST_THREADS;
@@ -38,7 +43,9 @@ class RequestManager {
 
     void download_request(connection::conn_ptr connection) const;
 
-	static bool validate_request(PacketManager &packet_manager, request_struct request);
+	bool validate_request(PacketManager &packet_manager, request_struct request);
+
+	void decode_send_reqeust();
 
     bool forward_request(request_struct request, connection::conn_ptr connection) const;
     //bool send_response(PacketManager& res_packet_manager, connection::conn_ptr connection);

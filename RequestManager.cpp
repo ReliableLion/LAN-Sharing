@@ -39,6 +39,11 @@ bool RequestManager::add_connection(const connection::conn_ptr new_connection, r
     if (!is_terminated_.load()) {
         std::lock_guard<std::mutex> l(mtx_);
 
+		// create a new queue connection struct 
+		QueueConnectionElement element;
+		element.connection = new_connection;
+		element.attempts = 0;
+
         if (!connection_queue_.insert_element(new_connection)) {
             status = full_queue;
             return false;            // the queue has reached the max number of element
@@ -53,31 +58,38 @@ bool RequestManager::add_connection(const connection::conn_ptr new_connection, r
 }
 
 void RequestManager::extract_next_connection() {
-    connection::conn_ptr connection;
-    std::unique_lock<std::mutex> ul(mtx_, std::defer_lock);
-	auto exit = false;
 
-    while (!exit) {
+    connection::conn_ptr connection;
+	QueueConnectionElement queue_element;
+    std::unique_lock<std::mutex> ul(mtx_, std::defer_lock);
+
+    while (true) {
         ul.lock();
 
-        cv_.wait(ul, [this]() {                                                        // wait on the condition varaible
+        cv_.wait(ul, [this]() {															// wait on the condition varaible
             return (!connection_queue_.is_empty() &&
-                    !is_terminated_.load());            // unlock the condition variable only if the queue is not empty or the server has been closed
+                    !is_terminated_.load());											// unlock the condition variable only if the queue is not empty or the server has been closed
         });
 
-        if (is_terminated_.load())
-            exit = true;                                        // if the server has been closed this method must return in order to join the threads
-        else {
-            // get the connection from the queue and then release the lock
-            connection_queue_.pop_element(connection);
-            ul.unlock();
-            download_request(connection);
-        }
+		if (is_terminated_.load())
+			break;
+       
+		// get the connection from the queue and then release the lock
+		connection_queue_.pop_element(connection);
+		ul.unlock();
+
+		// try to extrac the connection info from the data
+		if (queue_element.attempts < MAX_REQUEST_ATTEMPTS_) 
+			download_request(connection);
+		else {
+			// close the connection if the connection reached the maximum close the connection
+			queue_element.connection->close_connection();
+		}
     }
 }
 
 void RequestManager::download_request(const connection::conn_ptr connection) const {
-	auto exit = false, received_correctly = false;
+	auto received_correctly = false;
 	auto i = 0;
 
 	std::cout << "try to receive the request" << std::endl;
@@ -86,83 +98,55 @@ void RequestManager::download_request(const connection::conn_ptr connection) con
 
     // TODO declare here the requestManager and ReplyManager
     try {
-        while (!exit && i++ < MAX_REQUEST_ATTEMPTS_) {
+		/*
+		-if the packet is received correctly, write the reply and set received correclty true
+		-if the request is accepted pass the connection to the downloadmanager
+		-if the requets is not accepted send an error
+		-if the packet is not received correctly, send an error and set the index + 1
+		-if the connection is closed, write a message
+		*/
 
-            /*
-            -if the packet is received correctly, write the reply and set received correclty true
-            -if the request is accepted pass the connection to the downloadmanager
-            -if the requets is not accepted send an error
-            -if the packet is not received correctly, send an error and set the index + 1
-            -if the connection is closed, write a message
-            */
+		auto packet = packet_manager.receive_packet();
+		packet.compute_packet_type();
 
-	        auto packet = packet_manager.receive_packet();
-            packet.compute_packet_type();
+		switch (packet.get_message_code()) {
 
-            switch (packet.get_message_code()) {
-
-                case protocol::undefined : {
-                    packet_manager.send_error(protocol::err_1);
-                    exit = false;
-                }
+			case protocol::undefined: {
+				std::cout << "impossible to decode the content of this packet" << std::endl;
+				packet_manager.send_error(protocol::err_1);
+			}
 				break;
 
-				case protocol::ok : {
-					std::cout << "received ok!" << std::endl;
+			case protocol::ok: 
+				std::cout << "received ok!" << std::endl;
+				break;
+
+			case protocol::send: {
+				//                    if (process_request(packet_manager, connection)) {
+				//                        exit = true;
+				//                        received_correctly = true;
+				//                        packet_manager.send_reply(connection, MessageType::OK);
+				//                    } else {
+				//                        exit = false;
+				//                        i++;                                        // increment the bad-request counter
+				//                        std::cout << "impossible to recognize the request format " << std::endl;
+				//                        packet_manager.send_error(connection, MessageType::ERR_1);
+				//                    }
+				if (packet.compute_send_request()) {
+					const auto req = packet.get_message_request();
+
 				}
+				else {
+					// if the request is not valid send an error
+					packet_manager.send_error(protocol::err_1);
+				}
+
+			}
 				break;
 
-				case protocol::send: {
-//                    if (process_request(packet_manager, connection)) {
-//                        exit = true;
-//                        received_correctly = true;
-//                        packet_manager.send_reply(connection, MessageType::OK);
-//                    } else {
-//                        exit = false;
-//                        i++;                                        // increment the bad-request counter
-//                        std::cout << "impossible to recognize the request format " << std::endl;
-//                        packet_manager.send_error(connection, MessageType::ERR_1);
-//                    }
-                   if (packet.compute_send_request()) {
-	                   const auto req = packet.get_message_request();
-
-                       if (validate_request(packet_manager, req)) {
-
-						   std::cout << "sono qui " << std::endl;
-
-                          if (forward_request(req, connection)) {
-							  if (!packet_manager.send_packet(protocol::ok)) {
-								  std::cout << "the packet is not sent" << std::endl;
-							  }
-
-                              exit = true;
-                          } else {
-                              packet_manager.send_error(protocol::err_1);
-                              exit = false;
-                          }
-
-                       }
-                       else exit = false;
-                   } else {
-                        // if the request is not valid send an error
-                       packet_manager.send_error(protocol::err_1);
-                       exit = false;
-                   }
-
-                }
-                    break;
-
-                default:
-                    break;
-            }
-
-        }
-
-        // check if the packet is received correctly
-        if (!exit && i > MAX_REQUEST_ATTEMPTS_) {
-            std::cout << "max attempts reached by the server, close the connection" << std::endl;
-            connection->close_connection();
-        }
+			default:
+				break;
+		}
 
         std::cout << "request received correclty" << std::endl;
 
@@ -182,10 +166,27 @@ void RequestManager::download_request(const connection::conn_ptr connection) con
     }
 }
 
+/*
+void RequestManager::decode_send_reqeust() {
+	if (validate_request(packet_manager, req)) {
+
+		std::cout << "sono qui " << std::endl;
+
+		if (forward_request(req, connection)) {
+			if (!packet_manager.send_packet(protocol::ok)) {
+				std::cout << "the packet is not sent" << std::endl;
+			}
+		}
+		else
+			packet_manager.send_error(protocol::err_1);
+
+	}
+}*/
+
 bool RequestManager::validate_request(PacketManager &packet_manager, request_struct request) {
     //request_struct request = req_packet_manager.get_request();
 
-    //  TODO cambiare gli errori da inviare al client
+    // TODO cambiare gli errori da inviare al client
     if (request.file_size_ <= 0) {
         packet_manager.send_error(protocol::err_1);
         return false;
@@ -205,12 +206,10 @@ bool RequestManager::forward_request(const request_struct request, connection::c
 
         std::cout << "the request is forwarded to the big file queue" << std::endl;
         return true;
-    } else {
-       if (!download_manager_->insert_small_file(request, connection)) return false;
+    }
+
+    if (!download_manager_->insert_small_file(request, connection)) return false;
 
         std::cout << "the request is forwarded to the small file queue"  << std::endl;
         return true;
-    }
 }
-
-

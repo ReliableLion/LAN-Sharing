@@ -119,11 +119,6 @@ ProtocolMessage::ProtocolMessage(const protocol::error_code error) {
 	prepare_out_packet();
 }
 
-void ProtocolMessage::replace(ProtocolMessage packet) {
-	m_buffer_.clear();
-	m_buffer_ = packet.get_packet_data();
-}
-
 /**
  * This method compute the data contained in a packate which type is SEND
  */
