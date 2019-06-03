@@ -1,12 +1,10 @@
 #pragma once
 
-
 #include <sstream>
 #include <vector>
 
 #include "Protocol.hpp"
 #include "Constants.hpp"
-
 
 typedef struct {
     __int64 file_size_;
@@ -19,10 +17,10 @@ public:
 
     Message();
 
-    Message(const char *buffer, const int size);    // Will use existing allocated buffer and create packet from i
-    // Packet(const Packet & p); 					// Will allocate new buffer but copy buffer from packet argument
+    Message(const char *buffer, const int size);		// Will use existing allocated buffer and create packet from i
+    // Packet(const Packet & p); 					    // Will allocate new buffer but copy buffer from packet argument
 
-	explicit Message(const protocol::message_code m);                     // Used for when sending a packet that only contains a packet type (Ex. End of File Packet)
+	explicit Message(const protocol::message_code m);	// Used for when sending a packet that only contains a packet type (Ex. End of File Packet)
 
     void append(const protocol::message_code mt);
 
@@ -91,13 +89,15 @@ public:
 
 	std::stringstream stream_;
 
-    /*__int64 ProtocolMessage::get_file_size() const {
+    /*
+    __int64 ProtocolMessage::get_file_size() const {
 		return this->requestBody.file_size;
 	}
 
 	std::string ProtocolMessage::get_file_name() const {
 		this->requestBody.file_name;
-	}*/
+	}
+	*/
 
     // this two methods are used to decode a single packet
     void compute_packet_type();

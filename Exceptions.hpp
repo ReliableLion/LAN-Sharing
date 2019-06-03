@@ -43,9 +43,15 @@ public:
 	explicit FileTransmissionException(const int error) : runtime_error("Problem with file transmission Exception: " + error) {}
 };
 
-class SocketException : public std::runtime_error {
+class SocketException : public std::exception {
 public:
-    explicit SocketException(const int error): runtime_error(("Problem with socket Exception: " + error)) {}
+	int get_error_code() {
+		return error_;
+	}
+
+	explicit SocketException(const int error) : error_(error) {};
+private:
+	int error_;
 };
 
 class FileOpenException : public std::exception {
@@ -72,6 +78,8 @@ class SocketBufferException : public std::exception {
 public:
 	SocketBufferException(std::string msg) : user_msg_(msg) {};
 
+	SocketBufferException() : user_msg_("Socket buffer exception") {};
+
 	const char *what() const throw() override {
 		return user_msg_.c_str();
     }
@@ -82,12 +90,17 @@ private:
 
 class ConnectionCloseException : public std::exception {
 public:
-    virtual const char *waht() const throw() {
+    virtual const char *what() const throw() {
         return "connection has been closed";
     }
 };
 
-class WindowsFileHandlerException : public std::runtime_error {
+class WindowsFileHandlerException {
 public:
-	explicit WindowsFileHandlerException(const std::string file_name): runtime_error("Cannot open: " + file_name)  {}
+	WindowsFileHandlerException(const std::string file_name)  { std::cout << "Error while opening: " << file_name << std::endl; return;}
+};
+
+class PacketFormatException : public std::runtime_error {
+public:
+	explicit PacketFormatException() : runtime_error("impossible to decode the message") {};
 };

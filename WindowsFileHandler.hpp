@@ -18,7 +18,7 @@ public:
 
 	~WindowsFileHandler();
 
-	WindowsFileHandler::WindowsFileHandler(WindowsFileHandler&& source) noexcept {
+	WindowsFileHandler(WindowsFileHandler&& source) noexcept {
 		this->file_handle_ = source.file_handle_;
 		this->filename_ = source.filename_;
 		this->file_dir_ = source.file_dir_;

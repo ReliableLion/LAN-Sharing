@@ -1,40 +1,49 @@
 #pragma once
 
 #include <cstring>
+
 #include "Constants.hpp"
 
 class SocketBuffer {
 protected:
-    char *buffer_;
-    const int MAX_BUFF_ = CHUNK;
-    int current_size_;
+    char *buffer_;		
+	char *read_ptr_;
+	unsigned int buffer_size_;
+	unsigned int read_bytes_;
+	const unsigned int MAX_BUFF_ = CHUNK;
 public:
-	virtual ~SocketBuffer() = default;
-	
-	SocketBuffer(): current_size_(0) { buffer_ = new char[MAX_BUFF_];};
+	SocketBuffer();
+
+	~SocketBuffer();
 
     void add(const char *data, int size);
 
+	void replace(const char *data, int size);
+
+	char *read();
+
+	void update_read_ptr(int size);
+
+	void read_all_bytes();
+
     void clear();
 
-    void replace(const char *data, int size);
-
-    virtual char *get_remaining_data();
+	int get_remaining_bytes();
 
     int get_size() const;
 
     int get_max_size() const;
 };
 
-
+/*
 class SendSocketBuffer : public SocketBuffer {
 private:
-    int send_position_;
-    char *remaining_data_buffer_;
+    unsigned int bytes_sent_;		// number of bytes already sent 
+    char *send_ptr_;				// variable that point to the first byte to be sent
 public:
-    SendSocketBuffer() : SocketBuffer(), send_position_(0) { remaining_data_buffer_ = buffer_; };
+    SendSocketBuffer() : SocketBuffer(), bytes_sent_(0) { send_ptr_ = buffer_; };
 
-    void send(int n);
+    void send(int size);
 
     char *get_remaining_data() override;
 
@@ -42,3 +51,31 @@ public:
 
     int get_remaining_bytes() const;
 };
+
+class RecvSocketBuffer : public SocketBuffer {
+private: 
+	unsigned int bytes_received_;	// number of bytes received
+	char *recv_ptr_;				// variable that points to the first availale location to be wrote
+public:	
+	RecvSocketBuffer() : SocketBuffer(), bytes_received_(0) { recv_ptr_ = buffer_; };
+
+	void receive(const char *data, int size);
+
+	int get_bytes_received();
+};
+
+class SRSocketBuffer : public SocketBuffer {
+private:
+	unsigned int bytes_received_;
+	unsigned int bytes_sent_;
+	char *recv_ptr_;
+	char *send_ptr_;
+
+public:
+	SRSocketBuffer();
+
+	void receive(int size);
+	void send(char *data, int size);
+	int get_bytes_received();
+	int get_bytes_sent();
+};*/

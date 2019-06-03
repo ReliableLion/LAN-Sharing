@@ -3,6 +3,7 @@
 #include "Constants.hpp"
 #include <map>
 #include <string>
+#include "User.hpp"
 
 // link with Ws2_32.lib
 #pragma comment (lib, "Ws2_32.lib")
@@ -29,7 +30,7 @@ namespace udp_service {
 
         void send_broadcast(const char *message);
 
-        map<string, string> get_online_users();
+        map<string, user> get_online_users();
 
         ~UdpClient();
 

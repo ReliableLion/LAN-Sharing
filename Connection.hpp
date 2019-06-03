@@ -20,35 +20,38 @@ namespace connection {
 
 		char *receive_buffer_;
 
-        // definition of the private methods
-        size_t readline_unbuffered(char *vptr, int maxlen) const;
+        size_t readline_unbuffered(char *vptr, int maxlen);
 
-        int read_select(char *read_buffer, int size) const;
+        int read_select(char *read_buffer, int size);
 
     public:
         TcpConnection(const std::string host, const int port);
 
-        TcpConnection(SOCKET socket, SOCKADDR_IN socket_address);
+        TcpConnection(SOCKET connected_socket, SOCKADDR_IN remote_address);
 
 		~TcpConnection();
 
         void close_connection() const;
 
-        void print_endpoint_info() const;
-
         bool read_data(std::shared_ptr<SocketBuffer> buffer);
 
-        bool send_data(std::shared_ptr<SendSocketBuffer> buffer) const;
+        bool send_data(std::shared_ptr<SocketBuffer> buffer);
 
-		bool read_data2(int size);
+		bool read_n_data(std::shared_ptr<SocketBuffer> buffer, int n);
 
-		char* getReceiveBuffer();
+		// bool read_data2(int size);
 
-        bool read_line(std::shared_ptr<SocketBuffer> buffer) const;
+		// char* getReceiveBuffer();
+
+        bool read_line(std::shared_ptr<SocketBuffer> buffer);
+
+		bool get_connection_status();
+
+		void print_endpoint_info() const;
 
 		SOCKET get_handle_socket();
     };
 
     // definition of the connection pointer type
-    typedef std::shared_ptr<TcpConnection> conn_ptr;
+    typedef std::shared_ptr<TcpConnection> connection_ptr;
 }

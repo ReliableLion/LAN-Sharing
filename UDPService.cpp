@@ -4,6 +4,7 @@
 #include <chrono>
 #include <iphlpapi.h>
 #include <iostream>
+#include "User.hpp"
 #pragma comment(lib, "IPHLPAPI.lib")
 
 #define MALLOC(x) HeapAlloc(GetProcessHeap(), 0, (x))
@@ -230,9 +231,9 @@ void UdpClient::send_broadcast(const char* message) {
 }
 
 //Todo Move this method to Discovery.cpp
-map<string, string> UdpClient::get_online_users() {
+map<string, user> UdpClient::get_online_users() {
 
-	map<string, string> online_users;
+	map<string, user> online_users;
 	char client_address[INET_ADDRSTRLEN];
 
 	struct timeval tval;
@@ -275,7 +276,7 @@ map<string, string> UdpClient::get_online_users() {
 
 				inet_ntop(AF_INET, &(server_address_struct_.sin_addr), client_address, INET_ADDRSTRLEN);
 
-				online_users.insert(make_pair(string(username), client_address));
+				online_users.insert(make_pair(string(username), user(username, client_address)));
 			}
 
 			if (n > (MAXBUFL))

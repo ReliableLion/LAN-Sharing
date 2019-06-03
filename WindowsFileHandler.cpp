@@ -10,22 +10,20 @@ WindowsFileHandler::WindowsFileHandler(const std::string path) : file_path_(path
 WindowsFileHandler::~WindowsFileHandler() { close_file(); }
 
 bool WindowsFileHandler::open_file() {
-
-	if ((file_handle_ = CreateFile(file_path_.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, nullptr)) != INVALID_HANDLE_VALUE)
-		return true;
-
-	return false;
+	return (file_handle_ = CreateFile(file_path_.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+	                                  FILE_ATTRIBUTE_READONLY | FILE_FLAG_SEQUENTIAL_SCAN, nullptr)) != INVALID_HANDLE_VALUE;
 }
 
 void WindowsFileHandler::close_file() const {
 	if (file_handle_ != INVALID_HANDLE_VALUE) {
 		try {
 			CloseHandle(file_handle_);
-		} catch(std::exception e) {
+			std::cout << "File chiuso." << std::endl;
+		} catch(std::exception &e) {
 			std::cout << e.what() << "ERROR CLOSE FILE" << std::endl;
 		}
-	} else
-		std::cout << "WINDOWS FILE HANDLE INVALID" << std::endl;
+	} /*else
+		std::cout << "WINDOWS FILE HANDLE INVALID" << std::endl;*/
 }
 
 void WindowsFileHandler::read_file(char *buffer, std::size_t size) {

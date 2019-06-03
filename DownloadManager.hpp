@@ -10,9 +10,9 @@
 #include "Connection.hpp"
 #include "Message.hpp"
 
-typedef struct {
+typedef struct download_struct {
     request_struct req;
-    connection::conn_ptr conn;
+    connection::connection_ptr conn;
 } download_struct;
 
 class DownloadManager {
@@ -24,22 +24,26 @@ class DownloadManager {
     ConcurrentQueue<download_struct> small_file_q_;
     std::mutex mtx_b_;
     std::mutex mtx_s_;
-    std::atomic<bool> is_terminated_;
-    std::condition_variable cv_b_, cv_s_;
+    std::atomic<bool> is_terminated_;					
+    std::condition_variable cv_b_, cv_s_;						// conditional variable for big and small queue 
 
-    // file variables
-	// TODO qeusta variabile deve essere settata dal'esterno per definire la cartella dove scaricare il file
-	std::string path_;
+	const std::string class_name = "DownloadManager";
+
+	std::string path_ = TEST_PATH;
 
     const std::string TEMP_PATH_ = TEMP_PATH;
 
-    void process_big_file();
+    void process_big_file(int thread_id);
 
-    void process_small_file();
+    void process_small_file(int thread_id);
 
-	static bool download_file(download_struct request, TemporaryFile &temporary_file);
+	void process_file(download_struct req, int thread_id);
 
-	static bool copy_file(TemporaryFile &temporary_file, FileHandler &destination_file);
+	bool download_file(download_struct request, TemporaryFile &temporary_file);
+
+	bool copy_file(TemporaryFile &temporary_file, FileHandler &destination_file);
+
+	bool send_response(int left_bytes, download_struct request);
 
 public:
     DownloadManager();
@@ -48,7 +52,7 @@ public:
 
     void terminate_service();
 
-    bool insert_small_file(request_struct request, connection::conn_ptr connection);
+    bool insert_small_file(request_struct request, connection::connection_ptr connection);
 
-    bool insert_big_file(request_struct request, connection::conn_ptr connection);
+    bool insert_big_file(request_struct request, connection::connection_ptr connection);
 };

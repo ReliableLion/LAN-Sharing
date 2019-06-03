@@ -3,16 +3,12 @@
 #include <vector>
 #include "RequestHandler.hpp"
 #include "WindowsFileHandler.hpp"
-#include "PacketManager.hpp"
-
+#include "PacketDispatcher.hpp"
 
 struct FileRequest;
 
 class UploadManager {
 
-	//std::vector<std::thread> thread_pool_;
-
 public:
-	void upload_file(std::shared_ptr<FileRequest>, WindowsFileHandler, PacketManager);
-	bool upload(std::shared_ptr<FileRequest>, WindowsFileHandler);
+	static bool upload_file(std::shared_ptr<FileRequest>, WindowsFileHandler, PacketDispatcher);
 };

@@ -1,7 +1,8 @@
-#include "Message.hpp"
-#include "Exceptions.hpp"
 #include <sstream>
 #include <iostream>
+
+#include "Message.hpp"
+#include "Exceptions.hpp"
 #include "WindowsFileHandler.hpp"
 
 Message::Message() : message_body_(""), message_size_(0) {}
@@ -50,8 +51,6 @@ void Message::clear() { m_buffer_.clear(); }
 /**********************/
 /* 	DISCOVERY MESSAGE */
 /**********************/
-
-
 
 std::string DiscoveryMessage::get_packet_type() {
 
@@ -115,12 +114,11 @@ ProtocolMessage::ProtocolMessage(const protocol::message_code message_code): err
 ProtocolMessage::ProtocolMessage(const protocol::error_code error) {
     this->message_code_ = protocol::err;
     this->error_code_ = error;
-
 	prepare_out_packet();
 }
 
-/**
- * This method compute the data contained in a packate which type is SEND
+/*
+ * This method compute the data contained in a packet which type is SEND
  */
 bool ProtocolMessage::compute_send_request() {
 
@@ -170,12 +168,13 @@ void ProtocolMessage::compute_packet_type() {
         if (m_buffer_.empty() && !stream_.str().find("\r\n")) message_code_ = protocol::undefined;
 
 		// Clean the stream
-		std::string message;
-		stream_ << m_buffer_.data();
-
-		std::getline(stream_, message, ' ');
+		std::string message = stream_.str().substr(0, 4);
 
         message_code_ = protocol::MessageType::get_message_type(message);
+
+		if(message_code_ == protocol::err) {
+			error_code_ = protocol::MessageType::get_error_type(stream_.str().substr(4, m_buffer_.size()));
+		}
     }
     catch (std::exception &e) {
 		std::cout << "EXCEPTION MESSAGE: " << e.what() << std::endl;
