@@ -122,7 +122,7 @@ void DownloadManager::process_big_file(int thread_id) {
 	std::unique_lock<std::mutex> ul(mtx_b_, std::defer_lock);
 	auto exit = false;
 
-    while (exit) {
+    while (!exit) {
         ul.lock();
 
         cv_b_.wait(ul, [this] {
@@ -133,7 +133,7 @@ void DownloadManager::process_big_file(int thread_id) {
         if (is_terminated_.load()) 
 			exit = true;
         else
-			small_file_q_.pop_element(big_file_req);
+			big_file_q_.pop_element(big_file_req);
 
 		// release the lock 
         ul.unlock();
@@ -162,7 +162,6 @@ void DownloadManager::process_file(download_struct file_req, int thread_id) {
 		// copy the file into the destination file
 		if (!copy_file(temporary_file, destination_file)) {
 			destination_file.remove_file();
-			
 		} 
 
 		//std::cout << "[Thread id " << thread_id << "] " << class_name << ": file " << filename << " downloaded correctly" << std::endl;
@@ -242,6 +241,9 @@ bool DownloadManager::copy_file(TemporaryFile &temporary_file, FileHandler &dest
 
 	temporary_file.open_file(read);
     destination_file.open_file(write);
+
+	std::cout << temporary_file.get_filename() << std::endl;
+	std::cout << destination_file.get_filename() << std::endl;
 
 	bool result;
 

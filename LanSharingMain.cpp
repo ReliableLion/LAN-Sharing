@@ -26,8 +26,8 @@ int main(int argc, char* argv[]) {
 		MessageBoxA(0, "Winsock startup failed", "Error", MB_OK | MB_ICONERROR);
 		exit(0);
 	}
-	//testServer();
-	test3();
+	testServer();
+	//test3();
 	return 0;
 }
 
@@ -66,29 +66,29 @@ void testServer() {
 
 void test3() {
 	RequestHandler req;
-	user alessandro = user("Alessandro Ianne", "192.168.1.9");
+	user alessandro = user("Alessandro Ianne", "192.168.1.102");
 
-	//auto request1 = user_request(alessandro,"C:\\Users\\Asus\\Downloads\\100MB.zip");
-	//auto request2 = user_request(alessandro,"C:\\Users\\Asus\\Downloads\\100MB_2.zip");
-	auto request3 = user_request(alessandro,"C:\\Users\\Asus\\Documents\\prova.txt");
+	auto request1 = user_request(alessandro,"C:\\Users\\utente pc\\test_project\\100MB.zip");
+	auto request2 = user_request(alessandro,"C:\\Users\\utente pc\\test_project\\100MB_2.zip");
+	auto request3 = user_request(alessandro,"C:\\Users\\utente pc\\test_project\\prova.txt");
 
-	//req.send_request(request1);
+	req.send_request(request1);
 
-	//req.send_request(request2);
+	req.send_request(request2);
 
 	req.send_request(request3);
 
-	//if(!req.is_terminated(request1)) {
-	//	cout << "Transferring of " << request1.file_name << " to " << request1.destination_user.username << " is not terminated" << endl;
-	//} else {
-	//	cout << "Transferring of " << request1.file_name << " to " << request1.destination_user.username << " terminated!" << endl;
-	//}
+	if(!req.is_terminated(request1)) {
+		cout << "Transferring of " << request1.file_name << " to " << request1.destination_user.username << " is not terminated" << endl;
+	} else {
+		cout << "Transferring of " << request1.file_name << " to " << request1.destination_user.username << " terminated!" << endl;
+	}
 
-	//if(!req.is_terminated(request2)) {
-	//	cout << "Transferring of " << request2.file_name << " to " << request2.destination_user.username << " is not terminated" << endl;
-	//} else {
-	//	cout << "Transferring of " << request2.file_name << " to " << request2.destination_user.username << " terminated!" << endl;
-	//}
+	if(!req.is_terminated(request2)) {
+		cout << "Transferring of " << request2.file_name << " to " << request2.destination_user.username << " is not terminated" << endl;
+	} else {
+		cout << "Transferring of " << request2.file_name << " to " << request2.destination_user.username << " terminated!" << endl;
+	}
 
 	if(!req.is_terminated(request3)) {
 		cout << "Transferring of " << request3.file_name << " to " << request3.destination_user.username << " is not terminated" << endl;
@@ -99,27 +99,27 @@ void test3() {
 
 	Sleep(10000);
 
-	//if(!req.is_terminated(request1)) {
-	//	cout << "Transferring of " << request1.file_name << " to " << request1.destination_user.username << " is not terminated" << endl;
-	//} else {
-	//	cout << "Transferring of " << request1.file_name << " to " << request1.destination_user.username << " terminated!" << endl;
+	if(!req.is_terminated(request1)) {
+		cout << "Transferring of " << request1.file_name << " to " << request1.destination_user.username << " is not terminated" << endl;
+	} else {
+		cout << "Transferring of " << request1.file_name << " to " << request1.destination_user.username << " terminated!" << endl;
 
-	//	if(req.get_result(request1))
-	//		cout << "Transferred correctly" << endl;
-	//	else
-	//		cout << "There was some problems" << endl;
-	//}
+		if(req.get_result(request1))
+			cout << "Transferred correctly" << endl;
+		else
+			cout << "There was some problems" << endl;
+	}
 
-	//if(!req.is_terminated(request2)) {
-	//	cout << "Transferring of " << request2.file_name << " to " << request2.destination_user.username << " is not terminated" << endl;
-	//} else {
-	//	cout << "Transferring of " << request2.file_name << " to " << request2.destination_user.username << " terminated!" << endl;
+	if(!req.is_terminated(request2)) {
+		cout << "Transferring of " << request2.file_name << " to " << request2.destination_user.username << " is not terminated" << endl;
+	} else {
+		cout << "Transferring of " << request2.file_name << " to " << request2.destination_user.username << " terminated!" << endl;
 
-	//	if(req.get_result(request2))
-	//		cout << "Transferred correctly" << endl;
-	//	else
-	//		cout << "There was some problems" << endl;
-	//}
+		if(req.get_result(request2))
+			cout << "Transferred correctly" << endl;
+		else
+			cout << "There was some problems" << endl;
+	}
 
 	if(!req.is_terminated(request3)) {
 		cout << "Transferring of " << request3.file_name << " to " << request3.destination_user.username << " is not terminated" << endl;
