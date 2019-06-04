@@ -6,6 +6,7 @@
 
 #include "Exceptions.hpp"
 #include "Connection.hpp"
+#pragma comment(lib, "Kernel32.lib")
 
 using namespace connection;
 using namespace std::chrono;
@@ -58,7 +59,9 @@ TcpConnection::TcpConnection(const std::string host, const int port) : alive_(tr
 
     freeaddrinfo(res0);
 
-	// allocate a receive buffer
+	// allocate a reading buffer
+	reading_buffer = new char[CHUNK];
+	// allocate a new buffer
 	receive_buffer_ = new char[CHUNK];
 }
 
@@ -246,6 +249,25 @@ void TcpConnection::select_connection() {
 		throw TimeoutException();
 }
 
+void TcpConnection::select_write_connection() {
+
+    struct timeval time;
+    FD_SET write_sock;
+
+    FD_ZERO(&write_sock);
+    FD_SET(sock_, &write_sock);
+
+    time.tv_sec = SEC_;
+    time.tv_usec = USEC_;
+
+    const int result = select(sock_ + 1, nullptr, &write_sock, nullptr, &time);
+
+    if (result == SOCKET_ERROR) 
+		throw SocketException(WSAGetLastError());
+    else if (result == 0) 
+		throw TimeoutException();
+}
+
 int TcpConnection::read_file(size_t file_size, TemporaryFile &temporary_file) {
 
 	auto left_bytes = static_cast<int>(file_size);
@@ -287,6 +309,54 @@ int TcpConnection::read_file(size_t file_size, TemporaryFile &temporary_file) {
 		<< duration.count() << " microseconds" << std::endl;
 
 	temporary_file.close_file();
+	return left_bytes;
+}
+
+int TcpConnection::send_file(HANDLE file_handle, DWORD file_size) {
+
+	int left_bytes = file_size, bytes_sent = 0, byte_to_read = 0;
+	DWORD bytes_read = 0;
+
+	select_write_connection();
+
+	SocketBuffer socket_buffer;
+
+	if (left_bytes < CHUNK)
+		byte_to_read = static_cast<long>(left_bytes);
+	else
+		byte_to_read = static_cast<long>(CHUNK);
+
+	while(left_bytes > 0) {
+
+		socket_buffer.rewind_buffer();
+
+		if(!ReadFile(file_handle, socket_buffer.get_buffer(), byte_to_read, &bytes_read, nullptr)) {
+			std::cout << "Some errors occurs while reading: " << GetLastError() << std::endl;
+			close_connection();
+			return left_bytes;
+		}
+
+		socket_buffer.bytes_read(static_cast<int>(bytes_read));
+
+		while(socket_buffer.get_remaining_bytes() != 0) {
+
+			if((bytes_sent = send(sock_, socket_buffer.get_buffer(), socket_buffer.get_remaining_bytes(), 0)) == SOCKET_ERROR) {
+				throw SocketException(WSAGetLastError());
+			}
+			if(bytes_sent == 0){
+				std::cout << "Connection closed by peer." << std::endl;
+				return 0;
+			}
+
+			socket_buffer.update_read_ptr(bytes_sent);
+		}
+
+		left_bytes -= bytes_sent;
+
+        if (left_bytes < CHUNK)
+			byte_to_read = static_cast<long>(left_bytes);
+	}
+
 	return left_bytes;
 }
 

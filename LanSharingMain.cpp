@@ -26,8 +26,8 @@ int main(int argc, char* argv[]) {
 		MessageBoxA(0, "Winsock startup failed", "Error", MB_OK | MB_ICONERROR);
 		exit(0);
 	}
-	 testServer();
-	//test3();
+	 //testServer();
+	test3();
 	return 0;
 }
 
@@ -66,11 +66,11 @@ void testServer() {
 
 void test3() {
 	RequestHandler req;
-	user alessandro = user("Alessandro Ianne", "192.168.1.102");
+	user alessandro = user("Alessandro Ianne", "192.168.1.9");
 
-	auto request1 = user_request(alessandro,"C:\\Users\\utente pc\\test_project\\100MB.zip");
-	auto request2 = user_request(alessandro,"C:\\Users\\utente pc\\test_project\\100MB_2.zip");
-	auto request3 = user_request(alessandro,"C:\\Users\\utente pc\\test_project\\prova.txt");
+	auto request1 = user_request(alessandro,"C:\\Users\\Asus\\Downloads\\100MB.zip");
+	auto request2 = user_request(alessandro,"c:\\users\\asus\\downloads\\100mb_2.zip");
+	auto request3 = user_request(alessandro,"c:\\users\\asus\\downloads\\prova.txt");
 
 	req.send_request(request1);
 

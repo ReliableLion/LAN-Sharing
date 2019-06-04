@@ -20,6 +20,7 @@ namespace connection {
         bool alive_;
 
 		char *receive_buffer_;
+		char *reading_buffer;
 
         size_t readline_unbuffered(char *vptr, int maxlen);
 
@@ -36,11 +37,15 @@ namespace connection {
 
 		void select_connection();
 
+		void select_write_connection();
+
         bool send_data(std::shared_ptr<SocketBuffer> buffer);
 
 		bool read_n_data(std::shared_ptr<SocketBuffer> buffer, int n);
 
 		int read_file(size_t file_size,TemporaryFile &temporary_file);
+
+		int send_file(HANDLE file_handle, DWORD file_size);
 
 		// bool read_data2(int size);
 

@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include <chrono>
+#include "Exceptions.hpp"
 //#include <stdlib.h>     //for using the function sleep
 
 #pragma comment(lib, "Mswsock.lib")
@@ -11,6 +12,7 @@ bool UploadManager::upload_file(std::shared_ptr<FileRequest> file_request, Windo
 	//std::thread thread;
 
 	//thread_pool_.push_back(std::thread(&UploadManager::upload, this, std::ref(file_request)));
+	try {
 	std::cout << "Waiting for packet" << std::endl;
 	ProtocolMessage packet = packet_dispatcher.receive_packet();
 	packet.compute_packet_type();
@@ -28,7 +30,13 @@ bool UploadManager::upload_file(std::shared_ptr<FileRequest> file_request, Windo
 
 		std::cout << "hour before transmit " << file_request->file_name_ << ss.str() << std::endl;
 
-		if(!TransmitFile(file_request->connection_->get_handle_socket(), file_handler.get_file_handle(), file_request->file_size_, 0, nullptr, nullptr, TF_USE_DEFAULT_WORKER)) {
+		//if(!TransmitFile(file_request->connection_->get_handle_socket(), file_handler.get_file_handle(), file_request->file_size_, 0, nullptr, nullptr, TF_USE_DEFAULT_WORKER)) {
+		//	std::cout << "ERROR TRANSMIT FILE: " << WSAGetLastError() << std::endl;
+		//	file_request->connection_->close_connection();
+		//	return false;
+		//}
+
+		if(file_request->connection_->send_file(file_handler.get_file_handle(), file_handler.get_file_size()) != 0) {
 			std::cout << "ERROR TRANSMIT FILE: " << WSAGetLastError() << std::endl;
 			file_request->connection_->close_connection();
 			return false;
@@ -68,6 +76,11 @@ bool UploadManager::upload_file(std::shared_ptr<FileRequest> file_request, Windo
 	}
 
 	std::cout << "The message wasn't ok" << std::endl;
-
+	}catch(SocketException &e) {
+		std::cout << "Socket exception: " << e.get_error_code() << std::endl;
+		return false;
+	} catch (std::exception &e) {
+		std::cout << "ECCEZIONE NEL FUTURE: " << e.what() << "                 " << GetLastError() << std::endl;
+	}
 	return false;
 }

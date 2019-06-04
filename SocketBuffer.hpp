@@ -20,7 +20,13 @@ public:
 
 	void replace(const char *data, int size);
 
+	void bytes_read(int bytes_read);
+
 	char *read();
+
+	char *get_buffer();
+
+	void rewind_buffer();
 
 	void update_read_ptr(int size);
 

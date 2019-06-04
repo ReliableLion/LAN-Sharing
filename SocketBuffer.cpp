@@ -41,6 +41,12 @@ void SocketBuffer::replace(const char *data, const int size) {
 	read_bytes_ = 0;
 }
 
+void SocketBuffer::bytes_read(int bytes_read) {
+	read_ptr_ = buffer_;
+	buffer_size_ = bytes_read;
+	read_bytes_ = 0;
+}
+
 void SocketBuffer::clear() {
     memset(buffer_, 0, MAX_BUFF_);
 	read_ptr_ = buffer_;
@@ -56,6 +62,10 @@ char *SocketBuffer::read() {
 	throw SocketBufferException(std::string("impossible to read more data than the buffer can"));
 }
 
+char* SocketBuffer::get_buffer() {
+	return read_ptr_;
+}
+
 void SocketBuffer::update_read_ptr(int size) {
 	if (size < 0)
 		return;
@@ -65,6 +75,10 @@ void SocketBuffer::update_read_ptr(int size) {
 
 	read_ptr_ += size;
 	read_bytes_ += size;
+}
+
+void SocketBuffer::rewind_buffer() {
+	read_ptr_ -= buffer_size_;
 }
 
 void SocketBuffer::read_all_bytes() {
