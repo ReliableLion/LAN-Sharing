@@ -113,18 +113,18 @@ bool TcpConnection::read_data(std::shared_ptr<SocketBuffer> buffer) {
 
 	// pay attenction because read select can throw an exception
 	int bytes_read = 0;
-	bytes_read = recv(sock_, buffer->get_buffer(), buffer->get_max_size(), 0);
+	bytes_read = recv(sock_, buffer->write_to_buffer(), buffer->get_max_size(), 0);
 
 	if (bytes_read == SOCKET_ERROR)
 		throw SocketException(WSAGetLastError());
 	else if (bytes_read == 0) {
 		alive_ = false;
 		return false;
-	} else if (bytes_read == 1 && buffer->get_buffer()[0] == '\0') {
+	} else if (bytes_read == 1 && buffer->read_to_buffer()[0] == '\0') {
 		std::cout << "the receive return an empty buffer" << std::endl;
 		return false;
 	} else {
-		buffer->bytes_read(bytes_read);
+		buffer->bytes_wrote(bytes_read);
 		return true;
 	}
 }
