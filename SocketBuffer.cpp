@@ -73,14 +73,6 @@ void SocketBuffer::clear() {
 	bytes_already_read = 0;
 }
 
-char *SocketBuffer::read() {
-	if (buffer_size_ != bytes_already_read) 
-		return read_ptr_;
-	
-	// throw a new buffer exception
-	throw SocketBufferException(std::string("impossible to read more data than the buffer can"));
-}
-
 char* SocketBuffer::read_from_buffer() {
 	return read_ptr_;
 }
@@ -105,72 +97,3 @@ int SocketBuffer::get_size() const {
 int SocketBuffer::get_remaining_bytes() {
 	return buffer_size_ - bytes_already_read;
 }
-
-/*
-	SendSoocketBuffer implementation
-*/
-
-/*void SendSocketBuffer::send(int size) {
-
-	if (size < 1)
-        return;
-
-	if (size > buffer_size_ || size > buffer_size_ - bytes_sent_) 
-		throw SocketBufferException(std::string("impossible to read more bytes than the buffer capacity"));
-   
-    send_ptr_ += size;
-    buffer_size_ += size;
-}
-
-int SendSocketBuffer::get_bytes_sent() const {
-    return bytes_sent_;
-}
-
-char *SendSocketBuffer::get_remaining_data() {
-    return send_ptr_;
-}
-
-int SendSocketBuffer::get_remaining_bytes() const {
-    return buffer_size_ - bytes_sent_;
-}*/
-
-/*
-	RecvSocketBuffer implementation 
-*/
-
-/*
-void RecvSocketBuffer::receive(const char *data, int size) {
-	add(data, size);
-}
-
-int RecvSocketBuffer::get_bytes_received() {
-	return bytes_received_;
-}*/
-
-/*
-	SRSocketBuffer implementation
-*/
-/*
-SRSocketBuffer::SRSocketBuffer() : bytes_received_(0), bytes_sent_(0) {
-	recv_ptr_ = buffer_;
-	send_ptr_ = buffer_;
-}
-
-void SRSocketBuffer::receive(int size) {
-
-	if (size < 1)
-		return;
-
-}
-
-void SRSocketBuffer::send(char *data, int size) {
-
-}
-
-int SRSocketBuffer::get_bytes_received() {
-	return bytes_received_;
-}
-
-int SRSocketBuffer::get_bytes_sent() {
-	return bytes_sent_;
-} */

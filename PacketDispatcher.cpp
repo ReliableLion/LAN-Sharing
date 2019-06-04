@@ -26,7 +26,7 @@ ProtocolMessage PacketDispatcher::receive_packet() const {
 	}
 
     // check if the buffer finish with /r/n
-    request_packet.append(recv_buffer_->read(), recv_buffer_->get_remaining_bytes());
+    request_packet.append(recv_buffer_->read_from_buffer(), recv_buffer_->get_remaining_bytes());
 	recv_buffer_->read_all_bytes();
 
 	// compute the message type and the message body

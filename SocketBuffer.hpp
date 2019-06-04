@@ -24,8 +24,6 @@ public:
 
 	void bytes_wrote(int bytes_wrote);
 
-	char *read();
-
 	char *read_from_buffer();
 	
 	char* write_to_buffer();
