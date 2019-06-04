@@ -120,7 +120,7 @@ bool TcpConnection::read_data(std::shared_ptr<SocketBuffer> buffer) {
 	else if (bytes_read == 0) {
 		alive_ = false;
 		return false;
-	} else if (bytes_read == 1 && buffer->read_to_buffer()[0] == '\0') {
+	} else if (bytes_read == 1 && buffer->read_from_buffer()[0] == '\0') {
 		std::cout << "the receive return an empty buffer" << std::endl;
 		return false;
 	} else {
@@ -142,7 +142,7 @@ bool TcpConnection::send_data(std::shared_ptr<SocketBuffer> buffer) {
 	int bytes_sent;
 
     while (buffer->get_remaining_bytes() != 0) {
-        bytes_sent = send(sock_, buffer->read(), buffer->get_remaining_bytes(), 0);
+        bytes_sent = send(sock_, buffer->read_from_buffer(), buffer->get_remaining_bytes(), 0);
 
 		if (bytes_sent == 0) {
 			alive_ = false;
@@ -150,7 +150,7 @@ bool TcpConnection::send_data(std::shared_ptr<SocketBuffer> buffer) {
 		} else if (bytes_sent == SOCKET_ERROR) 
 			throw SocketException(WSAGetLastError());
 
-		buffer->update_read_ptr(bytes_sent);
+		buffer->bytes_read(bytes_sent);
     }
 
     return true;
@@ -312,7 +312,7 @@ int TcpConnection::send_file(HANDLE file_handle, DWORD file_size) {
 
 		while(socket_buffer.get_remaining_bytes() != 0) {
 
-			if((bytes_sent = send(sock_, socket_buffer.read_to_buffer(), socket_buffer.get_remaining_bytes(), 0)) == SOCKET_ERROR) {
+			if((bytes_sent = send(sock_, socket_buffer.read_from_buffer(), socket_buffer.get_remaining_bytes(), 0)) == SOCKET_ERROR) {
 				throw SocketException(WSAGetLastError());
 			}
 			if(bytes_sent == 0){

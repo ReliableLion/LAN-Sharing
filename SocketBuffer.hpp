@@ -26,11 +26,9 @@ public:
 
 	char *read();
 
-	char *read_to_buffer();
+	char *read_from_buffer();
 	
 	char* write_to_buffer();
-
-	void update_read_ptr(int size);
 
 	void read_all_bytes();
 

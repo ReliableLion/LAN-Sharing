@@ -46,8 +46,8 @@ void SocketBuffer::bytes_wrote(int bytes_wrote) {
 	if (bytes_wrote < 0)
 		return;
 
-	if (bytes_wrote > buffer_size_)
-		throw SocketBufferException(std::string("buffer overflow"));
+	if (bytes_wrote > CHUNK)
+		throw SocketBufferException(std::string("Buffer overflow! Too many bytes wrote!"));
 
 	read_ptr_ = buffer_;
 	buffer_size_ = bytes_wrote;
@@ -60,7 +60,7 @@ void SocketBuffer::bytes_read(int bytes_read) {
 		return;
 
 	if (bytes_read > buffer_size_ - bytes_already_read)
-		throw SocketBufferException(std::string("buffer overflow"));
+		throw SocketBufferException(std::string("Buffer overflow! Too many bytes read!"));
 
 	read_ptr_ += bytes_read;
 	bytes_already_read += bytes_read;
@@ -81,23 +81,12 @@ char *SocketBuffer::read() {
 	throw SocketBufferException(std::string("impossible to read more data than the buffer can"));
 }
 
-char* SocketBuffer::read_to_buffer() {
+char* SocketBuffer::read_from_buffer() {
 	return read_ptr_;
 }
 
 char* SocketBuffer::write_to_buffer() {
 	return buffer_;
-}
-
-void SocketBuffer::update_read_ptr(int size) {
-	if (size < 0)
-		return;
-
-	if (size > buffer_size_ - bytes_already_read)
-		throw SocketBufferException(std::string("buffer overflow"));
-
-	read_ptr_ += size;
-	bytes_already_read += size;
 }
 
 void SocketBuffer::read_all_bytes() {
