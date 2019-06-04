@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
 		MessageBoxA(0, "Winsock startup failed", "Error", MB_OK | MB_ICONERROR);
 		exit(0);
 	}
-	testServer();
+	 testServer();
 	//test3();
 	return 0;
 }

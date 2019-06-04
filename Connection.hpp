@@ -7,6 +7,7 @@
 
 #include "Constants.hpp"
 #include "SocketBuffer.hpp"
+#include "FileHandler.hpp"
 
 namespace connection {
 
@@ -22,8 +23,6 @@ namespace connection {
 
         size_t readline_unbuffered(char *vptr, int maxlen);
 
-        int read_select(char *read_buffer, int size);
-
     public:
         TcpConnection(const std::string host, const int port);
 
@@ -35,9 +34,13 @@ namespace connection {
 
         bool read_data(std::shared_ptr<SocketBuffer> buffer);
 
+		void select_connection();
+
         bool send_data(std::shared_ptr<SocketBuffer> buffer);
 
 		bool read_n_data(std::shared_ptr<SocketBuffer> buffer, int n);
+
+		int read_file(size_t file_size,TemporaryFile &temporary_file);
 
 		// bool read_data2(int size);
 

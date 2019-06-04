@@ -151,7 +151,6 @@ void DownloadManager::process_file(download_struct file_req, int thread_id) {
 
 		// download the file and store it into the temp folder
 		if (!download_file(file_req, temporary_file)) {
-			//std::cout << "[Thread id " << thread_id << "] " << class_name << ": impossible to complete the file download..." << std::endl;
 			ConcurrentStreamPrint::print_data(thread_id, class_name, "impossible to complete the file download...");
 			return;
 		}
@@ -164,59 +163,31 @@ void DownloadManager::process_file(download_struct file_req, int thread_id) {
 			destination_file.remove_file();
 		} 
 
-		//std::cout << "[Thread id " << thread_id << "] " << class_name << ": file " << filename << " downloaded correctly" << std::endl;
-		ConcurrentStreamPrint::print_data(thread_id, class_name, "downloaded correctly");
+		std::stringstream ss;
+		ss << filename << " downloaded correctly";
+
+		ConcurrentStreamPrint::print_data(thread_id, class_name, ss.str());
 	}
 	catch (SocketException &se) {
 		UNREFERENCED_PARAMETER(se);
-		//std::cout << "[Thread id " << thread_id << "] " << class_name << "Socket Exception" << std::endl;
 		ConcurrentStreamPrint::print_data(thread_id, class_name, "Socket Exception");
 	}
 	catch (TimeoutException &te) {
 		UNREFERENCED_PARAMETER(te);
-		//std::cout << "[Thread id " << thread_id << "] " << class_name << ": Timeout Exception" << std::endl;
 		ConcurrentStreamPrint::print_data(thread_id, class_name, "Timeout Exception");
 	}
 	catch (FileOpenException &fwe) {
 		UNREFERENCED_PARAMETER(fwe);
-		//std::cout << "[Thread id " << thread_id << "] " << class_name << ": File Open Exception" << std::endl;
 		ConcurrentStreamPrint::print_data(thread_id, class_name, "File Open Exception");
 	}
 	catch (FileWriteException & fe) {
 		UNREFERENCED_PARAMETER(fe);
-		// std::cout << "[Thread id " << thread_id << "] " << class_name << ": File Write Exception" << std::endl;
 		ConcurrentStreamPrint::print_data(thread_id, class_name, "File Write Exception");
 	}
 }
 
 bool DownloadManager::download_file(download_struct request,  TemporaryFile &temporary_file) {
-
-	auto left_bytes = static_cast<int>(request.req.file_size_);
-	auto bytes_to_download = 0;
-	auto connection_closed = false;
-
-	std::shared_ptr<SocketBuffer> buffer = std::make_shared<SocketBuffer>();
-    const auto buffer_max_size = buffer->get_max_size();
-
-    temporary_file.open_file(write);										// open the two files, if an exception is throw by the program then the file is closed by the destructor
-
-    while (left_bytes != 0 && !connection_closed) {
-           
-		if (left_bytes >= buffer_max_size) {								// if the remaining data are greater than the max size of the buffer then the bytes to download are max buff lengh
-			bytes_to_download = buffer_max_size;
-		} else {
-            bytes_to_download = left_bytes;									// if the remaining data are smaller than the max, set the remaining bytes value
-		}
-
-        if (request.conn->read_data(buffer)) {			
-			left_bytes -= buffer->get_size();
-            temporary_file.write_data(buffer);
-		} else {
-			connection_closed = request.conn->get_connection_status();
-		}
-    } 
-
-	temporary_file.close_file();
+	int left_bytes = request.conn->read_file(request.req.file_size_, temporary_file);
 	return send_response(left_bytes, request);
 }
 
@@ -242,8 +213,8 @@ bool DownloadManager::copy_file(TemporaryFile &temporary_file, FileHandler &dest
 	temporary_file.open_file(read);
     destination_file.open_file(write);
 
-	std::cout << temporary_file.get_filename() << std::endl;
-	std::cout << destination_file.get_filename() << std::endl;
+	//std::cout << temporary_file.get_filename() << std::endl;
+	//std::cout << destination_file.get_filename() << std::endl;
 
 	bool result;
 

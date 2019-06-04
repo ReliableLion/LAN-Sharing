@@ -2,11 +2,13 @@
 #include <fstream>
 #include <string>
 #include <cstdint>
+#include <chrono>
 
 #include "Exceptions.hpp"
 #include "Connection.hpp"
 
 using namespace connection;
+using namespace std::chrono;
 
 TcpConnection::TcpConnection(const std::string host, const int port) : alive_(true) {
     int n;
@@ -108,7 +110,7 @@ bool TcpConnection::read_data(std::shared_ptr<SocketBuffer> buffer) {
 
 	// pay attenction because read select can throw an exception
 	int bytes_read = 0;
-	bytes_read = read_select(receive_buffer_, buffer->get_max_size());
+	bytes_read = recv(sock_, receive_buffer_, buffer->get_max_size(), 0);
 
 	if (bytes_read == SOCKET_ERROR)
 		throw SocketException(WSAGetLastError());
@@ -156,30 +158,32 @@ bool TcpConnection::read_line(std::shared_ptr<SocketBuffer> buffer) {
 	//throw SocketException(15);
 
     // remember to check if the buffer ends with /r/n
-	int read_bytes = 0;
+	// int read_bytes = 0;
 
 	// auto *local_buffer = new char[buffer->get_max_size()];
 	// memset(local_buffer, 0, static_cast<std::size_t> (buffer->get_max_size()));
 
-    struct timeval time;
-    FD_SET read_sock;
+ //   struct timeval time;
+ //   FD_SET read_sock;
 
-    FD_ZERO(&read_sock);
-    FD_SET(sock_, &read_sock);
+ //   FD_ZERO(&read_sock);
+ //   FD_SET(sock_, &read_sock);
 
-    time.tv_sec = SEC_;
-    time.tv_usec = USEC_;
+ //   time.tv_sec = SEC_;
+ //   time.tv_usec = USEC_;
 
-    const auto result = select(sock_ + 1, &read_sock, nullptr, nullptr, &time);
+ //   const auto result = select(sock_ + 1, &read_sock, nullptr, nullptr, &time);
 
-	if (result == SOCKET_ERROR) {
-		// int i = WSAGetLastError();
-		throw SocketException(WSAGetLastError());
-	}
-    else if (result == 0) 
-		throw TimeoutException();
-	else 
-		read_bytes = readline_unbuffered(receive_buffer_, buffer->get_max_size());
+	//if (result == SOCKET_ERROR) {
+	//	// int i = WSAGetLastError();
+	//	throw SocketException(WSAGetLastError());
+	//}
+ //   else if (result == 0) 
+	//	throw TimeoutException();
+	//else 
+	select_connection();
+
+	int read_bytes = readline_unbuffered(receive_buffer_, buffer->get_max_size());
 
 	if (read_bytes == 0) {
 		alive_ = false;
@@ -224,7 +228,7 @@ size_t TcpConnection::readline_unbuffered(char *vptr, const int maxlen) {
     return n;
 }
 
-int TcpConnection::read_select(char *read_buffer, const int size) {
+void TcpConnection::select_connection() {
     struct timeval time;
     FD_SET read_sock;
 
@@ -237,11 +241,53 @@ int TcpConnection::read_select(char *read_buffer, const int size) {
     const int result = select(sock_ + 1, &read_sock, nullptr, nullptr, &time);
 
     if (result == SOCKET_ERROR) 
-		throw SocketException(1);
+		throw SocketException(WSAGetLastError());
     else if (result == 0) 
 		throw TimeoutException();
-	else
-		return recv(sock_, read_buffer, size, 0);
+}
+
+int TcpConnection::read_file(size_t file_size, TemporaryFile &temporary_file) {
+
+	auto left_bytes = static_cast<int>(file_size);
+	auto bytes_to_download = 0;
+	auto connection_closed = false;
+
+	std::shared_ptr<SocketBuffer> buffer = std::make_shared<SocketBuffer>();
+	const auto buffer_max_size = buffer->get_max_size();
+
+	select_connection();
+
+	temporary_file.open_file(write);										// open the two files, if an exception is throw by the program then the file is closed by the destructor
+
+	auto start = high_resolution_clock::now();
+
+	while (left_bytes != 0 && !connection_closed) {
+
+		if (left_bytes >= buffer_max_size) {								// if the remaining data are greater than the max size of the buffer then the bytes to download are max buff lengh
+			bytes_to_download = buffer_max_size;
+		}
+		else {
+			bytes_to_download = left_bytes;									// if the remaining data are smaller than the max, set the remaining bytes value
+		}
+
+		if (read_data(buffer)) {
+			left_bytes -= buffer->get_size();
+			temporary_file.write_data(buffer);
+		}
+		else {
+			connection_closed = get_connection_status();
+		}
+	}
+
+	auto stop = high_resolution_clock::now();
+
+	auto duration = duration_cast<microseconds>(stop - start);
+
+	std::cout << "Time taken by function: "
+		<< duration.count() << " microseconds" << std::endl;
+
+	temporary_file.close_file();
+	return left_bytes;
 }
 
 bool TcpConnection::get_connection_status() { return alive_; }
