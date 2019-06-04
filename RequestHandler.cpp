@@ -24,15 +24,10 @@ bool RequestHandler::send_request(const user_request destination_user) {
 
 		auto tcp_connection = std::make_shared<connection::TcpConnection>(destination_user.destination_user.client_address, port2);
 
-		// TODO packet manager must be changed and initialized here every time
 		PacketDispatcher packet_dispatcher(tcp_connection);
 	
-	//std::string port = std::to_string(DEFAULT_LISTEN_PORT);
-
-	//if (tcp_connection.create_connection(server, port.c_str())) {
 		auto file_request = std::make_shared<FileRequest>();
 
-		//FileRequest file_request;
 		file_request->file_name_ = file_handler.get_file_path();
 		file_request->destination_user = destination_user.destination_user;
 		file_request->file_size_ = file_handler.get_file_size();
@@ -49,21 +44,17 @@ bool RequestHandler::send_request(const user_request destination_user) {
 
 			requests_.insert(std::make_pair(destination_user, std::async(std::launch::async, &UploadManager::upload_file, file_request, std::move(file_handler), packet_dispatcher)));
 
-			//upload_manager_->upload_file(file_request, std::move(file_handler), packet_manager);
 			return true;
 		}
-		// TODO call upload manager to handle the request in another thread
 
 		return false;
+
 	} catch (SocketException &e) {
 		std::cout << "Socket exception " << e.what() << std::endl;
 		return false;
 	} catch(WindowsFileHandlerException &e) {
 		return false;
 	}
-	//}
-
-	//return false;
 }
 
 
@@ -84,8 +75,6 @@ bool RequestHandler::is_terminated(user_request destination_user) {
 	}
 
 	if (result != requests_.end()) {
-	  // found element. it is an iterator to the first matching element.
-	  // if you really need the index, you can also get it:
 	  return (result->second.wait_for(std::chrono::steady_clock::duration::zero())) == std::future_status::ready;
 	}
 

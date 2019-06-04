@@ -66,11 +66,11 @@ void testServer() {
 
 void test3() {
 	RequestHandler req;
-	user alessandro = user("Alessandro Ianne", "192.168.1.9");
+	user alessandro = user("Alessandro Ianne", "192.168.1.14");
 
 	auto request1 = user_request(alessandro,"C:\\Users\\Asus\\Downloads\\100MB.zip");
-	auto request2 = user_request(alessandro,"c:\\users\\asus\\downloads\\100mb_2.zip");
-	auto request3 = user_request(alessandro,"c:\\users\\asus\\downloads\\prova.txt");
+	auto request2 = user_request(alessandro,"c:\\users\\Asus\\Downloads\\100mb_2.zip");
+	auto request3 = user_request(alessandro,"c:\\users\\Asus\\Downloads\\prova.txt");
 
 	req.send_request(request1);
 

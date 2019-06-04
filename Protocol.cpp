@@ -22,11 +22,13 @@ std::string protocol::MessageType::get_message_type(const protocol::message_code
 
 protocol::error_code protocol::MessageType::get_error_type(const std::string error_code) {
 
-	if (ERROR_TYPE_MAP.at(error_code) == send)
-		return err_1;
-		// TODO check the error to be returned
-	return err_1;
+	auto it = ERROR_TYPE_MAP.find(error_code);
 
+	if(it != ERROR_TYPE_MAP.end()) {
+		return ERROR_TYPE_MAP.find(error_code)->second;
+	}
+
+	return err_1;
 }
 
 std::string protocol::MessageType::get_error_type(const protocol::error_code error_code) {

@@ -65,6 +65,7 @@ public:
 };
 
 class ProtocolMessage : public Message {
+
     protocol::message_code message_code_;
     protocol::error_code error_code_;
     request_struct request_body_;
@@ -88,6 +89,30 @@ public:
 	} ;                                                                   // This is used to create an empty RequestMessage, which it's supposed will be received
 
 	std::stringstream stream_;
+
+	ProtocolMessage& ProtocolMessage::operator=(ProtocolMessage&& source) {
+		if(this != &source) {
+			this->request_body_ = source.request_body_;
+			this->error_code_ = source.error_code_;
+			this->message_code_ = source.message_code_;
+			this->time_stamp_ = source.time_stamp_;
+			this->message_size_ = source.message_size_;
+			this->message_body_ = source.message_body_;
+		}
+
+		return *this;
+	}
+
+	ProtocolMessage(const ProtocolMessage& source) {
+		this->request_body_ = source.request_body_;
+		this->error_code_ = source.error_code_;
+		this->message_code_ = source.message_code_;
+		this->time_stamp_ = source.time_stamp_;
+		this->message_size_ = source.message_size_;
+		this->message_body_ = source.message_body_;
+	}
+
+	~ProtocolMessage(){}
 
     /*
     __int64 ProtocolMessage::get_file_size() const {

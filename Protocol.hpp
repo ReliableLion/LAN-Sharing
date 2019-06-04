@@ -14,7 +14,7 @@ namespace protocol {
     };
 
     enum error_code {
-        err_1,
+        err_1, // Generic error
 		err_file,
 		err_timeout,
 		err_packet_format
