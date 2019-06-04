@@ -113,18 +113,18 @@ bool TcpConnection::read_data(std::shared_ptr<SocketBuffer> buffer) {
 
 	// pay attenction because read select can throw an exception
 	int bytes_read = 0;
-	bytes_read = recv(sock_, receive_buffer_, buffer->get_max_size(), 0);
+	bytes_read = recv(sock_, buffer->get_buffer(), buffer->get_max_size(), 0);
 
 	if (bytes_read == SOCKET_ERROR)
 		throw SocketException(WSAGetLastError());
 	else if (bytes_read == 0) {
 		alive_ = false;
 		return false;
-	} else if (bytes_read == 1 && receive_buffer_[0] == '\0') {
+	} else if (bytes_read == 1 && buffer->get_buffer()[0] == '\0') {
 		std::cout << "the receive return an empty buffer" << std::endl;
 		return false;
 	} else {
-		buffer->replace(receive_buffer_, bytes_read);
+		buffer->bytes_read(bytes_read);
 		return true;
 	}
 }
@@ -158,32 +158,6 @@ bool TcpConnection::send_data(std::shared_ptr<SocketBuffer> buffer) {
 
 bool TcpConnection::read_line(std::shared_ptr<SocketBuffer> buffer) {
 
-	//throw SocketException(15);
-
-    // remember to check if the buffer ends with /r/n
-	// int read_bytes = 0;
-
-	// auto *local_buffer = new char[buffer->get_max_size()];
-	// memset(local_buffer, 0, static_cast<std::size_t> (buffer->get_max_size()));
-
- //   struct timeval time;
- //   FD_SET read_sock;
-
- //   FD_ZERO(&read_sock);
- //   FD_SET(sock_, &read_sock);
-
- //   time.tv_sec = SEC_;
- //   time.tv_usec = USEC_;
-
- //   const auto result = select(sock_ + 1, &read_sock, nullptr, nullptr, &time);
-
-	//if (result == SOCKET_ERROR) {
-	//	// int i = WSAGetLastError();
-	//	throw SocketException(WSAGetLastError());
-	//}
- //   else if (result == 0) 
-	//	throw TimeoutException();
-	//else 
 	select_connection();
 
 	int read_bytes = readline_unbuffered(receive_buffer_, buffer->get_max_size());
@@ -328,19 +302,17 @@ int TcpConnection::send_file(HANDLE file_handle, DWORD file_size) {
 
 	while(left_bytes > 0) {
 
-		socket_buffer.rewind_buffer();
-
-		if(!ReadFile(file_handle, socket_buffer.get_buffer(), byte_to_read, &bytes_read, nullptr)) {
+		if(!ReadFile(file_handle, socket_buffer.write_to_buffer(), byte_to_read, &bytes_read, nullptr)) {
 			std::cout << "Some errors occurs while reading: " << GetLastError() << std::endl;
 			close_connection();
 			return left_bytes;
 		}
 
-		socket_buffer.bytes_read(static_cast<int>(bytes_read));
+		socket_buffer.bytes_wrote(static_cast<int>(bytes_read));
 
 		while(socket_buffer.get_remaining_bytes() != 0) {
 
-			if((bytes_sent = send(sock_, socket_buffer.get_buffer(), socket_buffer.get_remaining_bytes(), 0)) == SOCKET_ERROR) {
+			if((bytes_sent = send(sock_, socket_buffer.read_to_buffer(), socket_buffer.get_remaining_bytes(), 0)) == SOCKET_ERROR) {
 				throw SocketException(WSAGetLastError());
 			}
 			if(bytes_sent == 0){
@@ -348,7 +320,7 @@ int TcpConnection::send_file(HANDLE file_handle, DWORD file_size) {
 				return 0;
 			}
 
-			socket_buffer.update_read_ptr(bytes_sent);
+			socket_buffer.bytes_read(bytes_sent);
 		}
 
 		left_bytes -= bytes_sent;

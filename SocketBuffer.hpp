@@ -9,7 +9,7 @@ protected:
     char *buffer_;		
 	char *read_ptr_;
 	unsigned int buffer_size_;
-	unsigned int read_bytes_;
+	unsigned int bytes_already_read;
 	const unsigned int MAX_BUFF_ = CHUNK;
 public:
 	SocketBuffer();
@@ -19,14 +19,16 @@ public:
     void add(const char *data, int size);
 
 	void replace(const char *data, int size);
-
+	
 	void bytes_read(int bytes_read);
+
+	void bytes_wrote(int bytes_wrote);
 
 	char *read();
 
-	char *get_buffer();
-
-	void rewind_buffer();
+	char *read_to_buffer();
+	
+	char* write_to_buffer();
 
 	void update_read_ptr(int size);
 

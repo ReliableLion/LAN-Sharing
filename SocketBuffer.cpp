@@ -3,7 +3,7 @@
 #include "SocketBuffer.hpp"
 #include "Exceptions.hpp"
 
-SocketBuffer::SocketBuffer() : buffer_size_(0), read_bytes_(0) { 
+SocketBuffer::SocketBuffer() : buffer_size_(0), bytes_already_read(0) { 
 	buffer_ = new char[MAX_BUFF_];
 	read_ptr_ = buffer_;
 }
@@ -38,51 +38,70 @@ void SocketBuffer::replace(const char *data, const int size) {
 	memcpy(buffer_, data, size);
 	read_ptr_ = buffer_;
     buffer_size_ = size;
-	read_bytes_ = 0;
+	bytes_already_read = 0;
+}
+
+void SocketBuffer::bytes_wrote(int bytes_wrote) {
+
+	if (bytes_wrote < 0)
+		return;
+
+	if (bytes_wrote > buffer_size_)
+		throw SocketBufferException(std::string("buffer overflow"));
+
+	read_ptr_ = buffer_;
+	buffer_size_ = bytes_wrote;
+	bytes_already_read = 0;
 }
 
 void SocketBuffer::bytes_read(int bytes_read) {
-	read_ptr_ = buffer_;
-	buffer_size_ = bytes_read;
-	read_bytes_ = 0;
+
+	if (bytes_read < 0)
+		return;
+
+	if (bytes_read > buffer_size_ - bytes_already_read)
+		throw SocketBufferException(std::string("buffer overflow"));
+
+	read_ptr_ += bytes_read;
+	bytes_already_read += bytes_read;
 }
 
 void SocketBuffer::clear() {
     memset(buffer_, 0, MAX_BUFF_);
 	read_ptr_ = buffer_;
     buffer_size_ = 0;
-	read_bytes_ = 0;
+	bytes_already_read = 0;
 }
 
 char *SocketBuffer::read() {
-	if (buffer_size_ != read_bytes_) 
+	if (buffer_size_ != bytes_already_read) 
 		return read_ptr_;
 	
 	// throw a new buffer exception
 	throw SocketBufferException(std::string("impossible to read more data than the buffer can"));
 }
 
-char* SocketBuffer::get_buffer() {
+char* SocketBuffer::read_to_buffer() {
 	return read_ptr_;
+}
+
+char* SocketBuffer::write_to_buffer() {
+	return buffer_;
 }
 
 void SocketBuffer::update_read_ptr(int size) {
 	if (size < 0)
 		return;
 
-	if (size > buffer_size_ - read_bytes_)
+	if (size > buffer_size_ - bytes_already_read)
 		throw SocketBufferException(std::string("buffer overflow"));
 
 	read_ptr_ += size;
-	read_bytes_ += size;
-}
-
-void SocketBuffer::rewind_buffer() {
-	read_ptr_ -= buffer_size_;
+	bytes_already_read += size;
 }
 
 void SocketBuffer::read_all_bytes() {
-	read_bytes_ = buffer_size_;
+	bytes_already_read = buffer_size_;
 	read_ptr_ += buffer_size_;
 }
 
@@ -95,7 +114,7 @@ int SocketBuffer::get_size() const {
 }
 
 int SocketBuffer::get_remaining_bytes() {
-	return buffer_size_ - read_bytes_;
+	return buffer_size_ - bytes_already_read;
 }
 
 /*
