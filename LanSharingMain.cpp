@@ -26,8 +26,8 @@ int main(int argc, char* argv[]) {
 		MessageBoxA(0, "Winsock startup failed", "Error", MB_OK | MB_ICONERROR);
 		exit(0);
 	}
-	 //testServer();
-	test3();
+	testServer();
+	// test3();
 	return 0;
 }
 
@@ -53,7 +53,7 @@ void testServer() {
 	try {
 		Server server;
 		server.start_server();
-		while (1);
+		Sleep(10000);
 	} catch (SocketException& se) {
 		UNREFERENCED_PARAMETER(se);
 		std::cout << "server returned an exception" << std::endl;

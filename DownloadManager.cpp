@@ -94,7 +94,12 @@ void DownloadManager::process_small_file(int thread_id) {
         ul.lock();
 
         cv_s_.wait(ul, [this] {
-            return (!small_file_q_.is_empty() && !is_terminated_.load());
+            //return (!small_file_q_.is_empty() && !is_terminated_.load());
+			if (is_terminated_.load()) {
+				return true;
+			} else {
+				return !small_file_q_.is_empty();
+			}
         });
 
         // get the request struct from the queue than release the lock
@@ -126,7 +131,12 @@ void DownloadManager::process_big_file(int thread_id) {
         ul.lock();
 
         cv_b_.wait(ul, [this] {
-            return (!big_file_q_.is_empty() && !is_terminated_.load());
+            if (is_terminated_.load()) {
+				return true;
+			}
+			else {
+				return !big_file_q_.is_empty();
+			}
         });
 
 		// check if the server is in terminated status

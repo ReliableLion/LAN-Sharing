@@ -33,11 +33,11 @@ class Server {
 							std::shared_ptr<connection::TcpConnection> connection);
 
 public:
-	explicit Server(int port = DEFAULT_LISTEN_PORT);
+	explicit Server();
 
     ~Server();
 
-    void start_server();
+    void start_server(int port = DEFAULT_LISTEN_PORT);
 
     void close_server();
 };
