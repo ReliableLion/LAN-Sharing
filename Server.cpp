@@ -21,7 +21,7 @@ Server::~Server() {
 void Server::run_server() {
     std::cout << "Server is running" << std::endl << std::endl;
 
-    while (server_status_ == running) {
+    while (server_status_.load() == running) {
         listen_new_connection();
     }
 }
@@ -44,9 +44,14 @@ void Server::listen_new_connection() {
 
 	const auto accept_socket = accept(passive_socket_, reinterpret_cast<SOCKADDR *>(&client_address), &addrlen);
 
+	// if the server is in pause return to the caller
+	if (server_status_.load() == paused) {
+		return; 
+	}
+
 	if (accept_socket == INVALID_SOCKET) {
 		if (WSAGetLastError() == WSAEINTR) {
-			server_status_ = stopped;
+			server_status_.store(stopped);
 		}
 		return;
 	}
@@ -80,6 +85,10 @@ void Server::listen_new_connection() {
 }
 
 void Server::start_server(const int port) {
+
+	// change the server state and instantiate the main thread
+	if (server_status_.load() == running)
+		throw ServerException();
 
 	if (port < 0 || port > 65535) {
 		std::cout << "the value of the port passed as parameter is not valid" << std::endl;
@@ -116,11 +125,7 @@ void Server::start_server(const int port) {
 	download_manager_ = std::make_shared<DownloadManager>();
     handshake_agreement_manager_ = std::make_shared<HandshakeManager>(download_manager_);
 
-	// change the server state and instantiate the main thread
-	if (server_status_ == running)
-		throw ServerException();
-
-    server_status_ = running;
+    server_status_.store(running);
     server_main_thread_ = std::thread(&Server::run_server, this);
 }
 
@@ -131,5 +136,17 @@ void Server::close_server() {
     handshake_agreement_manager_.reset();
     download_manager_.reset();
 
-	server_status_ = stopped;
+	server_status_.store(stopped);
+}
+
+void Server::pause_server() {
+	if (server_status_.load() == running) {
+		server_status_.store(paused);
+	}
+}
+
+void Server::recover_server() {
+	if (server_status_.load() == paused) {
+		server_status_.store(running);
+	}
 }

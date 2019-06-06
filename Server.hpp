@@ -2,12 +2,14 @@
 
 #include <thread>
 #include <mutex>
+#include <atomic>
 
 #include "Connection.hpp"
 #include "HandshakeManager.hpp"
 
 enum server_state_type {
     stopped,
+	paused,
     running
 };
 
@@ -18,7 +20,7 @@ class Server {
 
     std::thread server_main_thread_;
 
-    server_state_type server_status_;
+    std::atomic<server_state_type> server_status_;
 
 	const std::string class_name = "Server";
 
@@ -38,6 +40,10 @@ public:
     ~Server();
 
     void start_server(int port = DEFAULT_LISTEN_PORT);
+
+	void pause_server();
+
+	void recover_server();
 
     void close_server();
 };
