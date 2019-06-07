@@ -80,7 +80,4 @@ public:
 	TemporaryFile::TemporaryFile();
 
     ~TemporaryFile();
-
-private:
-	std::string generate_random_filename(int len);
 };

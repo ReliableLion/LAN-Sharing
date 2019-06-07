@@ -43,7 +43,7 @@ namespace connection {
 
 		bool read_n_data(std::shared_ptr<SocketBuffer> buffer, int n);
 
-		int read_file(size_t file_size,TemporaryFile &temporary_file);
+		int read_file(size_t file_size, FileHandler &temporary_file);
 
 		int send_file(HANDLE file_handle, DWORD file_size);
 
