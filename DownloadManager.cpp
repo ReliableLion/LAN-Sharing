@@ -169,17 +169,13 @@ void DownloadManager::process_file(download_struct file_req, int thread_id) {
 		}
 
 		std::string filename = file_req.req.file_name_;
-		file.rename_file(filename);
-
-		// copy the file into the destination file
-		/*if (!copy_file(temporary_file, destination_file)) {
-			destination_file.remove_file();
-		} */
 
 		std::stringstream ss;
 		ss << filename << " downloaded correctly";
 
 		ConcurrentStreamPrint::print_data(thread_id, class_name, ss.str());
+		
+		rename_file(filename, file);
 	}
 	catch (SocketException &se) {
 		UNREFERENCED_PARAMETER(se);
@@ -220,6 +216,22 @@ bool DownloadManager::send_response(int left_bytes, download_struct request) {
 #endif 
 
 	return false;
+}
+
+void DownloadManager::change_dest_path(std::string new_path) {
+	path_ = new_path;
+}
+
+void DownloadManager::rename_file(std::string new_filename, FileHandler &file) {
+	std::lock_guard<std::mutex> lk_g(file_write_mtx);
+
+	if (file.check_filename_existence(new_filename)) {
+		std::cout << "error the file already exists" << std::endl;
+	}
+	else {
+		file.rename_file(new_filename);
+	}
+
 }
 
 //bool DownloadManager::copy_file(TemporaryFile &temporary_file, FileHandler &destination_file) {
