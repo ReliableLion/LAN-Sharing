@@ -36,7 +36,7 @@
 /**
  * \brief Network adapter name used to send datagram
  */
-#define NETWORK_ADAPTER_NAME "{4B80AC2C-32A7-4C94-B45A-D714A8EA5B76}"
+#define NETWORK_ADAPTER_NAME "{A4C459EF-7A3F-47BF-9021-35AD78B030A2}"
 
 #define USERNAME "Davide"
 #define USERNAME_LENGTH 255

@@ -37,7 +37,7 @@ UdpClient::UdpClient(): sock_(0), server_port_(0) {
 	memset(&source_address, 0, sizeof(source_address));
 	source_address.sin_family = AF_INET;
 	source_address.sin_port = htons(uint16_t(UDP_PORT));
-	inet_pton(AF_INET, client_address_, &(source_address.sin_addr));
+	inet_pton(AF_INET, "192.168.1.102", &(source_address.sin_addr));
 
 	bind(sock_, reinterpret_cast<sockaddr*>(&source_address), sizeof(source_address));
 }
@@ -78,9 +78,9 @@ bool UdpClient::get_adapter()
 		p_adapter = p_adapter_info;
 
 		while (p_adapter) {
-			//printf("\tAdapter Name: \t%s\n", pAdapter->AdapterName);
+			printf("\tAdapter Name: \t%s\n", p_adapter->AdapterName);
 
-			//printf("\tIP Address: \t%s\n", pAdapter->IpAddressList.IpAddress.String);
+			printf("\tIP Address: \t%s\n", p_adapter->IpAddressList.IpAddress.String);
 
 			if (std::strcmp(p_adapter->AdapterName, NETWORK_ADAPTER_NAME) == 0) {
 				strcpy_s(client_address_, sizeof(p_adapter->IpAddressList.IpAddress.String), p_adapter->IpAddressList.IpAddress.String);
@@ -330,11 +330,7 @@ UdpServer::UdpServer() {
 }
 
 void UdpServer::stop() {
-	if (closesocket(server_sock_) == 0) {
-		return;
-	}
-
-	throw udp_exception::UdpException("Error when shutdown the server socket!");
+	closesocket(server_sock_);
 }
 
 int UdpServer::send_datagram(const char *buffer, const struct sockaddr_in *saddr, const socklen_t addr_len, const size_t len) const {
@@ -343,7 +339,13 @@ int UdpServer::send_datagram(const char *buffer, const struct sockaddr_in *saddr
 
 	if ((n = sendto(server_sock_, buffer, len, 0, reinterpret_cast<const struct sockaddr*>(saddr), addr_len)) == SOCKET_ERROR) { // strlen(buffer) because I want to send just the valid characters.
 		cout << "Sendto failed! Error: " << WSAGetLastError() << endl;
-		throw udp_exception::UdpException("Sendto error: " + std::to_string(WSAGetLastError()) + "\n");
+
+		if(WSAGetLastError() == WSAEINTR) {
+			std::cout << "Terminating UDP Server..." << std::endl;
+			return 0;
+		}
+		std::cout << "UDP EXCEPTION: " << WSAGetLastError() << std::endl;
+		throw udp_exception::UdpShutdownException();
 	}
 
 	return n;
@@ -356,9 +358,13 @@ socklen_t UdpServer::receive_datagram(char *buffer, const struct sockaddr_in *ca
 	const size_t n = recvfrom(server_sock_, buffer, length, 0, const_cast<struct sockaddr*>(reinterpret_cast<const struct sockaddr*>(caddr)), &address_len);
 
 	if (n == SOCKET_ERROR) {
-		if (WSAGetLastError() == WSAENOTSOCK) {
-			throw udp_exception::UdpShutdownException();
+
+		if(WSAGetLastError() == WSAEINTR) {
+			std::cout << "Terminating UDP Server..." << std::endl;
+			return 0;
 		}
+		std::cout << "UDP EXCEPTION: " << WSAGetLastError() << std::endl;
+		throw udp_exception::UdpShutdownException();
 	}
 
 	if (n > (length))

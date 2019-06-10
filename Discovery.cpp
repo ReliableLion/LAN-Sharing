@@ -23,6 +23,7 @@ boolean Discovery::stop_discovery_service() {
 
 		return true;
 	} catch(exception& e) {
+
 		return false;
 	}
 }
@@ -31,6 +32,20 @@ boolean Discovery::stop_discovery_service() {
 void discovery::send_hello(){
 	udp_client_.send_broadcast(hello_message_.get_message_body().c_str());
 }*/
+
+void Discovery::start_udp_server() {
+
+	int retry = 0;
+
+	if (retry < 2) {
+		try {
+			start_listening();
+		} catch (udp_exception::UdpShutdownException &e) {
+			retry += 1;
+		}
+	}
+}
+
 
 void Discovery::start_listening() {
 
@@ -46,11 +61,8 @@ void Discovery::start_listening() {
 	while (true) {
 
 		socklen_t address_len;
-		try {
-			address_len = udp_server_.receive_datagram(buffer, client_address_ptr, MAXBUFL);
-		} catch(udp_exception::UdpShutdownException& e) {
-			break;
-		}
+		
+		address_len = udp_server_.receive_datagram(buffer, client_address_ptr, MAXBUFL);
 
         packet.append(buffer, strlen(buffer));
 
@@ -89,4 +101,8 @@ void Discovery::start_discovery_service() {
 	discovery_thread_ = std::thread(&Discovery::start_listening, this);
 
 	cout << "-------------- Server started" << endl;
+}
+
+Discovery::~Discovery(){
+	stop_discovery_service();
 }

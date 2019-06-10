@@ -11,6 +11,7 @@ public:
 	explicit Discovery(const string username): hello_message_(username){}
 
 	void start_discovery_service();
+	~Discovery();
 
 	udp_service::UdpServer udp_server_;
 
@@ -26,6 +27,8 @@ public:
 
 private:
 	void start_listening();
+
+	void start_udp_server();
 
 	DiscoveryMessage hello_message_;
 	map<string, string> online_users_;

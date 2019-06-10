@@ -2,7 +2,7 @@
 //#include "Discovery.hpp"
 //#include <future>
 #include <iostream>     //for using cout
-#include <stdlib.h>     //for using the function sleep
+#include <cstdlib>     //for using the function sleep
 #include "Server.hpp"
 #include "RequestHandler.hpp"
 #include "Exceptions.hpp"
@@ -16,7 +16,6 @@ void test2();
 void start_server();
 void test3();
 
-
 int main(int argc, char* argv[]) {
 
 	//Winsock Startup
@@ -26,8 +25,9 @@ int main(int argc, char* argv[]) {
 		MessageBoxA(0, "Winsock startup failed", "Error", MB_OK | MB_ICONERROR);
 		exit(0);
 	}
-	 //testServer();
-	test3();
+	//testServer();
+	test2();
+	//test3();
 	return 0;
 }
 
@@ -51,9 +51,10 @@ void test1() {
 
 void testServer() {
 	try {
-		Server server;
-		server.start_server();
-		while (1);
+		Server main_server;
+
+		main_server.start_server();
+		//while (1);
 	} catch (SocketException& se) {
 		UNREFERENCED_PARAMETER(se);
 		std::cout << "server returned an exception" << std::endl;
@@ -141,44 +142,54 @@ void test3() {
 }
 
 void test2() {
-	/*
-	Discovery discovery_service = Discovery("davide");
+	
+	Discovery discovery_service("davide");
+
 	cout << "Starting discovery service" << endl;
+
 	discovery_service.start_discovery_service();
+
 	cout << "Discovery service started" << endl;
+
 	Sleep(3000);
+
 	if (discovery_service.get_online_users().size() == 0)
-	cout << "NO USERS" << endl;
+		cout << "NO USERS" << endl;
 	else
-	for (auto user : discovery_service.get_online_users()) {
-	cout << "USER: " << user.first << ":" << user.second << endl;
-	}
+		for (auto user : discovery_service.get_online_users()) {
+		cout << "USER: " << user.first << ":" << user.second << endl;
+		}
+
 	cout << "Sending discovery..." << endl;
+
 	discovery_service.find_users();
+
 	cout << "Discovery sent!" << endl;
+
 	Sleep(3000);
+
 	if (discovery_service.get_online_users().size() == 0)
-	cout << "NO USERS" << endl;
+		cout << "NO USERS" << endl;
 	else
-	for (auto user : discovery_service.get_online_users()) {
-	cout << "USER: " << user.first << ":" << user.second << endl;
-	}
-	*/
+		for (auto user : discovery_service.get_online_users()) {
+		cout << "USER: " << user.first << ":" << user.second << endl;
+		}
+	
 
 	//auto f1 = std::async(start_server);
 
-	/*	Sleep(2000);         //make the programme waiting for 5 seconds
-	cout << "Started client" << endl;
+	//Sleep(2000);         //make the programme waiting for 5 seconds
+	//cout << "Started client" << endl;
 
-	udp_service::UdpClient client;
+	//udp_service::UdpClient client;
 
-	client.get_server_info("192.168.1.102", std::to_string(UDP_PORT));
+	//client.get_server_info("192.168.1.102", std::to_string(UDP_PORT));
 
 	//client.send_datagram("prova");
-	client.send_broadcast(DISCOVERY_MSG);
-	cout << "Datagram sent" << endl;*/
+	//client.send_broadcast(DISCOVERY_MSG);
+	//cout << "Datagram sent" << endl;
 
-	//client.receive_datagram();
+//	client.receive_datagram();
 
 	/*connection::TcpConnection connection("192.168.1.9", DEFAULT_LISTEN_PORT);
 	cout << "Trying to connect" << endl;
@@ -198,21 +209,21 @@ void test2() {
 
 
 
-	try {
+	//try {
 
-		RequestHandler request;
+	//	RequestHandler request;
 
-		cout << "Ora creo la richiesta e quindi leggo il file" << endl;
+	//	cout << "Ora creo la richiesta e quindi leggo il file" << endl;
 
-		//request.send_request(user("Alessandro Ianne", "192.168.1.9"), "C:\\Users\\Asus\\Documents\\prova.txt");
+	//	//request.send_request(user("Alessandro Ianne", "192.168.1.9"), "C:\\Users\\Asus\\Documents\\prova.txt");
 
-		cout << "Richiesta creata e file letto" << endl;
+	//	cout << "Richiesta creata e file letto" << endl;
 
-		Sleep(1000);
-	}
-	catch (std::exception& e) {
-		std::cerr << "Exception: " << e.what() << std::endl;
-	}
+	//	Sleep(1000);
+	//}
+	//catch (std::exception& e) {
+	//	std::cerr << "Exception: " << e.what() << std::endl;
+	//}
 
 
 }
