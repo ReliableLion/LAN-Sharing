@@ -4,6 +4,7 @@
 #include "Exceptions.hpp"
 #include "PacketDispatcher.hpp"
 #include "ConcurrentStreamPrint.hpp"
+#include "Utils.hpp"
 
 using namespace connection;
 
@@ -94,7 +95,12 @@ void DownloadManager::process_small_file(int thread_id) {
         ul.lock();
 
         cv_s_.wait(ul, [this] {
-            return (!small_file_q_.is_empty() && !is_terminated_.load());
+            //return (!small_file_q_.is_empty() && !is_terminated_.load());
+			if (is_terminated_.load()) {
+				return true;
+			} else {
+				return !small_file_q_.is_empty();
+			}
         });
 
         // get the request struct from the queue than release the lock
@@ -126,7 +132,12 @@ void DownloadManager::process_big_file(int thread_id) {
         ul.lock();
 
         cv_b_.wait(ul, [this] {
-            return (!big_file_q_.is_empty() && !is_terminated_.load());
+            if (is_terminated_.load()) {
+				return true;
+			}
+			else {
+				return !big_file_q_.is_empty();
+			}
         });
 
 		// check if the server is in terminated status
@@ -146,31 +157,31 @@ void DownloadManager::process_big_file(int thread_id) {
 }
 
 void DownloadManager::process_file(download_struct file_req, int thread_id) {
-	try {
-		TemporaryFile temporary_file;
+	// generate a random filename 
+	std::string rnd_filename = generate_random_string(20, std::string(".tmp"));
+	FileHandler file(dest_folder_path_, rnd_filename);
 
+	try {
 		// download the file and store it into the temp folder
-		if (!download_file(file_req, temporary_file)) {
+		if (!download_file(file_req, file)) {
 			ConcurrentStreamPrint::print_data(thread_id, class_name, "impossible to complete the file download...");
 			return;
 		}
 
 		std::string filename = file_req.req.file_name_;
-		FileHandler destination_file(filename, path_);
-
-		// copy the file into the destination file
-		if (!copy_file(temporary_file, destination_file)) {
-			destination_file.remove_file();
-		} 
 
 		std::stringstream ss;
 		ss << filename << " downloaded correctly";
 
 		ConcurrentStreamPrint::print_data(thread_id, class_name, ss.str());
+		
+		rename_file(filename, file);
 	}
 	catch (SocketException &se) {
 		UNREFERENCED_PARAMETER(se);
 		ConcurrentStreamPrint::print_data(thread_id, class_name, "Socket Exception");
+		file.close_file();
+		file.remove_file();
 	}
 	catch (TimeoutException &te) {
 		UNREFERENCED_PARAMETER(te);
@@ -183,11 +194,13 @@ void DownloadManager::process_file(download_struct file_req, int thread_id) {
 	catch (FileWriteException & fe) {
 		UNREFERENCED_PARAMETER(fe);
 		ConcurrentStreamPrint::print_data(thread_id, class_name, "File Write Exception");
+		file.close_file();
+		file.remove_file();
 	}
 }
 
-bool DownloadManager::download_file(download_struct request,  TemporaryFile &temporary_file) {
-	int left_bytes = request.conn->read_file(request.req.file_size_, temporary_file);
+bool DownloadManager::download_file(download_struct request,  FileHandler &file) {
+	int left_bytes = request.conn->read_file(request.req.file_size_, file);
 	return send_response(left_bytes, request);
 }
 
@@ -205,26 +218,42 @@ bool DownloadManager::send_response(int left_bytes, download_struct request) {
 	return false;
 }
 
-bool DownloadManager::copy_file(TemporaryFile &temporary_file, FileHandler &destination_file) {
-	// check write permission for destination file
-	if (!destination_file.check_write_permission())
-		return false;
+void DownloadManager::change_dest_path(std::string new_path) {
+	path_ = new_path;
+}
 
-	temporary_file.open_file(read);
-    destination_file.open_file(write);
+void DownloadManager::rename_file(std::string new_filename, FileHandler &file) {
+	std::lock_guard<std::mutex> lk_g(file_write_mtx);
 
-	//std::cout << temporary_file.get_filename() << std::endl;
-	//std::cout << destination_file.get_filename() << std::endl;
-
-	bool result;
-
-    if (temporary_file.copy_file(destination_file)) {
-		result = true;
-	} else {
-		result = false;
+	if (file.check_filename_existence(new_filename)) {
+		std::cout << "error the file already exists" << std::endl;
+	}
+	else {
+		file.rename_file(new_filename);
 	}
 
-	temporary_file.close_file();
-	destination_file.close_file();
-	return result;
 }
+
+//bool DownloadManager::copy_file(TemporaryFile &temporary_file, FileHandler &destination_file) {
+//	// check write permission for destination file
+//	if (!destination_file.check_write_permission())
+//		return false;
+//
+//	temporary_file.open_file(read);
+//    destination_file.open_file(write);
+//
+//	//std::cout << temporary_file.get_filename() << std::endl;
+//	//std::cout << destination_file.get_filename() << std::endl;
+//
+//	bool result;
+//
+//    if (temporary_file.copy_file(destination_file)) {
+//		result = true;
+//	} else {
+//		result = false;
+//	}
+//
+//	temporary_file.close_file();
+//	destination_file.close_file();
+//	return result;
+//}

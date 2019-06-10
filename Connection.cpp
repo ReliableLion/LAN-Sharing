@@ -242,7 +242,7 @@ void TcpConnection::select_write_connection() {
 		throw TimeoutException();
 }
 
-int TcpConnection::read_file(size_t file_size, TemporaryFile &temporary_file) {
+int TcpConnection::read_file(size_t file_size, FileHandler &temporary_file) {
 
 	auto left_bytes = static_cast<int>(file_size);
 	auto bytes_to_download = 0;

@@ -70,8 +70,12 @@ void HandshakeManager::extract_connections_from_queue(int id) {
         ul.lock();
 
         cv_.wait(ul, [this]() {															// wait on the condition varaible
-            return (!connection_queue_.is_empty() 
-				&& !is_terminated_.load());												// unlock the condition variable only if the queue is not empty or the server has been closed
+			if (is_terminated_.load()) {
+				return true;
+			}
+			else {
+				return !connection_queue_.is_empty();
+			}											// unlock the condition variable only if the queue is not empty or the server has been closed
         });
 
 		if (is_terminated_.load())

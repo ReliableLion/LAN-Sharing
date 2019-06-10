@@ -27,11 +27,14 @@ class DownloadManager {
     std::atomic<bool> is_terminated_;					
     std::condition_variable cv_b_, cv_s_;						// conditional variable for big and small queue 
 
+	// file write mutex
+	std::mutex file_write_mtx;
+
 	const std::string class_name = "DownloadManager";
 
 	std::string path_ = TEST_PATH;
 
-    const std::string TEMP_PATH_ = TEMP_PATH;
+    std::string dest_folder_path_ = TEMP_PATH;
 
     void process_big_file(int thread_id);
 
@@ -39,9 +42,11 @@ class DownloadManager {
 
 	void process_file(download_struct req, int thread_id);
 
-	bool download_file(download_struct request, TemporaryFile &temporary_file);
+	bool download_file(download_struct request, FileHandler &temporary_file);
 
-	bool copy_file(TemporaryFile &temporary_file, FileHandler &destination_file);
+	void rename_file(std::string new_filename, FileHandler &file);
+
+	//bool copy_file(TemporaryFile &temporary_file, FileHandler &destination_file);
 
 	bool send_response(int left_bytes, download_struct request);
 
@@ -51,6 +56,8 @@ public:
     ~DownloadManager();
 
     void terminate_service();
+
+	void change_dest_path(std::string new_path);
 
     bool insert_small_file(request_struct request, connection::connection_ptr connection);
 

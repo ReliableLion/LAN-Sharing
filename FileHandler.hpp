@@ -48,6 +48,8 @@ public:
 
 	bool check_write_permission();
 
+	bool check_filename_existence(std::string path);
+
 	bool check_file_dim(size_t size);
 
     std::string get_filename() const;
@@ -80,7 +82,4 @@ public:
 	TemporaryFile::TemporaryFile();
 
     ~TemporaryFile();
-
-private:
-	std::string generate_random_filename(int len);
 };
