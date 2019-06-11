@@ -1,0 +1,32 @@
+#pragma once
+
+class SocketBuffer {
+protected:
+    char *buffer_;		
+	char *read_ptr_;
+	unsigned int buffer_size_;
+	unsigned int read_bytes_;
+	const unsigned int MAX_BUFF_ = CHUNK;
+public:
+	SocketBuffer();
+
+	~SocketBuffer();
+
+    void add(const char *data, int size);
+
+	void replace(const char *data, int size);
+
+	char *read();
+
+	void update_read_ptr(int size);
+
+	void read_all_bytes();
+
+    void clear();
+
+	int get_remaining_bytes();
+
+    int get_size() const;
+
+    int get_max_size() const;
+};
