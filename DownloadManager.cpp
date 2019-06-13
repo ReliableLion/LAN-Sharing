@@ -2,7 +2,7 @@
 
 using namespace connection;
 
-DownloadManager::DownloadManager() {
+DownloadManager::DownloadManager(std::string path) : dest_folder_path_(path) {
     is_terminated_.store(false);
 
 #ifdef APP_DEBUG
@@ -169,7 +169,7 @@ void DownloadManager::process_file(download_struct file_req, int thread_id) {
 
 		ConcurrentStreamPrint::print_data(thread_id, class_name, ss.str());
 		
-		rename_file(filename, file);
+		perform_rename_file(filename, file);
 	}
 	catch (SocketException &se) {
 		UNREFERENCED_PARAMETER(se);
@@ -212,18 +212,32 @@ bool DownloadManager::send_response(int left_bytes, download_struct request) {
 	return false;
 }
 
+void DownloadManager::perform_rename_file(std::string new_filename, FileHandler &file) {
+	int i = 1;
+	std::string filename = new_filename;
+	std::stringstream ss;
+
+	while (rename_file(filename, file) == false) {
+		ss.clear();
+		ss << new_filename << "(" << i << ")";
+		filename = ss.str();
+		i++;
+	}
+}
+
 void DownloadManager::change_dest_path(std::string new_path) {
 	path_ = new_path;
 }
 
-void DownloadManager::rename_file(std::string new_filename, FileHandler &file) {
+bool DownloadManager::rename_file(std::string new_filename, FileHandler &file) {
 	std::lock_guard<std::mutex> lk_g(file_write_mtx);
 
 	if (file.check_filename_existence(new_filename)) {
-		std::cout << "error the file already exists" << std::endl;
+		return false;
 	}
 	else {
 		file.rename_file(new_filename);
+		return true;
 	}
 
 }

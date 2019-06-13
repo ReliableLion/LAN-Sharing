@@ -25,7 +25,7 @@ class DownloadManager {
 
 	std::string path_ = TEST_PATH;
 
-    std::string dest_folder_path_ = TEMP_PATH;
+	std::string dest_folder_path_;
 
     void process_big_file(int thread_id);
 
@@ -35,14 +35,16 @@ class DownloadManager {
 
 	bool download_file(download_struct request, FileHandler &temporary_file);
 
-	void rename_file(std::string new_filename, FileHandler &file);
+	void perform_rename_file(std::string new_filename, FileHandler &file);
+
+	bool rename_file(std::string new_filename, FileHandler &file);
 
 	//bool copy_file(TemporaryFile &temporary_file, FileHandler &destination_file);
 
 	bool send_response(int left_bytes, download_struct request);
 
 public:
-    DownloadManager();
+    DownloadManager(std::string path = std::string(TEMP_PATH));
 
     ~DownloadManager();
 
