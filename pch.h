@@ -7,7 +7,8 @@
 #ifndef PCH_H
 #define PCH_H
 
-typedef void (*MANAGED_CALLBACK)();
+typedef void (*EXCEPTION_CALLBACK)();
+typedef void (*DISCOVERY_MANAGED_CALLBACK)(const char* ipAddress,const char* username,const char* avatar);
 
 // add headers that you want to pre-compile here
 #include "framework.h"

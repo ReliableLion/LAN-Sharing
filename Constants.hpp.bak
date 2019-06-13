@@ -7,7 +7,7 @@
 /**
  * \brief Minimum unit of payload within a TCP packet
  */
-#define CHUNK 1024 * 1024
+#define CHUNK 1460
  /**
  * \brief Timeout used by the SELECT()
  */
@@ -33,6 +33,9 @@
  * \brief Message appended within a Discovery Message
  */
 #define DISCOVERY_MSG "LAN-SHARING LOOKING FOR"
+
+#define DISCOVERY_IMAGE  "MYIMAGE "
+
 /**
  * \brief Network adapter name used to send datagram
  */
@@ -44,14 +47,18 @@
 /* FILE SECTION */
 #define BIG_FILE_THREADS 3
 #define SMALL_FILE_THREADS 2
-#define FILE_SIZE_THRESHOLD 1024 * 1024	* 600	// 1MB
-#define REQUEST_THREADS 4
+#define FILE_SIZE_THRESHOLD 1024 * 1024	* 80	// 1MB
+#define REQUEST_THREADS 1
 #define MAX_REQUEST_ATTEMPTS 3
 #define MAX_FILE_ATTEMPTS 5
-#define TEST_PATH std::string("C:\\Users\\utente pc\\test_project")
-#define TEMP_PATH std::string("C:\\Users\\utente pc\\test_project")							// "C:\\users\\utentepc\\Appdata\\local\\temp"
+#define TEST_PATH std::string("C:\\Users\\Asus\\test_project")
+#define TEMP_PATH std::string("C:\\Users\\Asus\\AppData\\Local\\Temp")
 #define QUEUE_MAX_ELEMENTS 1000
 #define MAX_FILENAME_LENGTH 256
 
 /* TCP SECTION */
 #define DEFAULT_LISTEN_PORT 1500
+
+/* COMPILATION SWITCH */
+// #define APP_DEBUG 
+// #define FILE_HANDLER_OUTPUT 

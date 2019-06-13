@@ -1,8 +1,7 @@
 #pragma once
 #include "pch.h"
-#include <list>
+#include <map>
 #include <string>
-#include <atomic>
 
 using namespace std;
 
@@ -47,9 +46,9 @@ namespace udp_service {
 
 		void stop();
 
-        int send_datagram(const char *buffer, const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) ;
+        int send_datagram(const char *buffer, const struct sockaddr_in *saddr, socklen_t addr_len, size_t len) const;
 
-        socklen_t receive_datagram(char *buffer, const struct sockaddr_in *caddr, size_t len);
+        socklen_t receive_datagram(char *buffer, const struct sockaddr_in *caddr, size_t len) const;
 
         ~UdpServer();
 
@@ -58,6 +57,5 @@ namespace udp_service {
         char buffer_[MAXBUFL] = "";
         char server_address_[INET_ADDRSTRLEN]{};
 
-		atomic<bool> exit_udp;
     };
 }

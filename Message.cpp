@@ -72,30 +72,18 @@ void DiscoveryMessage::set_username(const std::string username) {
     append(END_MESSAGE_);
 }
 
-void DiscoveryMessage::set_image(std::string image_path) {
-	std::ifstream image;
-	image.open(image_path, std::ios_base::binary);
-
-	image.seekg (0, ios::end);
-	int n = image.tellg();
-	image.seekg (0, ios::beg);
-
+void DiscoveryMessage::set_image(std::string image_name) {
 	clear();
 	append(DISCOVERY_IMAGE);
-
-	if(n <= 1000) {
-		const auto res = new char[n];
-		image.read(res, n);
-
-		append(res, n);
-	}
+	append(image_name);
+	append(END_MESSAGE_);
 }
 
 std::string DiscoveryMessage::get_username() {
 
     char username[USERNAME_LENGTH] = "";
 
-    if (get_packet_type() == HELLO_MSG) {
+    if (get_packet_type() == HELLO_MSG && m_buffer_.size() < USERNAME_LENGTH) {
         // HELLO_MSG is the smallest string within a discovery message packet
         memcpy(static_cast<void *>(username), static_cast<void *>(&(m_buffer_.at(strlen(HELLO_MSG)))),
                m_buffer_.size() - strlen(HELLO_MSG));
@@ -107,30 +95,20 @@ std::string DiscoveryMessage::get_username() {
     return std::string(temp, strlen(username));
 }
 
-std::string DiscoveryMessage::get_image_path(std::string ip_address) {
+std::string DiscoveryMessage::get_image_name() {
 
-	if(get_packet_type() == DISCOVERY_IMAGE) {
+    char image[IMAGE_NAME] = "";
 
-		stringstream ss;
-
-		ss << TEST_PATH << "\\" << ip_address << ".bmp";
-		
-		char image[MAXBUFL] = "";
-		memcpy(static_cast<void *>(image), static_cast<void *>(&(m_buffer_.at(strlen(DISCOVERY_IMAGE)))), m_buffer_.size() - strlen(DISCOVERY_IMAGE));
-
-		image[m_buffer_.size() - strlen(HELLO_MSG)] = '\0';
-
-		const auto temp = reinterpret_cast<char *>(image);
-		FILE *image_file;
-		fopen_s(&image_file, ss.str().c_str(), "w");
-		fwrite(temp, sizeof(*temp), 1, image_file);
-		fclose(image_file);
-
-
-		return ss.str();
-	} else
+    if (get_packet_type() == DISCOVERY_IMAGE && m_buffer_.size() < IMAGE_NAME) {
+        // HELLO_MSG is the smallest string within a discovery message packet
+        memcpy(static_cast<void *>(image), static_cast<void *>(&(m_buffer_.at(strlen(DISCOVERY_IMAGE)))),
+               m_buffer_.size() - strlen(DISCOVERY_IMAGE));
+        image[m_buffer_.size() - strlen(DISCOVERY_IMAGE)] = '\0';
+    } else
         throw MessageException("packet is not an Hello Message!\n");
 
+    const auto temp = reinterpret_cast<char *>(image);
+    return std::string(temp, strlen(image));
 }
 
 std::string DiscoveryMessage::get_message_body() {

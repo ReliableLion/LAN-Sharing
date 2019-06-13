@@ -9,13 +9,18 @@ class Discovery {
 public:
 	explicit Discovery(const string username="User"): hello_message_(username){}
 
-	void start_discovery_service(EXCEPTION_CALLBACK callback, DISCOVERY_MANAGED_CALLBACK d_callback, std::string username, std::string image_name);
+	void start_discovery_service(MANAGED_CALLBACK callback, std::string username, std::string image_path);
 	~Discovery();
 
 	udp_service::UdpServer udp_server_;
 
+	//void send_hello();
+
+	// Return a list of pairs (UserIP, Username)
 	void find_users();
 	void set_local_ip_address(std::string ip_address);
+	map<string, string> get_online_users();
+	map<string, string> get_user_image();
 
 	BOOL stop_discovery_service();
 
@@ -28,16 +33,18 @@ public:
 private:
 	void start_listening();
 
-	void start_udp_server(EXCEPTION_CALLBACK callback);
+	void start_udp_server(MANAGED_CALLBACK callback);
 
 	DiscoveryMessage hello_message_;
 	DiscoveryMessage image_message;
-	DISCOVERY_MANAGED_CALLBACK discovery_callback;
+
+	std::string user_image_path;
+	map<string, string> online_users_;
+	map<string, string> users_image;
 
 	std::thread discovery_thread_;
 
 	BOOL hide_me_ = false;
-	std::atomic<bool> exit_udp = false;
 
 	udp_service::UdpClient udp_client_;
 };

@@ -53,9 +53,15 @@ public:
         append(END_MESSAGE_);
     }
 
-    DiscoveryMessage() {};
+    DiscoveryMessage() = default;
+
+	void set_username(std::string username);
+
+	void set_image(std::string image_path);
 
     std::string get_username();
+
+	std::string get_image_path(std::string ip_address);
 
     std::string get_packet_type();
 
@@ -88,7 +94,8 @@ public:
 
 	std::stringstream stream_;
 
-	ProtocolMessage& ProtocolMessage::operator=(ProtocolMessage&& source) {
+	ProtocolMessage& operator=(ProtocolMessage&& source) noexcept
+	{
 		if(this != &source) {
 			this->request_body_ = source.request_body_;
 			this->error_code_ = source.error_code_;

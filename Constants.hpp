@@ -43,6 +43,7 @@
 
 #define USERNAME "Davide"
 #define USERNAME_LENGTH 255
+#define IMAGE_NAME 255
 
 /* FILE SECTION */
 #define BIG_FILE_THREADS 3

@@ -57,11 +57,11 @@ public:
 
 	void set_username(std::string username);
 
-	void set_image(std::string image_path);
+	void set_image(std::string image_name);
 
     std::string get_username();
 
-	std::string get_image_path(std::string ip_address);
+	std::string get_image_name();
 
     std::string get_packet_type();
 

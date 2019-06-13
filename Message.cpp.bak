@@ -59,14 +59,36 @@ std::string DiscoveryMessage::get_packet_type() {
         strncmp(message.c_str(), DISCOVERY_MSG, strlen(DISCOVERY_MSG)) == 0)
         return DISCOVERY_MSG;
 
+	if(strlen(message.c_str()) >= strlen(DISCOVERY_IMAGE) && strncmp(message.c_str(), DISCOVERY_IMAGE, strlen(DISCOVERY_IMAGE)) == 0)
+		return DISCOVERY_IMAGE;
+
     return "";
 }
 
-void DiscoveryMessage::set_username(std::string username) {
+void DiscoveryMessage::set_username(const std::string username) {
 	clear();
-	append(HELLO_MSG);
+    append(HELLO_MSG);
     append(username);
     append(END_MESSAGE_);
+}
+
+void DiscoveryMessage::set_image(std::string image_path) {
+	std::ifstream image;
+	image.open(image_path, std::ios_base::binary);
+
+	image.seekg (0, ios::end);
+	int n = image.tellg();
+	image.seekg (0, ios::beg);
+
+	clear();
+	append(DISCOVERY_IMAGE);
+
+	if(n <= 1000) {
+		const auto res = new char[n];
+		image.read(res, n);
+
+		append(res, n);
+	}
 }
 
 std::string DiscoveryMessage::get_username() {
@@ -83,6 +105,32 @@ std::string DiscoveryMessage::get_username() {
 
     const auto temp = reinterpret_cast<char *>(username);
     return std::string(temp, strlen(username));
+}
+
+std::string DiscoveryMessage::get_image_path(std::string ip_address) {
+
+	if(get_packet_type() == DISCOVERY_IMAGE) {
+
+		stringstream ss;
+
+		ss << TEST_PATH << "\\" << ip_address << ".bmp";
+		
+		char image[MAXBUFL] = "";
+		memcpy(static_cast<void *>(image), static_cast<void *>(&(m_buffer_.at(strlen(DISCOVERY_IMAGE)))), m_buffer_.size() - strlen(DISCOVERY_IMAGE));
+
+		image[m_buffer_.size() - strlen(HELLO_MSG)] = '\0';
+
+		const auto temp = reinterpret_cast<char *>(image);
+		FILE *image_file;
+		fopen_s(&image_file, ss.str().c_str(), "w");
+		fwrite(temp, sizeof(*temp), 1, image_file);
+		fclose(image_file);
+
+
+		return ss.str();
+	} else
+        throw MessageException("packet is not an Hello Message!\n");
+
 }
 
 std::string DiscoveryMessage::get_message_body() {
