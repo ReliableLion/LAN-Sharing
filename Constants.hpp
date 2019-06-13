@@ -36,11 +36,6 @@
 
 #define DISCOVERY_IMAGE  "MYIMAGE "
 
-/**
- * \brief Network adapter name used to send datagram
- */
-#define NETWORK_ADAPTER_NAME "{4B80AC2C-32A7-4C94-B45A-D714A8EA5B76}"
-
 #define USERNAME "Davide"
 #define USERNAME_LENGTH 255
 #define IMAGE_NAME 255
@@ -48,7 +43,7 @@
 /* FILE SECTION */
 #define BIG_FILE_THREADS 3
 #define SMALL_FILE_THREADS 2
-#define FILE_SIZE_THRESHOLD 1024 * 1024	* 80	// 1MB
+#define FILE_SIZE_THRESHOLD ((1024 * 1024) * 80)	// 80MB
 #define REQUEST_THREADS 1
 #define MAX_REQUEST_ATTEMPTS 3
 #define MAX_FILE_ATTEMPTS 5
