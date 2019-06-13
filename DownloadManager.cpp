@@ -2,7 +2,7 @@
 
 using namespace connection;
 
-DownloadManager::DownloadManager(std::string path) : dest_folder_path_(path) {
+DownloadManager::DownloadManager(std::string path): dest_folder_path_(path) {
     is_terminated_.store(false);
 
 #ifdef APP_DEBUG
@@ -153,10 +153,12 @@ void DownloadManager::process_big_file(int thread_id) {
 void DownloadManager::process_file(download_struct file_req, int thread_id) {
 	// generate a random filename 
 	std::string rnd_filename = generate_random_string(20, std::string(".tmp"));
-	FileHandler file(dest_folder_path_, rnd_filename);
+	std::string file_path = get_dest_path();
+
+	FileHandler file(file_path, rnd_filename);
 
 	try {
-		// download the file and store it into the temp folder
+
 		if (!download_file(file_req, file)) {
 			ConcurrentStreamPrint::print_data(thread_id, class_name, "impossible to complete the file download...");
 			return;
@@ -225,10 +227,6 @@ void DownloadManager::perform_rename_file(std::string new_filename, FileHandler 
 	}
 }
 
-void DownloadManager::change_dest_path(std::string new_path) {
-	path_ = new_path;
-}
-
 bool DownloadManager::rename_file(std::string new_filename, FileHandler &file) {
 	std::lock_guard<std::mutex> lk_g(file_write_mtx);
 
@@ -242,26 +240,12 @@ bool DownloadManager::rename_file(std::string new_filename, FileHandler &file) {
 
 }
 
-//bool DownloadManager::copy_file(TemporaryFile &temporary_file, FileHandler &destination_file) {
-//	// check write permission for destination file
-//	if (!destination_file.check_write_permission())
-//		return false;
-//
-//	temporary_file.open_file(read);
-//    destination_file.open_file(write);
-//
-//	//std::cout << temporary_file.get_filename() << std::endl;
-//	//std::cout << destination_file.get_filename() << std::endl;
-//
-//	bool result;
-//
-//    if (temporary_file.copy_file(destination_file)) {
-//		result = true;
-//	} else {
-//		result = false;
-//	}
-//
-//	temporary_file.close_file();
-//	destination_file.close_file();
-//	return result;
-//}
+void DownloadManager::change_dest_path(std::string new_path) {
+	std::lock_guard<std::mutex> lk(path_write_mtx);
+	dest_folder_path_ = new_path;
+}
+
+std::string DownloadManager::get_dest_path() {
+	std::lock_guard<std::mutex> lk(path_write_mtx);
+	return dest_folder_path_;
+}

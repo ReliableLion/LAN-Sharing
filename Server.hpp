@@ -33,11 +33,13 @@ public:
 
     ~Server();
 
-    void start_server(int port = DEFAULT_LISTEN_PORT);
+    void start_server(int port, std::string path);
 
 	void pause_server();
 
 	void recover_server();
 
     void close_server();
+
+	void change_dest_path(std::string path);
 };

@@ -6,7 +6,9 @@ using namespace connection;
 * this constructor create a new socket that is setted on the defaul port 1500;
 * if you want to change it is possible to call the method change port and pass the new port number, t
 */
-Server::Server(): server_status_(stopped) {}
+Server::Server() {
+	server_status_.store(stopped);
+}
 
 Server::~Server() {
     close_server();
@@ -100,7 +102,7 @@ void Server::listen_new_connection() {
 	}
 }
 
-void Server::start_server(const int port) {
+void Server::start_server(const int port, std::string path) {
 
 	// change the server state and instantiate the main thread
 	if (server_status_.load() == running)
@@ -138,7 +140,7 @@ void Server::start_server(const int port) {
 	std::cout << "This server has address: " << address_msg;
 	std::cout << ", port number: " << ntohs(local_address_.sin_port) << std::endl << std::endl;
 
-	download_manager_ = std::make_shared<DownloadManager>();
+	download_manager_ = std::make_shared<DownloadManager>(path);
     handshake_agreement_manager_ = std::make_shared<HandshakeManager>(download_manager_);
 
     server_status_.store(running);
@@ -169,5 +171,11 @@ void Server::pause_server() {
 void Server::recover_server() {
 	if (server_status_.load() == paused) {
 		server_status_.store(running);
+	}
+}
+
+void Server::change_dest_path(std::string path) {
+	if (server_status_.load() != stopped) {
+		download_manager_->change_dest_path(path);
 	}
 }

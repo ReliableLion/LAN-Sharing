@@ -20,10 +20,11 @@ class DownloadManager {
 
 	// file write mutex
 	std::mutex file_write_mtx;
+	std::mutex path_write_mtx;
 
 	const std::string class_name = "DownloadManager";
 
-	std::string path_ = TEST_PATH;
+	//std::string path_ = TEST_PATH;
 
 	std::string dest_folder_path_;
 
@@ -39,12 +40,12 @@ class DownloadManager {
 
 	bool rename_file(std::string new_filename, FileHandler &file);
 
-	//bool copy_file(TemporaryFile &temporary_file, FileHandler &destination_file);
-
 	bool send_response(int left_bytes, download_struct request);
 
+	std::string get_dest_path();
+
 public:
-    DownloadManager(std::string path = std::string(TEMP_PATH));
+    DownloadManager(std::string path);
 
     ~DownloadManager();
 
