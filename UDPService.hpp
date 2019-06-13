@@ -30,7 +30,6 @@ namespace udp_service {
         int sock_;
         char buffer_[MAXBUFL] = "";
         char server_address_[INET_ADDRSTRLEN];
-        char client_address_[INET_ADDRSTRLEN] = "";
         int server_port_;
         struct sockaddr_in broadcast_address_, server_address_struct_;
 

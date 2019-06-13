@@ -9,10 +9,6 @@ void Discovery::find_users() {
 	udp_client_.send_broadcast(DISCOVERY_MSG);
 }
 
-void Discovery::set_local_ip_address(std::string ip_address) {
-	udp_client_.set_client_address(ip_address);
-}
-
 BOOL Discovery::stop_discovery_service() {
 
 	try {
@@ -31,7 +27,7 @@ BOOL Discovery::stop_discovery_service() {
 	}
 }
 
-void Discovery::start_udp_server(EXCEPTION_CALLBACK callback) {
+void Discovery::start_udp_server() {
 
 	int retry = 0;
 
@@ -43,7 +39,7 @@ void Discovery::start_udp_server(EXCEPTION_CALLBACK callback) {
 		}
 	}
 
-	callback();
+	managed_callback::exit_callback();
 }
 
 
@@ -51,8 +47,8 @@ void Discovery::set_username(std::string username) {
 	hello_message_.set_username(username);
 }
 
-void Discovery::set_user_image(std::string image_path) {
-	image_message.set_image(image_path);
+void Discovery::set_user_image(std::string image_name) {
+	image_message.set_image(image_name);
 }
 
 void Discovery::start_listening() {
@@ -76,7 +72,7 @@ void Discovery::start_listening() {
 
 		if (packet.get_packet_type() == DISCOVERY_MSG) {
 
-			if (!hide_me_) {
+			if (!hide_me_.load()) {
 				cout << "HERE THE DISCOVERY RECEIVED: " << packet.get_message_body() << endl;
 
 				//Wait random time before sending the hello message. So that the hosts won't be flooded
@@ -93,13 +89,13 @@ void Discovery::start_listening() {
 
 			cout << "HERE THE HELLO RECEIVED: " << packet.get_message_body() << "The username obviously is: " << packet.get_username() << endl;
 
-			discovery_callback(udp_service::get_client_address(client_address_ptr).c_str(), packet.get_username().c_str(), "");
+			managed_callback::discovery_managed_callback(udp_service::get_client_address(client_address_ptr).c_str(), packet.get_username().c_str(), "");
 
 		} else if(packet.get_packet_type() == DISCOVERY_IMAGE) {
 			
 			auto image_name = packet.get_image_name();
 
-			discovery_callback(udp_service::get_client_address(client_address_ptr).c_str(), "", image_name.c_str());
+			managed_callback::discovery_managed_callback(udp_service::get_client_address(client_address_ptr).c_str(), "", image_name.c_str());
 
 		}
 		else
@@ -111,13 +107,12 @@ void Discovery::start_listening() {
 	}
 }
 
-void Discovery::start_discovery_service(EXCEPTION_CALLBACK callback, DISCOVERY_MANAGED_CALLBACK d_callback, std::string username, std::string image_name) {
+void Discovery::start_discovery_service(std::string username, std::string image_name) {
 	if(username.size() > 32)
 		username.resize(32);
 	hello_message_.set_username(std::move(username));
 	image_message.set_image(image_name);
-	discovery_callback = d_callback;
-	discovery_thread_ = std::thread(&Discovery::start_udp_server, this, callback);
+	discovery_thread_ = std::thread(&Discovery::start_udp_server, this);
 	cout << "-------------- Server started" << endl;
 }
 

@@ -32,6 +32,7 @@ typedef void (*DISCOVERY_MANAGED_CALLBACK)(const char* ipAddress,const char* use
 #include "User.hpp"
 #include "UserRequest.hpp"
 
+#include "ManagedCallback.hpp"
 #include "ConcurrentQueue.hpp"
 #include "SocketBuffer.hpp"
 #include "Exceptions.hpp"

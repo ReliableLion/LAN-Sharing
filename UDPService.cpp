@@ -25,10 +25,6 @@ UdpClient::UdpClient(): sock_(0), server_port_(0) {
 	broadcast_address_.sin_port = htons(UDP_PORT);
 }
 
-void UdpClient::set_client_address(const std::string ip_address) {
-	strcpy_s(client_address_, ip_address.c_str());
-}
-
 list<std::string> UdpClient::get_adapter()
 {
 	// It is possible for an adapter to have multiple

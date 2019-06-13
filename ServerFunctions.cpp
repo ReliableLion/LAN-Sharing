@@ -15,7 +15,7 @@ BOOL start_lan_sharing() {
 		const WORD dll_version = MAKEWORD(2, 1);
 		if (WSAStartup(dll_version, &wsa_data) != 0) {
 			MessageBoxA(0, "Winsock startup failed", "Error", MB_OK | MB_ICONERROR);
-			exit(0);
+			managed_callback::exit_callback();
 		}
 
 		try {
