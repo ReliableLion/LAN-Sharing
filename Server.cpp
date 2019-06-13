@@ -147,12 +147,17 @@ void Server::start_server(const int port) {
 
 void Server::close_server() {
     closesocket(passive_socket_);
-    server_main_thread_.join();
 
-    handshake_agreement_manager_.reset();
-    download_manager_.reset();
+	// check if the server is running 
+	if (server_status_.load() == running && server_main_thread_.joinable()) {
+		server_main_thread_.join();
 
-	server_status_.store(stopped);
+		handshake_agreement_manager_.reset();
+		download_manager_.reset();
+
+		server_status_.store(stopped);
+	}
+   
 }
 
 void Server::pause_server() {

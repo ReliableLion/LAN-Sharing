@@ -1,7 +1,11 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "pch.h"
 
+
+// definition of the function exposed by the dll
 extern "C" __declspec(dllexport) BOOL start_lan_sharing();
+extern "C" __declspec(dllexport) VOID pause_server();
+extern "C" __declspec(dllexport) VOID recover_server();
 
 Server main_server;
 
@@ -58,4 +62,12 @@ BOOL start_lan_sharing() {
 
 		return FALSE;
 	}
+}
+
+VOID pause_server() {
+	main_server.pause_server();
+}
+
+VOID recover_server() {
+	main_server.recover_server();
 }
