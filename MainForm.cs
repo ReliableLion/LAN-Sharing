@@ -12,7 +12,7 @@ using Microsoft.Win32;
 
 namespace LanSharing
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
 
         private System.Windows.Forms.ContextMenu contextMenu1;
@@ -21,13 +21,7 @@ namespace LanSharing
         private const string MenuName = "Software\\Classes\\*\\shell\\LanSharing";
         private const string Command = "Software\\Classes\\*\\shell\\LanSharing\\command";
 
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr LoadLibrary(string libname);
-
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
-        private static extern bool FreeLibrary(IntPtr hModule);
-
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
             sidePanel.Height = homeButton.Height;
@@ -50,19 +44,9 @@ namespace LanSharing
             notifyIcon1.ContextMenu = contextMenu1;
 
             AddRightClickItem();
-
-            ////Load
-            //IntPtr Handle = LoadLibrary("C:\\Users\\Asus\\source\\repos\\Dll1\\Debug\\DLL1.dll");
-            //if (Handle == IntPtr.Zero) {
-            //    int errorCode = Marshal.GetLastWin32Error();
-            //    throw new Exception(string.Format("Failed to load library (ErrorCode: {0})",errorCode));
-            //}
         }
 
         private void ExitApplication() {
-            //Free
-            //if(Handle != IntPtr.Zero)
-            //    FreeLibrary(Handle);
             Application.Exit();
         }
 

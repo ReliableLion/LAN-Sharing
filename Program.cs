@@ -17,14 +17,18 @@ namespace LanSharing
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        static int Main()
         {
-            SaveDelegate(delegate() {
-                Console.WriteLine("Called back by unmanaged side ");
+            SaveDelegate(delegate ()
+            {
+                var form = new ErrorForm();
+                form.Show();
             });
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            Application.Run(new MainForm());
+
+            return 0;
         }
     }
 }
