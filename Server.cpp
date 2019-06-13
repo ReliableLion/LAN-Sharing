@@ -108,7 +108,7 @@ void Server::start_server(const int port) {
 
 	if (port < 0 || port > 65535) {
 		std::cout << "the value of the port passed as parameter is not valid" << std::endl;
-		exit(1);
+		managed_callback::exit_callback();
 	}
 
 	// create the data structure that contain the local address and the server port
@@ -121,14 +121,14 @@ void Server::start_server(const int port) {
 	if (::bind(passive_socket_, reinterpret_cast<SOCKADDR *>(&local_address_), sizeof(local_address_)) == SOCKET_ERROR) {
 		std::cout << "impossible to bind the socket with the specified address, error:"
 			<< std::to_string(WSAGetLastError()) << std::endl;
-		exit(1);
+		managed_callback::exit_callback();
 	}
 
 	if (listen(passive_socket_, SOMAXCONN) == SOCKET_ERROR) {
 		std::cout << "server cannot listen for incoming request, error: "
 			<< std::to_string(WSAGetLastError())
 			<< std::endl;
-		exit(1);
+		managed_callback::exit_callback();
 	}
 
 	// convert the address from sockaddr type into a human readable format
