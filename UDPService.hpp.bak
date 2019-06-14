@@ -30,6 +30,8 @@ namespace udp_service {
 
         void send_broadcast(const char *message);
 
+        //map<string, user> get_online_users();
+
         ~UdpClient();
 
     private:

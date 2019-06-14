@@ -30,8 +30,8 @@ UdpClient::UdpClient(): sock_(0), server_port_(0) {
 	broadcast_address_.sin_addr.s_addr = htonl(0xffffffff); //broadcast address
 	broadcast_address_.sin_port = htons(UDP_PORT);
 
-	//if (!get_adapter())
-	//	throw udp_exception::UdpException("Cannot start UDP Client!");
+	if (!get_adapter())
+		throw udp_exception::UdpException("Cannot start UDP Client!");
 
 	/* specify address to bind to */
 	memset(&source_address, 0, sizeof(source_address));
@@ -42,11 +42,7 @@ UdpClient::UdpClient(): sock_(0), server_port_(0) {
 	bind(sock_, reinterpret_cast<sockaddr*>(&source_address), sizeof(source_address));
 }
 
-void UdpClient::set_client_address(const std::string ip_address) {
-	strcpy_s(client_address_, ip_address.c_str());
-}
-
-list<std::string> UdpClient::get_adapter()
+bool UdpClient::get_adapter()
 {
 	// It is possible for an adapter to have multiple
 	// IPv4 addresses, gateways, and secondary WINS servers
@@ -60,13 +56,11 @@ list<std::string> UdpClient::get_adapter()
 	PIP_ADAPTER_INFO p_adapter = nullptr;
 	DWORD dw_ret_val = 0;
 
-	list<std::string> ip_addresses;
-
 	ULONG ul_out_buf_len = sizeof(IP_ADAPTER_INFO);
 	p_adapter_info = static_cast<IP_ADAPTER_INFO *>(MALLOC(sizeof(IP_ADAPTER_INFO)));
 	if (p_adapter_info == nullptr) {
 		printf("Error allocating memory needed to call GetAdaptersinfo\n");
-		return ip_addresses;
+		return false;
 	}
 
 	// Make an initial call to GetAdaptersInfo to get
@@ -76,7 +70,7 @@ list<std::string> UdpClient::get_adapter()
 		p_adapter_info = static_cast<IP_ADAPTER_INFO *>(MALLOC(ul_out_buf_len));
 		if (p_adapter_info == nullptr) {
 			printf("Error allocating memory needed to call GetAdaptersinfo\n");
-			return ip_addresses;
+			return false;
 		}
 	}
 
@@ -84,16 +78,13 @@ list<std::string> UdpClient::get_adapter()
 		p_adapter = p_adapter_info;
 
 		while (p_adapter) {
-            
-			ip_addresses.push_back(p_adapter->IpAddressList.IpAddress.String);
+			printf("\tAdapter Name: \t%s\n", p_adapter->AdapterName);
 
-			//printf("\tAdapter Name: \t%s\n", p_adapter->AdapterName);
+			printf("\tIP Address: \t%s\n", p_adapter->IpAddressList.IpAddress.String);
 
-			//printf("\tIP Address: \t%s\n", p_adapter->IpAddressList.IpAddress.String);
-
-			//if (std::strcmp(p_adapter->AdapterName, NETWORK_ADAPTER_NAME) == 0) {
-			//	strcpy_s(client_address_, sizeof(p_adapter->IpAddressList.IpAddress.String), p_adapter->IpAddressList.IpAddress.String);
-			//}
+			if (std::strcmp(p_adapter->AdapterName, NETWORK_ADAPTER_NAME) == 0) {
+				strcpy_s(client_address_, sizeof(p_adapter->IpAddressList.IpAddress.String), p_adapter->IpAddressList.IpAddress.String);
+			}
 
 			p_adapter = p_adapter->Next;
 		}
@@ -102,7 +93,7 @@ list<std::string> UdpClient::get_adapter()
 	if (p_adapter_info)
 		FREE(p_adapter_info);
 
-	return ip_addresses;
+	return true;
 }
 
 void UdpClient::get_server_info(std::string address, std::string port) {
@@ -151,6 +142,61 @@ void UdpClient::get_server_info(std::string address, std::string port) {
 	/*******************************************************************************************/
 }
 
+int UdpClient::send_datagram(std::string buff) const {
+
+	int n;
+
+	/* send datagram */
+	if ((n = sendto(sock_, buff.c_str(), buff.size(), 0, reinterpret_cast<const struct sockaddr*>(&server_address_struct_), sizeof(server_address_struct_)) == SOCKET_ERROR)) {
+		cout << "Sendto failed! Error: " << WSAGetLastError() << endl;
+		throw udp_exception::UdpException("Sendto error: " + std::to_string(WSAGetLastError()) + "\n");
+	}
+
+	return n;
+}
+
+int UdpClient::receive_datagram() {
+
+	struct timeval tval;
+	fd_set cset;
+	socklen_t address_len = sizeof(server_address_struct_);
+	size_t n;
+
+	FD_ZERO(&cset);
+	FD_SET(sock_, &cset);
+	tval.tv_sec = TIMEOUT;
+	tval.tv_usec = 0;
+
+	if ((n = select(sock_ + 1, &cset, nullptr, nullptr, &tval)) == -1)
+		throw udp_exception::UdpException("Select error: " + std::to_string(WSAGetLastError()) + "\n");
+
+	if (n > 0) {
+
+		/*
+		* ****************
+		* SOCKET SELECTED
+		* ****************
+		*/
+		buffer_[0] = 0;
+
+		n = recvfrom(sock_, buffer_, MAXBUFL, 0, const_cast<struct sockaddr*>(reinterpret_cast<const struct sockaddr*>(&server_address_struct_)), &address_len);
+
+		if (n > (MAXBUFL))
+			cout << "--- Some bytes lost!" << endl;
+
+		return n;
+	}
+	/*
+		* ********
+		* TIMEOUT
+		* ********
+		*/
+
+	cout << "No response after " << TIMEOUT << " seconds!" << endl; // tval is reset by select
+
+	return 1;
+}
+
 void UdpClient::send_broadcast(const char* message) {
 	
 	auto broadcast = 1;
@@ -164,41 +210,102 @@ void UdpClient::send_broadcast(const char* message) {
 	memset(&source_address, 0, sizeof(source_address));
 	source_address.sin_family = AF_INET;
 	source_address.sin_port = htons(uint16_t(UDP_PORT));
+	inet_pton(AF_INET, client_address_, &(source_address.sin_addr));
 
-		// Set socket options to broadcast
+	bind(sock_, reinterpret_cast<sockaddr*>(&source_address), sizeof(source_address));
+
+	// Set socket options to broadcast
 	if (setsockopt(sock_, SOL_SOCKET, SO_BROADCAST, reinterpret_cast<char *>(&broadcast), sizeof(broadcast)) < 0)
 		if (closesocket(sock_) != 0)
 			throw udp_exception::UdpException("Closesocket error: " + std::to_string(WSAGetLastError()) + "\n");
 
-	std::list<string> addresses = get_adapter();
+	// Broadcast data on the socket
+	if (sendto(sock_, message, strlen(message) + 1, 0, reinterpret_cast<sockaddr *> (&broadcast_address_), sizeof(broadcast_address_)) < 0)
+		if (closesocket(sock_) != 0)
+			throw udp_exception::UdpException("Closesocket error: " + std::to_string(WSAGetLastError()) + "\n");
 
-	int result = 0;
-	for(auto address : addresses) {
-		result = inet_pton(AF_INET, address.c_str(), &(source_address.sin_addr));
-
-		if(result != 1 || address == "0.0.0.0")
-			continue;
-
-		bind(sock_, reinterpret_cast<sockaddr*>(&source_address), sizeof(source_address));
-
-		// Broadcast data on the socket
-		if (sendto(sock_, message, strlen(message) + 1, 0, reinterpret_cast<sockaddr *> (&broadcast_address_), sizeof(broadcast_address_)) < 0)
-			if (closesocket(sock_) != 0)
-				throw udp_exception::UdpException("Closesocket error: " + std::to_string(WSAGetLastError()) + "\n");
-	}
-
-
-	cout << "Broadcast packets has been sent!\n" << endl;
+	cout << "Broadcast packet has been sent!\n" << endl;
 
 	if (closesocket(sock_) != 0)
 		throw udp_exception::UdpException("Closesocket error: " + std::to_string(WSAGetLastError()) + "\n");
 }
 
+//Todo Move this method to Discovery.cpp
+map<string, user> UdpClient::get_online_users() {
+
+	map<string, user> online_users;
+	char client_address[INET_ADDRSTRLEN];
+
+	struct timeval tval;
+	fd_set cset;
+	socklen_t address_len = sizeof(server_address_struct_);
+	size_t n;
+	char username[USERNAME_LENGTH];
+	DiscoveryMessage packet;
+
+	using namespace std::chrono;
+	const auto start = steady_clock::now();
+
+	do {
+		FD_ZERO(&cset);
+		FD_SET(sock_, &cset);
+		tval.tv_sec = TIMEOUT;
+		tval.tv_usec = 0;
+
+		if ((n = select(sock_ + 1, &cset, nullptr, nullptr, &tval)) == -1)
+			throw udp_exception::UdpException("--- Error select() failed\n");
+
+		if (n > 0) {
+
+			/*
+			* ****************
+			* SOCKET SELECTED
+			* ****************
+			*/
+			buffer_[0] = 0;
+
+			n = recvfrom(sock_, buffer_, MAXBUFL, 0, const_cast<struct sockaddr*>(reinterpret_cast<const struct sockaddr*>(&server_address_struct_)), &address_len);
+
+            packet.append(buffer_, strlen(buffer_));
+
+			if (packet.get_packet_type() == HELLO_MSG) {
+
+				cout << "--- Received string " << buffer_ << endl;
+
+				packet.get_username();
+
+				inet_ntop(AF_INET, &(server_address_struct_.sin_addr), client_address, INET_ADDRSTRLEN);
+
+				online_users.insert(make_pair(string(username), user(username, client_address)));
+			}
+
+			if (n > (MAXBUFL))
+				cout << "--- Some bytes lost!" << endl;
+		}
+		else {
+
+			if (n == 0) {
+
+				/*
+				* ********
+				* TIMEOUT
+				* ********
+				*/
+
+				return online_users;
+			}
+			if (n == SOCKET_ERROR) {
+				throw SocketException(WSAGetLastError());
+			}
+		}
+	} while (duration_cast<chrono::seconds>(steady_clock::now() - start) < 3s);
+
+	return online_users;
+}
+
 UdpServer::UdpServer() {
 
 	struct sockaddr_in server_address, client_address;
-
-	exit_udp.store(false);
 
 	//const auto client_address_ptr = &client_address;
 	ZeroMemory(&client_address, sizeof(client_address));
@@ -226,26 +333,17 @@ void UdpServer::stop() {
 	closesocket(server_sock_);
 }
 
-int UdpServer::send_datagram(const char *buffer, const struct sockaddr_in *saddr, const socklen_t addr_len, const size_t len) {
+int UdpServer::send_datagram(const char *buffer, const struct sockaddr_in *saddr, const socklen_t addr_len, const size_t len) const {
 
 	int n;
-
-	if(exit_udp.load())
-		throw udp_exception::UdpShutdownException(); 
 
 	if ((n = sendto(server_sock_, buffer, len, 0, reinterpret_cast<const struct sockaddr*>(saddr), addr_len)) == SOCKET_ERROR) { // strlen(buffer) because I want to send just the valid characters.
 		cout << "Sendto failed! Error: " << WSAGetLastError() << endl;
 
 		if(WSAGetLastError() == WSAEINTR) {
-			exit_udp = true;
 			std::cout << "Terminating UDP Server..." << std::endl;
 			return 0;
 		}
-
-		if(WSAGetLastError() == WSAECONNRESET) {
-			return 0;
-		}
-
 		std::cout << "UDP EXCEPTION: " << WSAGetLastError() << std::endl;
 		throw udp_exception::UdpShutdownException();
 	}
@@ -253,19 +351,15 @@ int UdpServer::send_datagram(const char *buffer, const struct sockaddr_in *saddr
 	return n;
 }
 
-socklen_t UdpServer::receive_datagram(char *buffer, const struct sockaddr_in *caddr, const size_t length) {
+socklen_t UdpServer::receive_datagram(char *buffer, const struct sockaddr_in *caddr, const size_t length) const {
 
 	socklen_t address_len = sizeof(*caddr);
-
-	if(exit_udp.load())
-		throw udp_exception::UdpShutdownException(); 
 
 	const size_t n = recvfrom(server_sock_, buffer, length, 0, const_cast<struct sockaddr*>(reinterpret_cast<const struct sockaddr*>(caddr)), &address_len);
 
 	if (n == SOCKET_ERROR) {
 
 		if(WSAGetLastError() == WSAEINTR) {
-			exit_udp = true;
 			std::cout << "Terminating UDP Server..." << std::endl;
 			return 0;
 		}

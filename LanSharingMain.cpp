@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
 
 	//Winsock Startup
 	WSAData wsa_data;
-	const WORD dll_version = MAKEWORD(2, 1);
+	const WORD dll_version = MAKEWORD(2, 2);
 	if (WSAStartup(dll_version, &wsa_data) != 0) {
 		MessageBoxA(0, "Winsock startup failed", "Error", MB_OK | MB_ICONERROR);
 		exit(0);
@@ -149,6 +149,8 @@ void test2() {
 
 	discovery_service.start_discovery_service();
 
+	discovery_service.set_user_image("GRN.BMP");
+
 	cout << "Discovery service started" << endl;
 
 	Sleep(3000);
@@ -173,7 +175,14 @@ void test2() {
 	else
 		for (auto user : discovery_service.get_online_users()) {
 		cout << "USER: " << user.first << ":" << user.second << endl;
-		}
+	}
+
+	if (discovery_service.get_user_image().size() == 0)
+		cout << "NO USERS" << endl;
+	else
+		for (auto user : discovery_service.get_user_image()) {
+		cout << "USER: " << user.first << ":" << user.second << endl;
+	}
 	
 
 	//auto f1 = std::async(start_server);

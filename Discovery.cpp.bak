@@ -32,11 +32,8 @@ boolean Discovery::stop_discovery_service() {
 			discovery_thread_.join();
 
 		return true;
-	} catch(system_error& e) {
+	} catch(exception& e) {
 
-		if(e.code() == errc::no_such_process) {
-			return true;
-		}
 		return false;
 	}
 }

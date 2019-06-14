@@ -55,15 +55,9 @@ public:
         append(END_MESSAGE_);
     }
 
-    DiscoveryMessage() = default;
-
-	void set_username(std::string username);
-
-	void set_image(std::string image_name);
+    DiscoveryMessage() {};
 
     std::string get_username();
-
-	std::string get_image_name();
 
     std::string get_packet_type();
 

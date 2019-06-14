@@ -4,7 +4,6 @@
 #include "Message.hpp"
 #include "Exceptions.hpp"
 #include "WindowsFileHandler.hpp"
-#include <fstream>
 
 Message::Message() : message_body_(""), message_size_(0) {}
 
@@ -65,31 +64,14 @@ std::string DiscoveryMessage::get_packet_type() {
         strncmp(message.c_str(), DISCOVERY_MSG, strlen(DISCOVERY_MSG)) == 0)
         return DISCOVERY_MSG;
 
-	if(strlen(message.c_str()) >= strlen(DISCOVERY_IMAGE) && strncmp(message.c_str(), DISCOVERY_IMAGE, strlen(DISCOVERY_IMAGE)) == 0)
-		return DISCOVERY_IMAGE;
-
     return "";
-}
-
-void DiscoveryMessage::set_username(const std::string username) {
-	clear();
-    append(HELLO_MSG);
-    append(username);
-    append(END_MESSAGE_);
-}
-
-void DiscoveryMessage::set_image(std::string image_name) {
-	clear();
-	append(DISCOVERY_IMAGE);
-	append(image_name);
-	append(END_MESSAGE_);
 }
 
 std::string DiscoveryMessage::get_username() {
 
     char username[USERNAME_LENGTH] = "";
 
-    if (get_packet_type() == HELLO_MSG && m_buffer_.size() < USERNAME_LENGTH) {
+    if (get_packet_type() == HELLO_MSG) {
         // HELLO_MSG is the smallest string within a discovery message packet
         memcpy(static_cast<void *>(username), static_cast<void *>(&(m_buffer_.at(strlen(HELLO_MSG)))),
                m_buffer_.size() - strlen(HELLO_MSG));
@@ -99,22 +81,6 @@ std::string DiscoveryMessage::get_username() {
 
     const auto temp = reinterpret_cast<char *>(username);
     return std::string(temp, strlen(username));
-}
-
-std::string DiscoveryMessage::get_image_name() {
-
-    char image[IMAGE_NAME] = "";
-
-    if (get_packet_type() == DISCOVERY_IMAGE && m_buffer_.size() < IMAGE_NAME) {
-        // HELLO_MSG is the smallest string within a discovery message packet
-        memcpy(static_cast<void *>(image), static_cast<void *>(&(m_buffer_.at(strlen(DISCOVERY_IMAGE)))),
-               m_buffer_.size() - strlen(DISCOVERY_IMAGE));
-        image[m_buffer_.size() - strlen(DISCOVERY_IMAGE)] = '\0';
-    } else
-        throw MessageException("packet is not an Hello Message!\n");
-
-    const auto temp = reinterpret_cast<char *>(image);
-    return std::string(temp, strlen(image));
 }
 
 std::string DiscoveryMessage::get_message_body() {

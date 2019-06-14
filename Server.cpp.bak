@@ -25,40 +25,18 @@ void Server::run_server() {
         listen_new_connection();
     }
 }
-inline std::tm localtime_xp(std::time_t timer)
-{
-    std::tm bt {};
-#if defined(__unix__)
-    localtime_r(&timer, &bt);
-#elif defined(_MSC_VER)
-    localtime_s(&bt, &timer);
-#else
-    static std::mutex mtx;
-    std::lock_guard<std::mutex> lock(mtx);
-    bt = *std::localtime(&timer);
-#endif
-    return bt;
-}
 
-// default = "YYYY-MM-DD HH:MM:SS"
-inline std::string time_stamp(time_t time_stamp_t, const std::string& fmt = "%F %T")
-{
-    auto bt = localtime_xp(time_stamp_t);
-    char buf[64];
-    return {buf, std::strftime(buf, sizeof(buf), fmt.c_str(), &bt)};
-}
 void Server::print_client_info(const std::chrono::time_point<std::chrono::system_clock> time_point,
                                std::shared_ptr<TcpConnection> connection) {
 
     auto time_stamp_t = std::chrono::system_clock::to_time_t(time_point);
 
     std::cout << "***************************************************" << std::endl;
-    std::cout << "(" << time_stamp(time_stamp_t) << ") ";
+    std::cout << "(" << std::put_time(std::localtime(&time_stamp_t), "%c") << ") ";
     std::cout << "Server accepted an incoming request" << std::endl << "Client information: " << std::endl;
     connection->print_endpoint_info();
     std::cout << "***************************************************" << std::endl;
 }
-
 
 void Server::listen_new_connection() {
 	SOCKADDR_IN client_address;
