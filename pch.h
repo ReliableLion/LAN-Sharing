@@ -9,6 +9,7 @@
 
 typedef void (*EXCEPTION_CALLBACK)();
 typedef void (*DISCOVERY_MANAGED_CALLBACK)(const char* ipAddress,const char* username,const char* avatar);
+#include "ManagedCallback.hpp"
 
 // add headers that you want to pre-compile here
 #include "framework.h"
@@ -32,7 +33,6 @@ typedef void (*DISCOVERY_MANAGED_CALLBACK)(const char* ipAddress,const char* use
 #include "User.hpp"
 #include "UserRequest.hpp"
 
-#include "ManagedCallback.hpp"
 #include "ConcurrentQueue.hpp"
 #include "SocketBuffer.hpp"
 #include "Exceptions.hpp"

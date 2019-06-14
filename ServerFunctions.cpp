@@ -1,14 +1,14 @@
 #include "pch.h"
 
 // definition of the function exposed by the dll
-extern "C" __declspec(dllexport) BOOL start_lan_sharing(std::string path);
+extern "C" __declspec(dllexport) BOOL start_lan_sharing(const char* path);
 extern "C" __declspec(dllexport) VOID pause_server();
 extern "C" __declspec(dllexport) VOID recover_server();
 extern "C" __declspec(dllexport) VOID change_server_dw_path(std::string new_path);
 
 Server main_server;
 
-BOOL start_lan_sharing(std::string path) {
+BOOL start_lan_sharing(const char* path) {
 	try {
 
 		//Winsock Startup
@@ -16,11 +16,11 @@ BOOL start_lan_sharing(std::string path) {
 		const WORD dll_version = MAKEWORD(2, 1);
 		if (WSAStartup(dll_version, &wsa_data) != 0) {
 			MessageBoxA(0, "Winsock startup failed", "Error", MB_OK | MB_ICONERROR);
-			managed_callback::exit_callback();
+			managed_callback::getInstance().call_exit();
 		}
 
 		try {
-			main_server.start_server(1500, path);
+			main_server.start_server(1500, std::string(path));
 		}
 		catch (std::exception &e) {
 			std::cout << "Exception thrown by main server: " << WSAGetLastError() << " " << GetLastError() << std::endl;

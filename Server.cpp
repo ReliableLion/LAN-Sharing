@@ -21,7 +21,7 @@ void Server::run_server() {
         listen_new_connection();
     }
 }
-inline std::tm localtime_xp(std::time_t timer)
+inline std::tm localtime_xp(time_t timer)
 {
     std::tm bt {};
 #if defined(__unix__)
@@ -41,7 +41,7 @@ inline std::string time_stamp(time_t time_stamp_t, const std::string& fmt = "%F 
 {
     auto bt = localtime_xp(time_stamp_t);
     char buf[64];
-    return {buf, std::strftime(buf, sizeof(buf), fmt.c_str(), &bt)};
+    return {buf, strftime(buf, sizeof(buf), fmt.c_str(), &bt)};
 }
 void Server::print_client_info(const std::chrono::time_point<std::chrono::system_clock> time_point,
                                std::shared_ptr<TcpConnection> connection) {
@@ -54,7 +54,6 @@ void Server::print_client_info(const std::chrono::time_point<std::chrono::system
     connection->print_endpoint_info();
     std::cout << "***************************************************" << std::endl;
 }
-
 
 void Server::listen_new_connection() {
 	SOCKADDR_IN client_address;
@@ -110,7 +109,7 @@ void Server::start_server(const int port, std::string path) {
 
 	if (port < 0 || port > 65535) {
 		std::cout << "the value of the port passed as parameter is not valid" << std::endl;
-		managed_callback::exit_callback();
+		managed_callback::getInstance().call_exit();
 	}
 
 	// create the data structure that contain the local address and the server port
@@ -123,14 +122,14 @@ void Server::start_server(const int port, std::string path) {
 	if (::bind(passive_socket_, reinterpret_cast<SOCKADDR *>(&local_address_), sizeof(local_address_)) == SOCKET_ERROR) {
 		std::cout << "impossible to bind the socket with the specified address, error:"
 			<< std::to_string(WSAGetLastError()) << std::endl;
-		managed_callback::exit_callback();
+		managed_callback::getInstance().call_exit();
 	}
 
 	if (listen(passive_socket_, SOMAXCONN) == SOCKET_ERROR) {
 		std::cout << "server cannot listen for incoming request, error: "
 			<< std::to_string(WSAGetLastError())
 			<< std::endl;
-		managed_callback::exit_callback();
+		managed_callback::getInstance().call_exit();
 	}
 
 	// convert the address from sockaddr type into a human readable format

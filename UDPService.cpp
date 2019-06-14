@@ -187,7 +187,10 @@ void UdpServer::start_server() {
 	server_address.sin_port = htons(uint16_t(UDP_PORT));
 	server_address.sin_addr.s_addr = INADDR_ANY;
 
-	bind(server_sock_, reinterpret_cast<sockaddr*>(&server_address), sizeof(server_address));
+	if(::bind(server_sock_, reinterpret_cast<sockaddr*>(&server_address), sizeof(server_address)) != 0) {
+		cout << "Errorunable to bind " << WSAGetLastError() << endl;
+		throw udp_exception::UdpException("Error while binding the socket " + std::to_string(WSAGetLastError()) + "\n");
+	}
 
 	inet_ntop(AF_INET, &(server_address.sin_addr), server_address_, INET_ADDRSTRLEN);
 
