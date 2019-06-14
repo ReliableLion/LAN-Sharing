@@ -9,25 +9,54 @@ namespace LanSharing
 {
     class DiscoveryUser {
 
+        private static readonly DiscoveryUser instance = new DiscoveryUser();
+
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void DiscoveryDelegate(string ipAddress, string username, string avatar);
         
-        [DllImport("C:\\Users\\Asus\\source\\repos\\Dll1\\Debug\\DLL1.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void SaveUserDelegate(DiscoveryDelegate callback);
+        [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void save_discovery_callback(DiscoveryDelegate callback);
+
+        [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void start_collection();
+
+        [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void hide_me();
+
+        [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void go_online();
+
+        [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void set_username(string username);
+
+        [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void set_avatar(string avatar);
 
         private static DiscoveryDelegate _discoveryDelegate;
         private readonly SortedDictionary<string, string> _users = new SortedDictionary<string, string>();
         private readonly SortedDictionary<string, string> _usersImage = new SortedDictionary<string, string>();
 
-        public DiscoveryUser() {
+
+        // Explicit static constructor to tell C# compiler
+        // not to mark type as beforefieldinit
+        static DiscoveryUser() {
+        }
+
+        private DiscoveryUser() {
             Save_user();
+        }
+
+        public static DiscoveryUser Instance {
+            get
+            {
+                return instance;
+            }
         }
 
         private void Save_user() {
 
             _discoveryDelegate = delegate(string ipAddress, string username, string avatar)
             {
-                
                 if (username != "")
                 {
                     if (!_users.ContainsKey(ipAddress))
@@ -43,7 +72,27 @@ namespace LanSharing
                 }
             };
 
-            SaveUserDelegate(_discoveryDelegate);
+            save_discovery_callback(_discoveryDelegate);
+        }
+
+        public void search_user() {
+            start_collection();
+        }
+
+        public void Hide() {
+            hide_me();
+        }
+
+        public void Online() {
+            go_online();
+        }
+
+        public void SetUsername(string username) {
+            set_username(username);
+        }
+
+        public void SetAvatar(string image_name) {
+            set_avatar(image_name);
         }
 
         public void print() {

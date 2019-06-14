@@ -54,6 +54,8 @@ namespace LanSharing
         }
 
         public void set_avatar(string avatar_name) {
+
+            DiscoveryUser.Instance.SetAvatar(avatar_name);
             try  
             {  
                 var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);  
@@ -79,11 +81,13 @@ namespace LanSharing
 
         private void SaveUsername_Click(object sender, EventArgs e)
         {
+
+            var username = Truncate(usernameBox.Text, 254);
+            DiscoveryUser.Instance.SetUsername(username);
             try  
             {  
-                var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);  
+                var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
                 var settings = configFile.AppSettings.Settings;
-                var username = Truncate(usernameBox.Text, 254);
                 if (settings["username"] == null)  
                 {  
                     settings.Add("username", username);  

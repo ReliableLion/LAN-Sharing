@@ -128,7 +128,7 @@ namespace LanSharing
                 registryMenu?.SetValue("","Share with");
                 registryMenu?.SetValue("Icon", "C:\\Users\\Asus\\Documents\\Malnati\\icon_lan_sharing.ico");
                 registryCmd = Registry.CurrentUser.CreateSubKey(Command);
-                registryCmd?.SetValue("", "");
+                registryCmd?.SetValue("", "C:\\Users\\Asus\\source\\repos\\LanSharing\\bin\\Debug\\LanSharing.exe %1");
             }
             catch(Exception ex)
             {
