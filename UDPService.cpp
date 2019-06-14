@@ -156,24 +156,25 @@ void UdpClient::send_broadcast(const char* message) {
 	auto broadcast = 1;
 	struct sockaddr_in source_address;
 
-	// Create a UDP socket
-	if ((sock_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
-		throw udp_exception::UdpException("Socket error: " + std::to_string(WSAGetLastError()) + "\n");
-
-	/* specify address to bind to */
-	memset(&source_address, 0, sizeof(source_address));
-	source_address.sin_family = AF_INET;
-	source_address.sin_port = htons(uint16_t(UDP_PORT));
-
-		// Set socket options to broadcast
-	if (setsockopt(sock_, SOL_SOCKET, SO_BROADCAST, reinterpret_cast<char *>(&broadcast), sizeof(broadcast)) < 0)
-		if (closesocket(sock_) != 0)
-			throw udp_exception::UdpException("Closesocket error: " + std::to_string(WSAGetLastError()) + "\n");
-
-	std::list<string> addresses = get_adapter();
+		std::list<string> addresses = get_adapter();
 
 	int result = 0;
 	for(auto address : addresses) {
+		// Create a UDP socket
+		if ((sock_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
+			throw udp_exception::UdpException("Socket error: " + std::to_string(WSAGetLastError()) + "\n");
+
+		/* specify address to bind to */
+		memset(&source_address, 0, sizeof(source_address));
+		source_address.sin_family = AF_INET;
+		source_address.sin_port = htons(uint16_t(UDP_PORT));
+
+			// Set socket options to broadcast
+		if (setsockopt(sock_, SOL_SOCKET, SO_BROADCAST, reinterpret_cast<char *>(&broadcast), sizeof(broadcast)) < 0)
+			if (closesocket(sock_) != 0)
+				throw udp_exception::UdpException("Closesocket error: " + std::to_string(WSAGetLastError()) + "\n");
+
+
 		result = inet_pton(AF_INET, address.c_str(), &(source_address.sin_addr));
 
 		if(result != 1 || address == "0.0.0.0")

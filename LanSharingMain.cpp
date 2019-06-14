@@ -168,7 +168,7 @@ void test2() {
 
 	cout << "Discovery sent!" << endl;
 
-	Sleep(3000);
+	Sleep(20000000000);
 
 	if (discovery_service.get_online_users().size() == 0)
 		cout << "NO USERS" << endl;
