@@ -25,6 +25,8 @@ class HandshakeManager {
 
 	const std::string class_name = "Handshake Manager";
 
+	std::atomic<bool> auto_accept_;
+
     // connection and download variable
     ConcurrentQueue<QueueConnectionElement> connection_queue_;
     std::shared_ptr<DownloadManager> download_manager_;
@@ -44,11 +46,13 @@ class HandshakeManager {
 
     // bool send_response(PacketManager& res_packet_manager, connection::conn_ptr connection);
 public:
-	explicit HandshakeManager(std::shared_ptr<DownloadManager> download_manager);
+	explicit HandshakeManager(std::shared_ptr<DownloadManager> download_manager, bool accept);
 
     ~HandshakeManager();
 
     void terminate_service();
 
     bool add_connection(QueueConnectionElement element, request_status &status);
+
+	void change_auto_accept(bool accept);
 };

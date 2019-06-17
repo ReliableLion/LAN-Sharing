@@ -2,8 +2,9 @@
 
 using namespace connection;
 
-HandshakeManager::HandshakeManager(const std::shared_ptr<DownloadManager> download_manager) {
+HandshakeManager::HandshakeManager(const std::shared_ptr<DownloadManager> download_manager, bool accept) {
     is_terminated_.store(false);
+	auto_accept_.store(accept);
     this->download_manager_ = download_manager;
 
     // instantiate all the threads that are used to manage all the incoming requests
@@ -122,6 +123,13 @@ void HandshakeManager::process_client_req(PacketDispatcher &packet_dispatcher, c
 		ConcurrentStreamPrint::print_data(thread_id, class_name, "try to receive the request");
 		ProtocolMessage protocol_packet = packet_dispatcher.receive_packet();
 
+		if (auto_accept_.load()) {
+			bool accept = managed_callback::getInstance().call_accept_callback();
+			if (!accept) {
+				return;
+			}
+		}
+
 		switch (protocol_packet.get_message_code()) {
 			case protocol::ok: 
 				// std::cout << "[Thread id " << thread_id << "]: received ok!" << std::endl;
@@ -204,4 +212,8 @@ void HandshakeManager::append_in_download_queue(PacketDispatcher &packet_dispatc
 	}
 
 	packet_dispatcher.send_packet(protocol::ok);
+}
+
+void HandshakeManager::change_auto_accept(bool accept) {
+	auto_accept_.store(accept);
 }

@@ -101,7 +101,7 @@ void Server::listen_new_connection() {
 	}
 }
 
-void Server::start_server(const int port, std::string path) {
+void Server::start_server(const int port, std::string path, bool accept) {
 
 	// change the server state and instantiate the main thread
 	if (server_status_.load() == running)
@@ -140,7 +140,7 @@ void Server::start_server(const int port, std::string path) {
 	std::cout << ", port number: " << ntohs(local_address_.sin_port) << std::endl << std::endl;
 
 	download_manager_ = std::make_shared<DownloadManager>(path);
-    handshake_agreement_manager_ = std::make_shared<HandshakeManager>(download_manager_);
+    handshake_agreement_manager_ = std::make_shared<HandshakeManager>(download_manager_, accept);
 
     server_status_.store(running);
     server_main_thread_ = std::thread(&Server::run_server, this);
@@ -176,5 +176,11 @@ void Server::recover_server() {
 void Server::change_dest_path(std::string path) {
 	if (server_status_.load() != stopped) {
 		download_manager_->change_dest_path(path);
+	}
+}
+
+void Server::change_auto_accept(bool accept) {
+	if (server_status_.load() != stopped) {
+		handshake_agreement_manager_->change_auto_accept(accept);
 	}
 }

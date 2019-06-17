@@ -9,6 +9,10 @@
 
 typedef void (*EXCEPTION_CALLBACK)();
 typedef void (*DISCOVERY_MANAGED_CALLBACK)(const char* ipAddress,const char* username,const char* avatar);
+typedef bool (*ACCEPT_CALLBACK)();
+typedef void (*PROGRESS_BAR_CALLBACK)(const char *id, int progress);
+
+
 #include "ManagedCallback.hpp"
 
 // add headers that you want to pre-compile here

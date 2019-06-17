@@ -1,14 +1,15 @@
 #include "pch.h"
 
 // definition of the function exposed by the dll
-extern "C" __declspec(dllexport) BOOL start_lan_sharing(const char* path);
+extern "C" __declspec(dllexport) BOOL start_lan_sharing(const char* path, BOOL accept);
 extern "C" __declspec(dllexport) VOID pause_server();
 extern "C" __declspec(dllexport) VOID recover_server();
 extern "C" __declspec(dllexport) VOID change_server_dw_path(const char* new_path);
+extern "C" __declspec(dllexport) VOID change_auto_accept(BOOL accept);
 
 Server main_server;
 
-BOOL start_lan_sharing(const char* path) {
+BOOL start_lan_sharing(const char* path, BOOL accept) {
 	try {
 
 		//Winsock Startup
@@ -20,7 +21,7 @@ BOOL start_lan_sharing(const char* path) {
 		}
 
 		try {
-			main_server.start_server(1500, std::string(path));
+			main_server.start_server(1500, std::string(path), accept);
 		}
 		catch (std::exception &e) {
 			std::cout << "Exception thrown by main server: " << WSAGetLastError() << " " << GetLastError() << std::endl;
@@ -54,4 +55,8 @@ VOID recover_server() {
 
 VOID change_server_dw_path(const char* new_path) {
 	main_server.change_dest_path(string(new_path));
+}
+
+VOID change_auto_accept(BOOL accept) {
+	main_server.change_auto_accept(accept);
 }

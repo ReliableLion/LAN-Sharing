@@ -20,6 +20,14 @@ public:
 		discovery_managed_callback = callback;
 	}
 
+	void save_accept(ACCEPT_CALLBACK accept_callback) {
+		this->accept_callback = accept_callback;
+	}
+
+	void save_progress_bar_handler(PROGRESS_BAR_CALLBACK progress_bar_callback) {
+		this->progress_bar_callback = progress_bar_callback;
+	}
+
 	void call_exit() {
 		exit_callback();
 	}
@@ -28,8 +36,18 @@ public:
 		discovery_managed_callback(address.c_str(), username.c_str(), avatar.c_str());
 	}
 
+	bool call_accept_callback() {
+		return accept_callback();
+	}
+
+	bool call_progress_bar_callback(const char *id, int progress) {
+		progress_bar_callback(id, progress);
+	}
+
 private:
 	managed_callback() = default;
 	EXCEPTION_CALLBACK exit_callback;
 	DISCOVERY_MANAGED_CALLBACK discovery_managed_callback;
+	ACCEPT_CALLBACK accept_callback;
+	PROGRESS_BAR_CALLBACK progress_bar_callback;
 };

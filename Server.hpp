@@ -33,13 +33,15 @@ public:
 
     ~Server();
 
-    void start_server(int port, std::string path);
+    void start_server(int port, std::string path, bool accept);
 
 	void pause_server();
 
 	void recover_server();
 
     void close_server();
+
+	void change_auto_accept(bool accept);
 
 	void change_dest_path(std::string path);
 };
