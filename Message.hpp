@@ -49,6 +49,8 @@ class DiscoveryMessage : public Message {
 public:
 	explicit DiscoveryMessage(const std::string username) {
         append(HELLO_MSG);
+		append("");
+		append(END_MESSAGE_);
         append(username);
         append(END_MESSAGE_);
     }

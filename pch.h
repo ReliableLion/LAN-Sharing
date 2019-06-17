@@ -28,6 +28,8 @@ typedef void (*DISCOVERY_MANAGED_CALLBACK)(const char* ipAddress,const char* use
 #include <mswsock.h>
 #pragma comment(lib, "Mswsock.lib")
 
+#pragma comment(lib, "ws2_32.lib")
+
 #include "Constants.hpp"
 #include "Utils.hpp"
 #include "User.hpp"

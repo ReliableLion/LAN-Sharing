@@ -28,17 +28,15 @@
 /**
  * \brief Message appended within an Hello Message
  */
-#define HELLO_MSG  "MYUSERNAME "
+#define HELLO_MSG  "MYPROFILE "
 /**
  * \brief Message appended within a Discovery Message
  */
 #define DISCOVERY_MSG "LAN-SHARING LOOKING FOR"
 
-#define DISCOVERY_IMAGE  "MYIMAGE "
-
 #define USERNAME "Davide"
 #define USERNAME_LENGTH 255
-#define IMAGE_NAME 255
+#define IMAGE_LENGTH 255
  
 /* FILE SECTION */
 #define BIG_FILE_THREADS 3

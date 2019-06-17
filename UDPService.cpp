@@ -3,6 +3,7 @@
 
 #define MALLOC(x) HeapAlloc(GetProcessHeap(), 0, (x))
 #define FREE(x) HeapFree(GetProcessHeap(), 0, (x))
+#define SIO_UDP_CONNRESET _WSAIOW(IOC_VENDOR, 12)
 
 using namespace udp_service;
 
@@ -39,6 +40,8 @@ list<std::string> UdpClient::get_adapter()
 	PIP_ADAPTER_INFO p_adapter = nullptr;
 	DWORD dw_ret_val = 0;
 
+	my_addresses_.clear();
+
 	list<std::string> ip_addresses;
 
 	ULONG ul_out_buf_len = sizeof(IP_ADAPTER_INFO);
@@ -72,6 +75,8 @@ list<std::string> UdpClient::get_adapter()
 
 	if (p_adapter_info)
 		FREE(p_adapter_info);
+
+	my_addresses_ = ip_addresses;
 
 	return ip_addresses;
 }
@@ -126,43 +131,80 @@ void UdpClient::send_broadcast(const char* message) {
 	
 	auto broadcast = 1;
 	struct sockaddr_in source_address;
-
-	// Create a UDP socket
-	if ((sock_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
-		throw udp_exception::UdpException("Socket error: " + std::to_string(WSAGetLastError()) + "\n");
-
-	/* specify address to bind to */
-	memset(&source_address, 0, sizeof(source_address));
-	source_address.sin_family = AF_INET;
-	source_address.sin_port = htons(uint16_t(UDP_PORT));
-
-		// Set socket options to broadcast
-	if (setsockopt(sock_, SOL_SOCKET, SO_BROADCAST, reinterpret_cast<char *>(&broadcast), sizeof(broadcast)) < 0)
-		if (closesocket(sock_) != 0)
-			throw udp_exception::UdpException("Closesocket error: " + std::to_string(WSAGetLastError()) + "\n");
+	char addr_string[INET_ADDRSTRLEN];
 
 	std::list<string> addresses = get_adapter();
 
 	int result = 0;
 	for(auto address : addresses) {
-		result = inet_pton(AF_INET, address.c_str(), &(source_address.sin_addr));
 
-		if(result != 1 || address == "0.0.0.0")
+		if(!is_ip_in_range(address))
 			continue;
 
-		bind(sock_, reinterpret_cast<sockaddr*>(&source_address), sizeof(source_address));
+		/* specify address to bind to */
+		memset(&source_address, 0, sizeof(source_address));
+		source_address.sin_family = AF_INET;
+		source_address.sin_port = htons(uint16_t(UDP_PORT));
+
+		result = inet_pton(AF_INET, address.c_str(), &(source_address.sin_addr));
+
+		if(result != 1) {
+			continue;
+		}
+
+		// Create a UDP socket
+		if ((sock_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
+			throw udp_exception::UdpException("Socket error: " + std::to_string(WSAGetLastError()) + "\n");
+
+			// Set socket options to broadcast
+		if (setsockopt(sock_, SOL_SOCKET, SO_BROADCAST, reinterpret_cast<char *>(&broadcast), sizeof(broadcast)) < 0)
+			if (closesocket(sock_) != 0)
+				throw udp_exception::UdpException("Closesocket error: " + std::to_string(WSAGetLastError()) + "\n");
+
+		::bind(sock_, reinterpret_cast<sockaddr*>(&source_address), sizeof(source_address));
+
+
+		inet_ntop(AF_INET, &(source_address.sin_addr), addr_string, INET_ADDRSTRLEN);
+
+		std::cout << addr_string << std::endl;
 
 		// Broadcast data on the socket
 		if (sendto(sock_, message, strlen(message) + 1, 0, reinterpret_cast<sockaddr *> (&broadcast_address_), sizeof(broadcast_address_)) < 0)
 			if (closesocket(sock_) != 0)
 				throw udp_exception::UdpException("Closesocket error: " + std::to_string(WSAGetLastError()) + "\n");
+		
+		closesocket(sock_);
 	}
 
+	std::cout << "Broadcast packets has been sent!\n" << endl;
 
-	cout << "Broadcast packets has been sent!\n" << endl;
+}
 
-	if (closesocket(sock_) != 0)
-		throw udp_exception::UdpException("Closesocket error: " + std::to_string(WSAGetLastError()) + "\n");
+bool UdpClient::is_ip_in_range(const std::string ip_address) {
+	struct sockaddr_in source_address;
+
+	memset(&source_address, 0, sizeof(source_address));
+	inet_pton(AF_INET, ip_address.c_str(), &(source_address.sin_addr));
+	const uint32_t ip = ntohl(source_address.sin_addr.s_addr);
+
+	auto b1 = static_cast<uint8_t>(ip >> 24);
+    auto b2 = static_cast<uint8_t>((ip >> 16) & 0x0ff);
+	auto b3 = static_cast<uint8_t>((ip >> 8) & 0x0ff);
+    auto b4 = static_cast<uint8_t>(ip & 0x0ff);
+
+    // 10.x.y.z
+    if (b1 == 10)
+        return true;
+
+    // 172.16.0.0 - 172.31.255.255
+    if ((b1 == 172) && (b2 >= 16) && (b2 <= 31))
+        return true;
+
+    // 192.168.0.0 - 192.168.255.255
+    if ((b1 == 192) && (b2 == 168))
+        return true;
+
+    return false;
 }
 
 UdpServer::UdpServer() {}
@@ -194,6 +236,10 @@ void UdpServer::start_server() {
 
 	inet_ntop(AF_INET, &(server_address.sin_addr), server_address_, INET_ADDRSTRLEN);
 
+	//BOOL bNewBehavior = FALSE;
+	//DWORD dwBytesReturned = 0;
+	//WSAIoctl(server_sock_, SIO_UDP_CONNRESET, &bNewBehavior, sizeof bNewBehavior, NULL, 0, &dwBytesReturned, NULL, NULL);
+
 	cout << "--- Listening on " << server_address_ << ":" << ntohs(server_address.sin_port) << endl;
 }
 
@@ -206,7 +252,13 @@ int UdpServer::send_datagram(const char *buffer, const struct sockaddr_in *saddr
 	int n;
 
 	if(exit_udp.load())
-		throw udp_exception::UdpShutdownException(); 
+		throw udp_exception::UdpShutdownException();
+
+	char addr_string[INET_ADDRSTRLEN];
+
+	inet_ntop(AF_INET, &(saddr->sin_addr), addr_string, INET_ADDRSTRLEN);
+
+	std::cout << saddr << std::endl;
 
 	if ((n = sendto(server_sock_, buffer, len, 0, reinterpret_cast<const struct sockaddr*>(saddr), addr_len)) == SOCKET_ERROR) { // strlen(buffer) because I want to send just the valid characters.
 		cout << "Sendto failed! Error: " << WSAGetLastError() << endl;
@@ -236,6 +288,10 @@ socklen_t UdpServer::receive_datagram(char *buffer, const struct sockaddr_in *ca
 		throw udp_exception::UdpShutdownException(); 
 
 	const size_t n = recvfrom(server_sock_, buffer, length, 0, const_cast<struct sockaddr*>(reinterpret_cast<const struct sockaddr*>(caddr)), &address_len);
+	char addr_string[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(caddr->sin_addr), addr_string, INET_ADDRSTRLEN);
+
+	std::cout << addr_string << std::endl;
 
 	if (n == SOCKET_ERROR) {
 
@@ -244,6 +300,7 @@ socklen_t UdpServer::receive_datagram(char *buffer, const struct sockaddr_in *ca
 			std::cout << "Terminating UDP Server..." << std::endl;
 			return 0;
 		}
+		auto result = WSAGetLastError();
 		std::cout << "UDP EXCEPTION: " << WSAGetLastError() << std::endl;
 		throw udp_exception::UdpShutdownException();
 	}

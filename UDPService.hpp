@@ -24,6 +24,10 @@ namespace udp_service {
 
         void send_broadcast(const char *message);
 
+		bool is_ip_in_range(const std::string ip_address);
+
+		list<string> get_addresses() {return my_addresses_;}
+
         ~UdpClient();
 
     private:
@@ -32,6 +36,7 @@ namespace udp_service {
         char server_address_[INET_ADDRSTRLEN];
         int server_port_;
         struct sockaddr_in broadcast_address_, server_address_struct_;
+		list<string> my_addresses_;
 
     };
 

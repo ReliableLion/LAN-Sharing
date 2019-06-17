@@ -30,7 +30,6 @@ private:
 	void start_udp_server();
 
 	DiscoveryMessage hello_message_;
-	DiscoveryMessage image_message;
 
 	std::thread discovery_thread_;
 

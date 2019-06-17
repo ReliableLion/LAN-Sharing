@@ -59,35 +59,44 @@ std::string DiscoveryMessage::get_packet_type() {
         strncmp(message.c_str(), DISCOVERY_MSG, strlen(DISCOVERY_MSG)) == 0)
         return DISCOVERY_MSG;
 
-	if(strlen(message.c_str()) >= strlen(DISCOVERY_IMAGE) && strncmp(message.c_str(), DISCOVERY_IMAGE, strlen(DISCOVERY_IMAGE)) == 0)
-		return DISCOVERY_IMAGE;
-
     return "";
 }
 
 void DiscoveryMessage::set_username(const std::string username) {
+	const auto temp = get_image_name();
 	clear();
-    append(HELLO_MSG);
+	append(HELLO_MSG);
+	append(temp);
+	append(END_MESSAGE_);
     append(username);
     append(END_MESSAGE_);
 }
 
 void DiscoveryMessage::set_image(std::string image_name) {
+	const auto temp = get_username();
 	clear();
-	append(DISCOVERY_IMAGE);
+	append(HELLO_MSG);
 	append(image_name);
 	append(END_MESSAGE_);
+    append(temp);
+    append(END_MESSAGE_);
 }
 
 std::string DiscoveryMessage::get_username() {
 
     char username[USERNAME_LENGTH] = "";
 
-    if (get_packet_type() == HELLO_MSG && m_buffer_.size() < USERNAME_LENGTH) {
+    if (get_packet_type() == HELLO_MSG && m_buffer_.size() < (USERNAME_LENGTH + IMAGE_LENGTH + strlen(END_MESSAGE_.c_str()) * 2 + strlen(HELLO_MSG))) {
+
+	    const auto temp = reinterpret_cast<char *>((m_buffer_.data()));
+	    auto message = std::string(temp, m_buffer_.size());
+
+		std::string first_part = message.substr(0, message.find("\r\n"));
+
         // HELLO_MSG is the smallest string within a discovery message packet
-        memcpy(static_cast<void *>(username), static_cast<void *>(&(m_buffer_.at(strlen(HELLO_MSG)))),
-               m_buffer_.size() - strlen(HELLO_MSG));
-        username[m_buffer_.size() - strlen(HELLO_MSG)] = '\0';
+        memcpy(static_cast<void *>(username), static_cast<void *>(&(m_buffer_.at(strlen(first_part.c_str()) + strlen(END_MESSAGE_.c_str())))),
+               m_buffer_.size() - strlen(first_part.c_str() - strlen(END_MESSAGE_.c_str())));
+        username[m_buffer_.size() - strlen(first_part.c_str()) - (strlen(END_MESSAGE_.c_str()) * 2)] = '\0';
     } else
         throw MessageException("packet is not an Hello Message!\n");
 
@@ -97,13 +106,22 @@ std::string DiscoveryMessage::get_username() {
 
 std::string DiscoveryMessage::get_image_name() {
 
-    char image[IMAGE_NAME] = "";
+    char image[IMAGE_LENGTH] = "";
 
-    if (get_packet_type() == DISCOVERY_IMAGE && m_buffer_.size() < IMAGE_NAME) {
+    if (get_packet_type() == HELLO_MSG && m_buffer_.size() < (USERNAME_LENGTH + IMAGE_LENGTH + strlen(END_MESSAGE_.c_str()) * 2 + strlen(HELLO_MSG))) {
+
+		const auto temp = reinterpret_cast<char *>((m_buffer_.data()));
+	    auto message = std::string(temp, m_buffer_.size());
+
+		std::string image_name = message.substr(0, message.find("\r\n"));
+
+		if(image_name == HELLO_MSG)
+			return "";
+
         // HELLO_MSG is the smallest string within a discovery message packet
-        memcpy(static_cast<void *>(image), static_cast<void *>(&(m_buffer_.at(strlen(DISCOVERY_IMAGE)))),
-               m_buffer_.size() - strlen(DISCOVERY_IMAGE));
-        image[m_buffer_.size() - strlen(DISCOVERY_IMAGE)] = '\0';
+        memcpy(static_cast<void *>(image), static_cast<void *>(&(m_buffer_.at(strlen(HELLO_MSG)))),
+               strlen(image_name.c_str()) - strlen(HELLO_MSG));
+        image[strlen(image_name.c_str()) - strlen(HELLO_MSG)] = '\0';
     } else
         throw MessageException("packet is not an Hello Message!\n");
 

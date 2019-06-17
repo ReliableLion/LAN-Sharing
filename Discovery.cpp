@@ -48,7 +48,7 @@ void Discovery::set_username(std::string username) {
 }
 
 void Discovery::set_user_image(std::string image_name) {
-	image_message.set_image(image_name);
+	hello_message_.set_image(image_name);
 }
 
 void Discovery::start_listening() {
@@ -81,22 +81,16 @@ void Discovery::start_listening() {
 				std::this_thread::sleep_for(std::chrono::milliseconds{ distance(eng) });
 
 				udp_server_.send_datagram(hello_message_.get_message_body().c_str(), &client_address, address_len, strlen(hello_message_.get_message_body().c_str()));
-				udp_server_.send_datagram(image_message.get_message_body().c_str(), &client_address, address_len, strlen(image_message.get_message_body().c_str()));
-
 			}
 		}
 		else if (packet.get_packet_type() == HELLO_MSG) {
 
 			cout << "HERE THE HELLO RECEIVED: " << packet.get_message_body() << "The username obviously is: " << packet.get_username() << endl;
 
-			managed_callback::getInstance().call_discovery(udp_service::get_client_address(client_address_ptr).c_str(), packet.get_username().c_str(), "");
+			auto ip_address = udp_service::get_client_address(client_address_ptr);
 
-		} else if(packet.get_packet_type() == DISCOVERY_IMAGE) {
-			
-			auto image_name = packet.get_image_name();
-
-			managed_callback::getInstance().call_discovery(udp_service::get_client_address(client_address_ptr).c_str(), "", image_name.c_str());
-
+			if(std::find(udp_client_.get_addresses().begin(), udp_client_.get_addresses().end(), ip_address) == udp_client_.get_addresses().end())
+				managed_callback::getInstance().call_discovery(ip_address, packet.get_username(), packet.get_image_name());
 		}
 		else
 			cout << "IT WASN'T A DISCOVERY MESSAGE!" << endl;
@@ -112,7 +106,7 @@ void Discovery::start_discovery_service(std::string username, std::string image_
 		username.resize(32);
 	udp_server_.start_server();
 	hello_message_.set_username(std::move(username));
-	image_message.set_image(image_name);
+	hello_message_.set_image(image_name);
 	discovery_thread_ = std::thread(&Discovery::start_udp_server, this);
 	cout << "-------------- Server started" << endl;
 }
