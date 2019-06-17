@@ -155,7 +155,14 @@ void DownloadManager::process_file(download_struct file_req, int thread_id) {
 	std::string rnd_filename = generate_random_string(20, std::string(".tmp"));
 	std::string file_path = get_dest_path();
 
-	FileHandler file(file_path, rnd_filename);
+	std::cout << "the path is " << file_path;
+
+	FileHandler file(rnd_filename, file_path);
+
+	if (!file.check_write_permission()) {
+		std::cout << "impossible to write the file into the location specified" << std::endl;
+		return;
+	}
 
 	try {
 
@@ -221,7 +228,10 @@ void DownloadManager::perform_rename_file(std::string new_filename, FileHandler 
 
 	while (rename_file(filename, file) == false) {
 		ss.clear();
-		ss << new_filename << "(" << i << ")";
+
+		std::size_t pos = filename.find_last_of(".");
+
+		ss << new_filename.substr(0, pos) << "(" << i << ")" << new_filename.substr(pos, new_filename.length());
 		filename = ss.str();
 		i++;
 	}

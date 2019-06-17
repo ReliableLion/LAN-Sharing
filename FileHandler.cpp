@@ -120,23 +120,25 @@ bool FileHandler::rename_file(std::string new_name) {
 		return false;
 	}
 
-	int result = rename(filename_.c_str(), new_name.c_str());
+	std::stringstream ss;
+	ss << file_dir_ << "\\" << new_name;
+	std::string new_path = ss.str();
+
+	int result = rename(file_path_.c_str(), new_path.c_str());
 
 	if (result == 0) {
 #ifdef FILE_HANDLER_OUTPUT
 		std::cout << "the file is correclty renamed" << std::endl;
 #endif
 		filename_ = new_name;
-		std::stringstream ss;
-		ss << file_dir_ << "\\" << filename_;
-		file_path_ = ss.str();
-		return false;
+		file_path_ = new_path;
+		return true;
 	}
 
 #ifdef FILE_HANDLER_OUTPUT
 	std::cout << "impossible to rename the file" << std::endl;
 #endif
-	return true;
+	return false;
 }
 
 bool FileHandler::check_filename_existence(std::string filename) {
