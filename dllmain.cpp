@@ -4,6 +4,8 @@
 
 extern "C" __declspec(dllexport) VOID save_exception_callback(EXCEPTION_CALLBACK callback);
 extern "C" __declspec(dllexport) VOID save_discovery_callback(DISCOVERY_MANAGED_CALLBACK callback);
+extern "C" __declspec(dllexport) VOID save_accept_callback(ACCEPT_CALLBACK callback);
+extern "C" __declspec(dllexport) VOID save_progress_bar_callback(PROGRESS_BAR_CALLBACK callback);
 
 VOID save_exception_callback(EXCEPTION_CALLBACK callback) {
 	managed_callback::getInstance().save_exit(callback);
