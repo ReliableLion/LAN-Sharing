@@ -24,6 +24,13 @@ namespace LanSharing
         [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
         public static extern bool start_discovery_service(string username, string avatar);
 
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate bool AutoDownloadDelegate();
+        
+        [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void save_accept_callback(AutoDownloadDelegate callback);
+        private static AutoDownloadDelegate autoDownloadDelegate_;
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -31,11 +38,7 @@ namespace LanSharing
         [STAThread]
         static void Main(string[] args)
         {
-            if(args.Length != 0)
-                foreach (var arg in args)
-                {
-                    Console.Out.WriteLine(arg);
-                }
+
             if (mutex.WaitOne(TimeSpan.Zero, true))
             {
                 Application.EnableVisualStyles();
@@ -51,6 +54,21 @@ namespace LanSharing
                 };
 
                 save_exception_callback(shutdownDelegate);
+                autoDownloadDelegate_ = () =>
+                {
+                    Console.Out.WriteLine("CHIAMATA");
+                    return true;
+                    //using (var fbd = new FolderBrowserDialog())
+                    //{
+
+                    //    DialogResult result = fbd.ShowDialog();
+
+                    //    if (result != DialogResult.OK || string.IsNullOrWhiteSpace(fbd.SelectedPath)) return "";
+
+                    //    return fbd.SelectedPath;
+                    //}
+                };
+                save_accept_callback(autoDownloadDelegate_);
 
                 string path;
                 string username;
