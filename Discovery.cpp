@@ -88,8 +88,9 @@ void Discovery::start_listening() {
 			cout << "HERE THE HELLO RECEIVED: " << packet.get_message_body() << "The username obviously is: " << packet.get_username() << endl;
 
 			auto ip_address = udp_service::get_client_address(client_address_ptr);
+			auto addr_list = udp_client_.get_addresses();
 
-			if(std::find(udp_client_.get_addresses().begin(), udp_client_.get_addresses().end(), ip_address) == udp_client_.get_addresses().end())
+			if(std::find(addr_list.begin(), addr_list.end(), ip_address) == addr_list.end())
 				managed_callback::getInstance().call_discovery(ip_address, packet.get_username(), packet.get_image_name());
 		}
 		else
