@@ -175,6 +175,7 @@
     <None Include="avatars\woman2.png" />
     <None Include="avatars\woman3.png" />
     <None Include="avatars\cancel.png" />
+    <None Include="avatars\close.png" />
     <Content Include="icon_lan_sharing.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

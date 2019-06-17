@@ -15,9 +15,11 @@ namespace LanSharing
 {
     public partial class SettingsControl : UserControl
     {
-
         [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
         public static extern void change_server_dw_path(string path);
+
+        [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void change_auto_accept(bool accept);
 
         public SettingsControl()
         {
@@ -61,6 +63,9 @@ namespace LanSharing
             }  
             catch (ConfigurationErrorsException) {
             }
+
+            change_auto_accept(downloadCheck.Checked);
+
         }
 
         private void DwnPathButton_Click(object sender, EventArgs e) {

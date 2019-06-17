@@ -32,6 +32,8 @@ namespace LanSharing
                 statusBtn.Text = @"Go Online";
                 statusLabel.Text = @"Offline";
             }
+
+            statusBtn.UseVisualStyleBackColor = false;
         }
 
         private void Button1_Click(object sender, EventArgs e) {
@@ -54,20 +56,11 @@ namespace LanSharing
             Settings.Default.Save();
         }
 
-        private int interval = 0;
-        private void Show_alert_Tick(object sender, EventArgs e)  {
-            if (this.Top < 60)
-            {
-                this.Top += interval;
-                interval += 2;
-            } else
-            {
-                show_alert.Stop();
-            }
-        }
-
         private void Alert_Load(object sender, EventArgs e)
         {
+            Color col = statusBtn.BackColor;
+            statusBtn.BackColor = Color.FromArgb(50, 0, 0, 0);
+
             this.Top = Screen.PrimaryScreen.Bounds.Height - this.Height - 35;
             this.Left = Screen.PrimaryScreen.Bounds.Width - this.Width - 15;
         }

@@ -19,7 +19,7 @@ namespace LanSharing
         private static ShutdownDelegate shutdownDelegate;
 
         [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        public static extern bool start_lan_sharing(string path);
+        public static extern bool start_lan_sharing(string path, bool autoAccept);
 
         [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
         public static extern bool start_discovery_service(string username, string avatar);
@@ -84,7 +84,7 @@ namespace LanSharing
                     avatar = "man";
                 }
 
-                if (!start_lan_sharing(path))
+                if (!start_lan_sharing(path, Convert.ToBoolean(Settings.Default[Constants.AUTO_DOWNLOAD])))
                     Application.Exit();
 
                 DiscoveryUser.Instance.Online();
