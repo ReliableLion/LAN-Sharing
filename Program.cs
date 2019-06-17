@@ -58,13 +58,13 @@ namespace LanSharing
                 try
                 {
                     var appSettings = ConfigurationManager.AppSettings;
-                    path = appSettings[Constants.PATH] ?? "C:";
+                    path = appSettings[Constants.PATH] ?? UsersFolder.GetPath(KnownFolder.Downloads);
                     username = appSettings[Constants.USERNAME] ?? "Default User";
                     avatar = appSettings[Constants.AVATAR] ?? "man";
                 }
                 catch (ConfigurationErrorsException)
                 {
-                    path = "C:";
+                    path = UsersFolder.GetPath(KnownFolder.Downloads);
                     username = "Default User";
                     avatar = "man";
                 }

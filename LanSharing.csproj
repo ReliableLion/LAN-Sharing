@@ -111,6 +111,7 @@
       <DependentUpon>SettingsControl.cs</DependentUpon>
     </Compile>
     <Compile Include="User.cs" />
+    <Compile Include="UsersFolder.cs" />
     <EmbeddedResource Include="DiscoveryForm.resx">
       <DependentUpon>DiscoveryForm.cs</DependentUpon>
     </EmbeddedResource>

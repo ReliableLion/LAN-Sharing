@@ -29,9 +29,8 @@ namespace LanSharing
             }
             Console.Out.WriteLine(filePath);
 
-            foreach (var user in destinationUsers)
-            {
-                send_file(user.Value, user.Value, filePath);
+            foreach (var user in destinationUsers)  {
+                send_file(user.Key, user.Value, filePath);
             }
         }
 
