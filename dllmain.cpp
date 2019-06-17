@@ -13,6 +13,14 @@ VOID save_discovery_callback(DISCOVERY_MANAGED_CALLBACK callback) {
 	managed_callback::getInstance().save_discovery(callback);
 }
 
+VOID save_accept_callback(ACCEPT_CALLBACK callback) {
+	managed_callback::getInstance().save_accept(callback);
+}
+
+VOID save_progress_bar_callback(PROGRESS_BAR_CALLBACK callback) {
+	managed_callback::getInstance().save_progress_bar_handler(callback);
+}
+
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
                        LPVOID lpReserved

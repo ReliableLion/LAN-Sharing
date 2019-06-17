@@ -123,7 +123,7 @@ void HandshakeManager::process_client_req(PacketDispatcher &packet_dispatcher, c
 		ConcurrentStreamPrint::print_data(thread_id, class_name, "try to receive the request");
 		ProtocolMessage protocol_packet = packet_dispatcher.receive_packet();
 
-		if (auto_accept_.load()) {
+		if (!auto_accept_.load()) {
 			bool accept = managed_callback::getInstance().call_accept_callback();
 			if (!accept) {
 				return;
