@@ -57,19 +57,17 @@ namespace LanSharing
 
             _discoveryDelegate = delegate(string ipAddress, string username, string avatar)
             {
-                if (username != "")
-                {
-                    if (!_users.ContainsKey(ipAddress))
-                        _users.Add(ipAddress, username);
-                    else
-                        _users[ipAddress] = username;
-                }
-                else if (avatar != "") {
-                    if (!_usersImage.ContainsKey(ipAddress))
-                        _usersImage.Add(ipAddress, avatar);
-                    else
-                        _usersImage[ipAddress] = avatar;
-                }
+                if (username == "" || avatar == "") return;
+
+                if (!_users.ContainsKey(ipAddress))
+                    _users.Add(ipAddress, username);
+                else
+                    _users[ipAddress] = username;
+
+                if (!_usersImage.ContainsKey(ipAddress))
+                    _usersImage.Add(ipAddress, avatar);
+                else
+                    _usersImage[ipAddress] = avatar;
             };
 
             save_discovery_callback(_discoveryDelegate);

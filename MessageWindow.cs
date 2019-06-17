@@ -40,7 +40,9 @@ namespace LanSharing
                     NativeMethods.COPYDATASTRUCT mystr = new NativeMethods.COPYDATASTRUCT();
                     Type mytype = mystr.GetType();
                     mystr = (NativeMethods.COPYDATASTRUCT)m.GetLParam(mytype);
-                    MessageBox.Show("Sending: " + mystr.lpData, "Receiveing file", MessageBoxButtons.OK, MessageBoxIcon.None, MessageBoxDefaultButton.Button1, (MessageBoxOptions)0x40000);
+                    //MessageBox.Show("Sending: " + mystr.lpData, "Receiveing file", MessageBoxButtons.OK, MessageBoxIcon.None, MessageBoxDefaultButton.Button1, (MessageBoxOptions)0x40000);
+                    DiscoveryForm discoveryForm = new DiscoveryForm();
+                    discoveryForm.Show();
                     break;
             }
             m.Result = new IntPtr(1);
