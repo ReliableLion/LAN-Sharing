@@ -41,7 +41,7 @@ namespace LanSharing
                     Type mytype = mystr.GetType();
                     mystr = (NativeMethods.COPYDATASTRUCT)m.GetLParam(mytype);
                     //MessageBox.Show("Sending: " + mystr.lpData, "Receiveing file", MessageBoxButtons.OK, MessageBoxIcon.None, MessageBoxDefaultButton.Button1, (MessageBoxOptions)0x40000);
-                    DiscoveryForm discoveryForm = new DiscoveryForm();
+                    DiscoveryForm discoveryForm = new DiscoveryForm(mystr.lpData);
                     discoveryForm.Show();
                     break;
             }

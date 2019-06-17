@@ -33,7 +33,22 @@ namespace LanSharing
             var rect = c.Bounds;
             rect.Inflate(5,5);
             var g = CreateGraphics ();
-            ControlPaint.DrawBorder ( g, rect, Color.FromArgb(25, 118, 210), ButtonBorderStyle.Solid );
+            var borderColor = Color.FromArgb(25, 118, 210);
+            var borderStyle = ButtonBorderStyle.Solid;
+            var borderWidth = 3;
+
+            ControlPaint.DrawBorder ( g, rect, borderColor,
+                borderWidth,
+                borderStyle,
+                borderColor,
+                borderWidth,
+                borderStyle,
+                borderColor,
+                borderWidth,
+                borderStyle,
+                borderColor,
+                borderWidth,
+                borderStyle);
         }
 
         private void Control_MouseLeave ( object sender, EventArgs e ) {

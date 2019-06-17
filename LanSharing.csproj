@@ -41,6 +41,7 @@
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -66,6 +67,7 @@
     <Compile Include="DiscoveryForm.Designer.cs">
       <DependentUpon>DiscoveryForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileSender.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -87,6 +89,9 @@
     <Compile Include="MessageWindow.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="UserPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="NativeMethods.cs" />
     <Compile Include="OvalPictureBox.cs">
       <SubType>Component</SubType>
@@ -105,6 +110,7 @@
     <Compile Include="SettingsControl.Designer.cs">
       <DependentUpon>SettingsControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="User.cs" />
     <EmbeddedResource Include="DiscoveryForm.resx">
       <DependentUpon>DiscoveryForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -147,6 +153,8 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\spinner.gif" />
+    <None Include="Resources\spinner-icon-gif-10.jpg" />
     <None Include="avatars\businessman.png" />
     <None Include="avatars\businesswoman.png" />
     <None Include="avatars\man.png" />

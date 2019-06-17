@@ -33,9 +33,7 @@ namespace LanSharing
         public static extern void set_avatar(string avatar);
 
         private static DiscoveryDelegate _discoveryDelegate;
-        private readonly SortedDictionary<string, string> _users = new SortedDictionary<string, string>();
-        private readonly SortedDictionary<string, string> _usersImage = new SortedDictionary<string, string>();
-
+        private readonly SortedDictionary<string, User> _users = new SortedDictionary<string, User>();
 
         // Explicit static constructor to tell C# compiler
         // not to mark type as beforefieldinit
@@ -59,15 +57,12 @@ namespace LanSharing
             {
                 if (username == "" || avatar == "") return;
 
-                if (!_users.ContainsKey(ipAddress))
-                    _users.Add(ipAddress, username);
-                else
-                    _users[ipAddress] = username;
+                var user = new User(username, avatar);
 
-                if (!_usersImage.ContainsKey(ipAddress))
-                    _usersImage.Add(ipAddress, avatar);
+                if (!_users.ContainsKey(ipAddress))
+                    _users.Add(ipAddress, user);
                 else
-                    _usersImage[ipAddress] = avatar;
+                    _users[ipAddress] = user;
             };
 
             save_discovery_callback(_discoveryDelegate);
@@ -75,6 +70,10 @@ namespace LanSharing
 
         public void search_user() {
             start_collection();
+        }
+
+        public SortedDictionary<string, User> get_users() {
+            return _users;
         }
 
         public void Hide() {
@@ -98,9 +97,9 @@ namespace LanSharing
                 Console.Out.WriteLine("KEY: " + user.Key + " VALUE: " + user.Value);
             }
 
-            foreach (var user in _usersImage) {
-                Console.Out.WriteLine("KEY: " + user.Key + " VALUE: " + user.Value);
-            }
+            //foreach (var user in _usersImage) {
+            //    Console.Out.WriteLine("KEY: " + user.Key + " VALUE: " + user.Value);
+            //}
         }
 
     }

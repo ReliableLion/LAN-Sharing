@@ -20,7 +20,8 @@ namespace LanSharing
 
         private const string MenuName = "Software\\Classes\\*\\shell\\LanSharing";
         private const string Command = "Software\\Classes\\*\\shell\\LanSharing\\command";
-
+        private const string MenuNameDir = "Software\\Classes\\Directory\\shell\\LanSharing";
+        private const string CommandDir = "Software\\Classes\\Directory\\shell\\LanSharing\\command";
         public MainForm()
         {
             InitializeComponent();
@@ -119,7 +120,8 @@ namespace LanSharing
         {
             RegistryKey registryCmd = null;
             var registryMenu = Registry.CurrentUser.OpenSubKey(MenuName);
-            if(registryMenu != null)
+            var registryMenuDir = Registry.CurrentUser.OpenSubKey(MenuNameDir);
+            if(registryMenu != null && registryMenuDir != null)
                 return;
 
             try
@@ -129,6 +131,12 @@ namespace LanSharing
                 registryMenu?.SetValue("Icon", "C:\\Users\\Asus\\Documents\\Malnati\\icon_lan_sharing.ico");
                 registryCmd = Registry.CurrentUser.CreateSubKey(Command);
                 registryCmd?.SetValue("", "C:\\Users\\Asus\\source\\repos\\LanSharing\\bin\\Debug\\LanSharing.exe %1");
+
+                registryMenuDir = Registry.CurrentUser.CreateSubKey(MenuNameDir);
+                registryMenuDir?.SetValue("","Share with");
+                registryMenuDir?.SetValue("Icon", "C:\\Users\\Asus\\Documents\\Malnati\\icon_lan_sharing.ico");
+                registryMenuDir = Registry.CurrentUser.CreateSubKey(CommandDir);
+                registryMenuDir?.SetValue("", "C:\\Users\\Asus\\source\\repos\\LanSharing\\bin\\Debug\\LanSharing.exe %1");
             }
             catch(Exception ex)
             {
