@@ -12,6 +12,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using LanSharing.Properties;
 
 namespace LanSharing
 {
@@ -27,9 +28,8 @@ namespace LanSharing
 
             try  
             {  
-                var appSettings = ConfigurationManager.AppSettings;
-                username = appSettings["username"] ?? "DefaultUser";
-                avatarName = appSettings["avatar"] ?? "man";
+                username = Settings.Default[Constants.USERNAME].ToString();
+                avatarName = Settings.Default[Constants.AVATAR].ToString();
             }  
             catch (ConfigurationErrorsException)
             {
@@ -59,16 +59,17 @@ namespace LanSharing
             try  
             {  
                 var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);  
-                var settings = configFile.AppSettings.Settings;  
-                if (settings["avatar"] == null)  
+
+                if (Settings.Default[Constants.AVATAR] == null)  
                 {  
-                    settings.Add("avatar", avatar_name);  
+                    Settings.Default[Constants.AVATAR] = avatar_name;
                 }  
                 else  
                 {  
-                    settings["avatar"].Value = avatar_name;  
+                    Settings.Default[Constants.AVATAR] = avatar_name;  
                 }  
-                configFile.Save(ConfigurationSaveMode.Modified);  
+                Settings.Default.Save();
+
                 ConfigurationManager.RefreshSection(configFile.AppSettings.SectionInformation.Name);
 
                 userAvatarBox.Image = (System.Drawing.Image)LanSharing.Properties.Resources.ResourceManager.GetObject(avatar_name);
@@ -87,16 +88,17 @@ namespace LanSharing
             try  
             {  
                 var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-                var settings = configFile.AppSettings.Settings;
-                if (settings["username"] == null)  
+
+                if (Settings.Default[Constants.USERNAME] == null)  
                 {  
-                    settings.Add("username", username);  
+                    Settings.Default[Constants.USERNAME] = username;
                 }  
                 else  
                 {  
-                    settings["username"].Value = username;  
+                    Settings.Default[Constants.USERNAME] = username;  
                 }  
-                configFile.Save(ConfigurationSaveMode.Modified);  
+                Settings.Default.Save();
+
                 ConfigurationManager.RefreshSection(configFile.AppSettings.SectionInformation.Name);
 
                 usernameLabel.Text = username;

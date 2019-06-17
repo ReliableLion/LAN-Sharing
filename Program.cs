@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using LanSharing.Properties;
 
 namespace LanSharing
 {
@@ -57,10 +58,20 @@ namespace LanSharing
 
                 try
                 {
-                    var appSettings = ConfigurationManager.AppSettings;
-                    path = appSettings[Constants.PATH] ?? UsersFolder.GetPath(KnownFolder.Downloads);
-                    username = appSettings[Constants.USERNAME] ?? "Default User";
-                    avatar = appSettings[Constants.AVATAR] ?? "man";
+                    if (Settings.Default[Constants.PATH].ToString() == "") {
+                        Settings.Default[Constants.PATH] = UsersFolder.GetPath(KnownFolder.Downloads);
+                    }
+                    if (Settings.Default[Constants.USERNAME].ToString() == "") {
+                        Settings.Default[Constants.USERNAME] = "DefaultUser";
+                    }
+                    if (Settings.Default[Constants.AVATAR].ToString() == "") {
+                        Settings.Default[Constants.AVATAR] = "man";
+                    }
+                    Settings.Default.Save();
+
+                    path = Settings.Default[Constants.PATH].ToString();
+                    username = Settings.Default[Constants.USERNAME].ToString();
+                    avatar = Settings.Default[Constants.AVATAR].ToString();
                 }
                 catch (ConfigurationErrorsException)
                 {

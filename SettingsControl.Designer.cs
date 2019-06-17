@@ -59,7 +59,7 @@
             // 
             this.downloadPath.AutoSize = true;
             this.downloadPath.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.downloadPath.Location = new System.Drawing.Point(199, 172);
+            this.downloadPath.Location = new System.Drawing.Point(158, 169);
             this.downloadPath.Name = "downloadPath";
             this.downloadPath.Size = new System.Drawing.Size(28, 24);
             this.downloadPath.TabIndex = 4;
@@ -67,7 +67,7 @@
             // 
             // dwnPathButton
             // 
-            this.dwnPathButton.Location = new System.Drawing.Point(255, 172);
+            this.dwnPathButton.Location = new System.Drawing.Point(153, 197);
             this.dwnPathButton.Name = "dwnPathButton";
             this.dwnPathButton.Size = new System.Drawing.Size(139, 23);
             this.dwnPathButton.TabIndex = 5;

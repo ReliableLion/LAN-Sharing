@@ -5,14 +5,26 @@ using System.Configuration;
 using System.Drawing;
 using System.Data;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using LanSharing.Properties;
 
 namespace LanSharing
 {
     public partial class SettingsControl : UserControl
     {
+
+        [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void change_server_dw_path(string path);
+
+        [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void pause_server();
+
+        [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void recover_server();
+
         public SettingsControl()
         {
             InitializeComponent();
@@ -21,13 +33,12 @@ namespace LanSharing
 
             try  
             {  
-                var appSettings = ConfigurationManager.AppSettings;
-                path = appSettings[Constants.PATH] ?? "C:";
-                autoDownload = Convert.ToBoolean((appSettings[Constants.AUTO_DOWNLOAD] ?? "true"));
+                path = Settings.Default[Constants.PATH].ToString();
+                autoDownload = Convert.ToBoolean(Settings.Default[Constants.AUTO_DOWNLOAD]);
             }  
             catch (ConfigurationErrorsException)
             {
-                path = "C:";
+                path = UsersFolder.GetPath(KnownFolder.Downloads);
                 autoDownload = true;
             }
 
@@ -40,16 +51,17 @@ namespace LanSharing
             try  
             {  
                 var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-                var settings = configFile.AppSettings.Settings;
-                if (settings[Constants.AUTO_DOWNLOAD] == null)  
+
+                if (Settings.Default[Constants.AUTO_DOWNLOAD] == null)
                 {  
-                    settings.Add(Constants.AUTO_DOWNLOAD, Convert.ToString(downloadCheck.Checked));
+                    Settings.Default[Constants.AUTO_DOWNLOAD] = downloadCheck.Checked;
                 }  
                 else  
                 {  
-                    settings[Constants.AUTO_DOWNLOAD].Value = Convert.ToString(downloadCheck.Checked);  
+                    Settings.Default[Constants.AUTO_DOWNLOAD] = downloadCheck.Checked;  
                 }  
-                configFile.Save(ConfigurationSaveMode.Modified);  
+                Settings.Default.Save();
+
                 ConfigurationManager.RefreshSection(configFile.AppSettings.SectionInformation.Name);
 
             }  
@@ -67,16 +79,16 @@ namespace LanSharing
                 try  
                 {  
                     var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-                    var settings = configFile.AppSettings.Settings;
-                    if (settings[Constants.DLL_PATH] == null)  
+
+                    if (Settings.Default[Constants.PATH] == null)  
                     {  
-                        settings.Add(Constants.DLL_PATH, fbd.SelectedPath);
+                        Settings.Default[Constants.PATH] = fbd.SelectedPath;
                     }  
                     else  
                     {  
-                        settings[Constants.DLL_PATH].Value = fbd.SelectedPath;  
+                        Settings.Default[Constants.PATH] = fbd.SelectedPath;  
                     }  
-                    configFile.Save(ConfigurationSaveMode.Modified);  
+                    Settings.Default.Save();
                     ConfigurationManager.RefreshSection(configFile.AppSettings.SectionInformation.Name);
 
                 }  
@@ -84,6 +96,7 @@ namespace LanSharing
                 }
 
                 downloadPath.Text = fbd.SelectedPath;
+                change_server_dw_path(fbd.SelectedPath);
             }
 
         }
