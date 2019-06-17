@@ -67,6 +67,10 @@ namespace LanSharing
                     if (Settings.Default[Constants.AVATAR].ToString() == "") {
                         Settings.Default[Constants.AVATAR] = "man";
                     }
+                    if (Settings.Default[Constants.STATUS] == null)
+                    {  
+                        Settings.Default[Constants.STATUS] = true;
+                    }
                     Settings.Default.Save();
 
                     path = Settings.Default[Constants.PATH].ToString();

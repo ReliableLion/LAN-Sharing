@@ -148,6 +148,12 @@ namespace LanSharing
                 registryCmd?.Close();
             }        
         }
+
+        private void NotifyIcon1_MouseClick(object sender, MouseEventArgs e)
+        {
+            Alert alert = new Alert();
+            alert.Show();
+        }
     }
 
 }

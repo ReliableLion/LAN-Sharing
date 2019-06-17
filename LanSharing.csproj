@@ -42,6 +42,7 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -53,6 +54,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Alert.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alert.Designer.cs">
+      <DependentUpon>Alert.cs</DependentUpon>
+    </Compile>
     <Compile Include="Constants.cs" />
     <Compile Include="DiscoveryUser.cs" />
     <Compile Include="Component1.cs">
@@ -112,6 +119,9 @@
     </Compile>
     <Compile Include="User.cs" />
     <Compile Include="UsersFolder.cs" />
+    <EmbeddedResource Include="Alert.resx">
+      <DependentUpon>Alert.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DiscoveryForm.resx">
       <DependentUpon>DiscoveryForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -164,6 +174,7 @@
     <None Include="avatars\woman.png" />
     <None Include="avatars\woman2.png" />
     <None Include="avatars\woman3.png" />
+    <None Include="avatars\cancel.png" />
     <Content Include="icon_lan_sharing.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

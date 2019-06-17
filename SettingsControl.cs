@@ -19,12 +19,6 @@ namespace LanSharing
         [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
         public static extern void change_server_dw_path(string path);
 
-        [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void pause_server();
-
-        [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void recover_server();
-
         public SettingsControl()
         {
             InitializeComponent();

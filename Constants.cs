@@ -13,6 +13,7 @@ namespace LanSharing
         public const string AVATAR = "avatar";
         public const string PATH = "downloadPath";
         public const string AUTO_DOWNLOAD = "downloadAccept";
+        public const string STATUS = "online";
         public const string APP_NAME = "PDS-LanSharing application";
 
     }

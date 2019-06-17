@@ -70,5 +70,17 @@ namespace LanSharing.Properties {
                 this["downloadPath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool online {
+            get {
+                return ((bool)(this["online"]));
+            }
+            set {
+                this["online"] = value;
+            }
+        }
     }
 }
