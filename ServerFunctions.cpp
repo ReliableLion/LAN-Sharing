@@ -4,7 +4,7 @@
 extern "C" __declspec(dllexport) BOOL start_lan_sharing(const char* path);
 extern "C" __declspec(dllexport) VOID pause_server();
 extern "C" __declspec(dllexport) VOID recover_server();
-extern "C" __declspec(dllexport) VOID change_server_dw_path(std::string new_path);
+extern "C" __declspec(dllexport) VOID change_server_dw_path(const char* new_path);
 
 Server main_server;
 
@@ -52,6 +52,6 @@ VOID recover_server() {
 	main_server.recover_server();
 }
 
-VOID change_server_dw_path(std::string new_path) {
-	main_server.change_dest_path(new_path);
+VOID change_server_dw_path(const char* new_path) {
+	main_server.change_dest_path(string(new_path));
 }

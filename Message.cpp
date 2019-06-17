@@ -198,10 +198,7 @@ bool ProtocolMessage::compute_send_request() {
 	// Get the filename
 	std::getline(stream_, this->request_body_.file_name_, '\r');
 
-	if (this->request_body_.file_name_.size() > 256)
-		return false;
-
-    return true;
+    return this->request_body_.file_name_.size() <= 256;
 }
 
 void ProtocolMessage::compute_packet_type() {

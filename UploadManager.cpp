@@ -5,7 +5,7 @@ bool UploadManager::upload_file(std::shared_ptr<FileRequest> file_request, Windo
 	try {
 		std::cout << "Waiting for packet" << std::endl;
 		ProtocolMessage packet = packet_dispatcher.receive_packet();
-		packet.compute_packet_type();
+		//packet.compute_packet_type();
 
 		bool retry = true;
 
@@ -41,7 +41,7 @@ bool UploadManager::upload_file(std::shared_ptr<FileRequest> file_request, Windo
 			std::cout << "Aspetto di ricevere OK!" << std::endl;
 
 			ProtocolMessage packet2 = packet_dispatcher.receive_packet();
-			packet2.compute_packet_type();
+			//packet2.compute_packet_type();
 
 			std::cout << "RICEVUTO: " << packet2.get_message_code() << std::endl;
 
