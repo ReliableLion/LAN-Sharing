@@ -28,9 +28,11 @@ namespace LanSharing
             if (Convert.ToBoolean(Settings.Default[Constants.STATUS])) {
                 statusBtn.Text = @"Go Offline";
                 statusLabel.Text = @"Online";
+                DiscoveryUser.go_online();
             } else {
                 statusBtn.Text = @"Go Online";
                 statusLabel.Text = @"Offline";
+                DiscoveryUser.hide_me();
             }
 
             statusBtn.UseVisualStyleBackColor = false;
@@ -46,11 +48,13 @@ namespace LanSharing
                 statusBtn.Text = @"Go Online";
                 statusLabel.Text = @"Offline";
                 Settings.Default[Constants.STATUS] = false;
+                DiscoveryUser.hide_me();
             } else {
                 recover_server();
                 statusBtn.Text = @"Go Offline";
                 statusLabel.Text = @"Online";
                 Settings.Default[Constants.STATUS] = true;
+                DiscoveryUser.go_online();
             }
 
             Settings.Default.Save();

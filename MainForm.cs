@@ -17,6 +17,7 @@ namespace LanSharing
 
         private System.Windows.Forms.ContextMenu contextMenu1;
         private System.Windows.Forms.MenuItem menuItem1;
+        private static Alert alert = new Alert();
 
         private const string MenuName = "Software\\Classes\\*\\shell\\LanSharing";
         private const string Command = "Software\\Classes\\*\\shell\\LanSharing\\command";
@@ -151,7 +152,8 @@ namespace LanSharing
 
         private void NotifyIcon1_MouseClick(object sender, MouseEventArgs e)
         {
-            Alert alert = new Alert();
+            if (alert.Visible)
+                return;
             alert.Show();
         }
     }

@@ -13,7 +13,7 @@ namespace LanSharing
     class FileSender {
 
         [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        public static extern bool send_file(string address, string username, string filePath);
+        public static extern string send_file(string address, string username, string filePath);
 
         private SortedDictionary<string, string> destinationUsers;
         private string filePath;
@@ -31,7 +31,8 @@ namespace LanSharing
             Console.Out.WriteLine(filePath);
 
             foreach (var user in destinationUsers)  {
-                send_file(user.Key, user.Value, filePath);
+                var requestId = send_file(user.Key, user.Value, filePath);
+                RequestProgress.Instance.addRequest(requestId, user.Value, filePath);
             }
         }
 

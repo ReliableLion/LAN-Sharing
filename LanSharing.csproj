@@ -96,6 +96,7 @@
     <Compile Include="MessageWindow.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="RequestProgress.cs" />
     <Compile Include="UserPanel.cs">
       <SubType>Component</SubType>
     </Compile>

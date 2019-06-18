@@ -69,6 +69,7 @@ namespace LanSharing
                     //}
                 };
                 save_accept_callback(autoDownloadDelegate_);
+                RequestProgress.Instance.initialize();
 
                 string path;
                 string username;
