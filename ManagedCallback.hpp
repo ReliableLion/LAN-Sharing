@@ -40,7 +40,7 @@ public:
 		return accept_callback();
 	}
 
-	bool call_progress_bar_callback(const char *id, int progress) {
+	void call_progress_bar_callback(const char *id, int progress) {
 		progress_bar_callback(id, progress);
 	}
 

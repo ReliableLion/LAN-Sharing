@@ -3,6 +3,7 @@
 
 struct FileRequest {
     std::string file_name_;
+	std::string requestID;
     user destination_user;
     DWORD file_size_;
     size_t transferred_bytes_ = 0;
@@ -35,5 +36,5 @@ public:
 	bool is_terminated(user_request destination_user);
 	bool get_result(user_request destination_user);
 
-    bool send_request(user_request destination_user);
+    std::string send_request(user_request destination_user);
 };

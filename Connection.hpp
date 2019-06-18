@@ -41,7 +41,7 @@ namespace connection {
 
 		int read_file(size_t file_size, FileHandler &temporary_file);
 
-		int send_file(HANDLE file_handle, DWORD file_size);
+		int send_file(HANDLE file_handle, DWORD file_size, std::string requestID);
 
 		// bool read_data2(int size);
 

@@ -1,18 +1,18 @@
 #include "pch.h"
 
-extern "C" __declspec(dllexport) BOOL send_file(const char* address, const char* username, const char* file_path);
+extern "C" __declspec(dllexport) const char* send_file(const char* address, const char* username, const char* file_path);
 extern "C" __declspec(dllexport) BOOL is_terminated(const char* address, const char* username, const char* file_path);
 extern "C" __declspec(dllexport) BOOL transferred_correctly(const char* address, const char* username, const char* file_path);
 
 RequestHandler request_handler;
 
-BOOL send_file(const char* address, const char* username, const char* file_path) {
+const char* send_file(const char* address, const char* username, const char* file_path) {
 
 	const auto destination_user = user(string(username), string(address));
 
 	const auto request = user_request(destination_user,string(file_path));
 
-	return request_handler.send_request(request);
+	return request_handler.send_request(request).c_str();
 }
 
 BOOL is_terminated(const char* address, const char* username, const char* file_path){

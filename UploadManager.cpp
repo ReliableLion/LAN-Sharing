@@ -32,7 +32,7 @@ bool UploadManager::upload_file(std::shared_ptr<FileRequest> file_request, Windo
 		if (packet.get_message_code() == protocol::ok) {
 			std::cout << "File sending..." << std::endl;
 
-			if(file_request->connection_->send_file(file_handler.get_file_handle(), file_handler.get_file_size()) != 0) {
+			if(file_request->connection_->send_file(file_handler.get_file_handle(), file_handler.get_file_size(), file_request->requestID) != 0) {
 				std::cout << "ERROR TRANSMIT FILE: " << WSAGetLastError() << " Last error: " << GetLastError() << std::endl;
 				file_request->connection_->close_connection();
 				return false;
