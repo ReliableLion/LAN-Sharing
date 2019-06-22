@@ -35,6 +35,7 @@ bool UploadManager::upload_file(std::shared_ptr<FileRequest> file_request, Windo
 			if(file_request->connection_->send_file(file_handler.get_file_handle(), file_handler.get_file_size(), file_request->requestID) != 0) {
 				std::cout << "ERROR TRANSMIT FILE: " << WSAGetLastError() << " Last error: " << GetLastError() << std::endl;
 				file_request->connection_->close_connection();
+				managed_callback::getInstance().call_file_sent_callback(file_request->requestID.c_str(), false);
 				return false;
 			}
 
@@ -47,6 +48,8 @@ bool UploadManager::upload_file(std::shared_ptr<FileRequest> file_request, Windo
 
 			std::cout << "File sent!" << std::endl;
 			file_request->connection_->close_connection();
+
+			managed_callback::getInstance().call_file_sent_callback(file_request->requestID.c_str(), true);
 
 			return true;
 

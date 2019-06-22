@@ -28,6 +28,10 @@ public:
 		this->progress_bar_callback = progress_bar_callback;
 	}
 
+	void save_file_sent_handler(FILE_SENT_CALLBACK file_sent_callback) {
+		this->file_sent_callback = file_sent_callback;
+	}
+
 	void call_exit() {
 		exit_callback();
 	}
@@ -44,10 +48,15 @@ public:
 		progress_bar_callback(id, progress);
 	}
 
+	void call_file_sent_callback(const char *id, bool finished) {
+		file_sent_callback(id, finished);
+	}
+
 private:
 	managed_callback() = default;
 	EXCEPTION_CALLBACK exit_callback;
 	DISCOVERY_MANAGED_CALLBACK discovery_managed_callback;
 	ACCEPT_CALLBACK accept_callback;
 	PROGRESS_BAR_CALLBACK progress_bar_callback;
+	FILE_SENT_CALLBACK file_sent_callback;
 };
