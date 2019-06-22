@@ -46,6 +46,26 @@ namespace LanSharing
             notifyIcon1.ContextMenu = contextMenu1;
 
             AddRightClickItem();
+
+            //ProgressForm newForm = new ProgressForm();
+            //ProgressBar progressBar = new ProgressBar();
+            //progressBar.Text = "Sending ";
+            //progressBar.Show();
+            //progressBar.BringToFront();
+            //progressBar.Visible = true;
+            ////progressBar.Location = new System.Drawing.Point(20, 20);
+            //newForm.addProgressbar(progressBar);
+            //newForm.Show();
+
+            //ProgressBar progressBar2 = new ProgressBar();
+            //progressBar2.Text = "Sending ";
+            //progressBar2.Show();
+            //progressBar2.BringToFront();
+            //progressBar2.Visible = true;
+            //newForm.addProgressbar(progressBar2);
+
+            //this.Controls.Add(progressBar);
+            // progressBars.Add(id, progressBar);
         }
 
         private void ExitApplication() {
