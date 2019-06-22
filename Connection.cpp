@@ -283,8 +283,8 @@ int TcpConnection::read_file(size_t file_size, FileHandler &temporary_file) {
 
 int TcpConnection::send_file(HANDLE file_handle, DWORD file_size, string requestID) {
 
-	int left_bytes = file_size, bytes_sent = 0, byte_to_read = 0;
-	int percentage = 0, percentage_limit = 0;
+	int left_bytes = file_size, bytes_sent = 0, byte_to_read = 0, total_byte_sent = 0;
+	int percentage = 0, percentage_limit = 0, treshold = 0;
 	DWORD bytes_read = 0;
 
 	select_write_connection();
@@ -296,7 +296,8 @@ int TcpConnection::send_file(HANDLE file_handle, DWORD file_size, string request
 	else
 		byte_to_read = static_cast<long>(CHUNK);
 
-	percentage_limit = (left_bytes*10)/100;
+	treshold = (left_bytes*10)/100;
+	total_byte_sent += treshold;
 
 	while(left_bytes > 0) {
 
@@ -319,12 +320,15 @@ int TcpConnection::send_file(HANDLE file_handle, DWORD file_size, string request
 			}
 
 			socket_buffer.bytes_read(bytes_sent);
+			total_byte_sent += bytes_sent;
 		}
 
-		if(bytes_sent > percentage_limit) {
-			percentage += 10;
-			managed_callback::getInstance().call_progress_bar_callback(requestID.c_str(), percentage);
-			percentage_limit += percentage_limit;
+		if(total_byte_sent > percentage_limit) {
+			if(percentage < 100) {
+				percentage += 10;
+				managed_callback::getInstance().call_progress_bar_callback(requestID.c_str(), percentage);
+				percentage_limit += treshold;
+			}
 		}
 
 		left_bytes -= bytes_sent;

@@ -2,7 +2,7 @@
 
 RequestHandler::RequestHandler() = default;
 
-string RequestHandler::send_request(const user_request destination_user) {
+bool RequestHandler::send_request(const user_request destination_user, char* requestIDBuff) {
 
 	const auto port2 = DEFAULT_LISTEN_PORT;
 	const auto file_path = destination_user.file_name;
@@ -13,7 +13,8 @@ string RequestHandler::send_request(const user_request destination_user) {
 		FILETIME write_time;
 
 		string requestID = generate_random_string(30);
-
+		strcpy_s(requestIDBuff, 31, requestID.c_str());
+		std::cout << "REQUEST ID: " << requestID;
 
 		if (!file_handler.open_file()) {
 			throw WindowsFileHandlerException(std::string(file_path));
@@ -42,16 +43,16 @@ string RequestHandler::send_request(const user_request destination_user) {
 
 			requests_.insert(std::make_pair(destination_user, std::async(std::launch::async, &UploadManager::upload_file, file_request, std::move(file_handler), packet_dispatcher)));
 
-			return requestID;
+			return true;
 		}
 
-		return "";
+		return false;
 
 	} catch (SocketException &e) {
 		std::cout << "Socket exception " << e.what() << std::endl;
-		return "";
+		return false;
 	} catch(WindowsFileHandlerException &e) {
-		return "";
+		return false;
 	}
 }
 
