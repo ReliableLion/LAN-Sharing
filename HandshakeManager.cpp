@@ -123,13 +123,6 @@ void HandshakeManager::process_client_req(PacketDispatcher &packet_dispatcher, c
 		ConcurrentStreamPrint::print_data(thread_id, class_name, "try to receive the request");
 		ProtocolMessage protocol_packet = packet_dispatcher.receive_packet();
 
-		if (!auto_accept_.load()) {
-			bool accept = managed_callback::getInstance().call_accept_callback();
-			if (!accept) {
-				return;
-			}
-		}
-
 		switch (protocol_packet.get_message_code()) {
 			case protocol::ok: 
 				// std::cout << "[Thread id " << thread_id << "]: received ok!" << std::endl;
@@ -139,6 +132,16 @@ void HandshakeManager::process_client_req(PacketDispatcher &packet_dispatcher, c
 				// std::cout << "[Thread id " << thread_id <<  "]: received send!" << std::endl;
 				ConcurrentStreamPrint::print_data(thread_id, class_name, "received send!");
 				request_struct request = protocol_packet.get_message_request();
+
+				if (!auto_accept_.load()) {
+					bool accept = managed_callback::getInstance().call_accept_callback(request.file_name_);
+					if (!accept) {
+						// return to the client the file error
+						packet_dispatcher.send_packet(protocol::err_file);
+						return;
+					}
+				}
+
 				append_in_download_queue(packet_dispatcher, request, connection);
 				packet_dispatcher.send_packet(protocol::err_1);
 			}

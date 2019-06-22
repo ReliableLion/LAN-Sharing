@@ -228,8 +228,9 @@ void DownloadManager::perform_rename_file(std::string new_filename, FileHandler 
 
 	while (rename_file(filename, file) == false) {
 		ss.clear();
-
-		std::size_t pos = filename.find_last_of(".");
+		ss.str("");
+	
+		std::size_t pos = new_filename.find_last_of(".");
 
 		ss << new_filename.substr(0, pos) << "(" << i << ")" << new_filename.substr(pos, new_filename.length());
 		filename = ss.str();

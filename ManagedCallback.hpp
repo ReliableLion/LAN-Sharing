@@ -36,8 +36,8 @@ public:
 		discovery_managed_callback(address.c_str(), username.c_str(), avatar.c_str());
 	}
 
-	bool call_accept_callback() {
-		return accept_callback();
+	bool call_accept_callback(std::string filename) {
+		return accept_callback(filename.c_str());
 	}
 
 	void call_progress_bar_callback(const char *id, int progress) {
