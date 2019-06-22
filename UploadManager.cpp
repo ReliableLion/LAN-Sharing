@@ -19,6 +19,7 @@ bool UploadManager::upload_file(std::shared_ptr<FileRequest> file_request, Windo
 				} else if(packet.get_error_code() == protocol::err_file) {
 					std::cout << "Error with file information" << std::endl;
 					file_request->connection_->close_connection();
+					managed_callback::getInstance().call_file_sent_callback(file_request->requestID.c_str(), false);
 					return false;
 				} else {
 					std::cout << "Unknown packet error" << std::endl;
