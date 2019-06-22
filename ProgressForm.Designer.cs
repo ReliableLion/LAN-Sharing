@@ -30,6 +30,7 @@
         {
             this.label1 = new System.Windows.Forms.Label();
             this.progressPanel = new System.Windows.Forms.TableLayoutPanel();
+            this.closeButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
@@ -44,27 +45,38 @@
             // 
             // progressPanel
             // 
+            this.progressPanel.AutoSize = true;
+            this.progressPanel.BackColor = System.Drawing.SystemColors.Control;
             this.progressPanel.ColumnCount = 1;
-            this.progressPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.progressPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 776F));
             this.progressPanel.Location = new System.Drawing.Point(12, 75);
             this.progressPanel.Name = "progressPanel";
-            this.progressPanel.RowCount = 5;
-            this.progressPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.progressPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.progressPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.progressPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.progressPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.progressPanel.Size = new System.Drawing.Size(776, 300);
+            this.progressPanel.RowCount = 1;
+            this.progressPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 70F));
+            this.progressPanel.Size = new System.Drawing.Size(776, 70);
             this.progressPanel.TabIndex = 1;
+            // 
+            // closeButton
+            // 
+            this.closeButton.Enabled = false;
+            this.closeButton.Location = new System.Drawing.Point(237, 177);
+            this.closeButton.Name = "closeButton";
+            this.closeButton.Size = new System.Drawing.Size(326, 26);
+            this.closeButton.TabIndex = 2;
+            this.closeButton.Text = "Close";
+            this.closeButton.UseVisualStyleBackColor = true;
+            this.closeButton.Click += new System.EventHandler(this.CloseButton_Click);
             // 
             // ProgressForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.AutoSize = true;
+            this.ClientSize = new System.Drawing.Size(800, 219);
+            this.Controls.Add(this.closeButton);
             this.Controls.Add(this.progressPanel);
             this.Controls.Add(this.label1);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "ProgressForm";
             this.Text = "ProgressForm";
             this.ResumeLayout(false);
@@ -76,5 +88,6 @@
 
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TableLayoutPanel progressPanel;
+        private System.Windows.Forms.Button closeButton;
     }
 }

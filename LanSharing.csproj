@@ -63,6 +63,9 @@
       <DependentUpon>Alert.cs</DependentUpon>
     </Compile>
     <Compile Include="Constants.cs" />
+    <Compile Include="CustomProgressBar.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="DiscoveryUser.cs" />
     <Compile Include="Component1.cs">
       <SubType>Component</SubType>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
 using System.Drawing;
 using System.Linq;
@@ -8,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using LanSharing.Properties;
 using Microsoft.Win32;
 
 namespace LanSharing
@@ -23,6 +25,14 @@ namespace LanSharing
         private const string Command = "Software\\Classes\\*\\shell\\LanSharing\\command";
         private const string MenuNameDir = "Software\\Classes\\Directory\\shell\\LanSharing";
         private const string CommandDir = "Software\\Classes\\Directory\\shell\\LanSharing\\command";
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate bool AutoDownloadDelegate(string fileName);
+        
+        [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void save_accept_callback(AutoDownloadDelegate callback);
+        private static AutoDownloadDelegate autoDownloadDelegate_;
+
         public MainForm()
         {
             InitializeComponent();
@@ -46,6 +56,40 @@ namespace LanSharing
             notifyIcon1.ContextMenu = contextMenu1;
 
             AddRightClickItem();
+
+            autoDownloadDelegate_ = (fileName) =>
+            {
+
+                bool autoDownload;
+
+                try  
+                {  
+                    autoDownload = Convert.ToBoolean(Settings.Default[Constants.AUTO_DOWNLOAD]);
+                }  
+                catch (ConfigurationErrorsException)
+                {
+                    autoDownload = true;
+                }
+
+                if (autoDownload)
+                    return true;
+
+                var text = "Do you want to accept the following file: " + fileName;
+
+                DialogResult dialogResult = MessageBox.Show(text, @"File accept", MessageBoxButtons.YesNo);
+
+                switch (dialogResult)
+                {
+                    case DialogResult.Yes:
+                        return true;
+                    case DialogResult.No:
+                        return false;
+                    default:
+                        return false;
+                }
+            };
+
+            save_accept_callback(autoDownloadDelegate_);
 
             //ProgressForm newForm = new ProgressForm();
             //ProgressBar progressBar = new ProgressBar();
@@ -172,6 +216,8 @@ namespace LanSharing
 
         private void NotifyIcon1_MouseClick(object sender, MouseEventArgs e)
         {
+            if(alert.IsDisposed)
+                return;
             if (alert.Visible)
                 return;
             alert.Show();

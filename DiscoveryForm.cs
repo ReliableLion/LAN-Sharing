@@ -21,6 +21,8 @@ namespace LanSharing
 
         public DiscoveryForm(string fileName) {
             InitializeComponent();
+            this.CenterToScreen();
+            BringToFront();
             filePath = fileName;
             Text = @"Sending " + Path.GetFileName(fileName);
             
