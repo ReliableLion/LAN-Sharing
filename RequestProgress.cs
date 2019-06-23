@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -11,6 +12,7 @@ using System.Windows.Forms;
 using System.Threading;
 using System.Windows.Threading;
 using System.Windows.Shell;
+using LanSharing.Properties;
 
 namespace LanSharing
 {
@@ -47,6 +49,7 @@ namespace LanSharing
         private static BeginDownloadDelegate beginDownloadDelegate;
         private static SortedDictionary<string, DateTime> timeStamps = new SortedDictionary<string, DateTime>();
         private static SortedDictionary<string, CustomProgressBar> progressBars = new SortedDictionary<string, CustomProgressBar>();
+        private static SortedDictionary<string, string> files = new SortedDictionary<string, string>();
         private MainForm parent;
 
         // Explicit static constructor to tell C# compiler
@@ -87,7 +90,14 @@ namespace LanSharing
                     if (status) {
                         progressBars[id].Value = 100;
                         TimeSpan timespent = DateTime.Now - timeStamps[id];
-                        progressBars[id].CustomText = "Completed in " + timespent.Seconds;
+                        var remainingTime = "";
+                        if (timespent.Seconds > 60) {
+                            remainingTime = ((int) (timespent.Seconds / 60)).ToString() + "m and " +
+                                            (timespent.Seconds % 60).ToString();
+                        } else {
+                            remainingTime = timespent.Seconds.ToString();
+                        }
+                        progressBars[id].CustomText = "Completed in " + remainingTime + "s";
                     }
                     else
                     {
@@ -105,10 +115,11 @@ namespace LanSharing
 
             fileDownloadedDelegate = (id, status, directory) =>
             {
-                if(directory)
-                    Console.Out.Write("DIRECTORYYYYYYYYYYYYYYYYYYYYYYYYY");
-                else
-                    Console.Out.Write("NONNNNNNNNNNNNNNNNNNNNNNNNN DIRECTORYYYYYYYYYYYYYYYYYYYYYYYYY");
+                if (directory) {
+                    if (files.ContainsKey(id)) {
+                        ZipFile.ExtractToDirectory(files[id],Settings.Default[Constants.PATH].ToString());
+                    }
+                }
 
                 parent.BeginInvoke(new Action(delegate ()
                 {
@@ -117,9 +128,9 @@ namespace LanSharing
                         var remainingTime = "";
                         if (timespent.Seconds > 60) {
                             remainingTime = ((int) (timespent.Seconds / 60)).ToString() + "m and " +
-                                            (timespent.Seconds % 60).ToString() + "s remaining...";
+                                            (timespent.Seconds % 60).ToString();
                         } else {
-                            remainingTime = timespent.Seconds.ToString() + "s remaining...";
+                            remainingTime = timespent.Seconds.ToString();
                         }
                         progressBars[id].CustomText = "Completed in " + remainingTime + "s";
                     }
@@ -160,6 +171,7 @@ namespace LanSharing
             progressBar.CustomText = "Calculating remaining time";
 
             downloadProgressForm.addDownloadProgressbar(progressBar, id, file_path);
+            files.Add(id, file_path);
             progressBars.Add(id, progressBar);
             timeStamps.Add(id, DateTime.Now);
         }
