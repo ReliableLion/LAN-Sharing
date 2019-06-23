@@ -213,7 +213,12 @@ void DownloadManager::process_file(download_struct file_req, int thread_id) {
 
 bool DownloadManager::download_file(download_struct request,  FileHandler &file, std::string requestID) {
 	int left_bytes = request.conn->receive_file(request.req.file_size_, file, requestID);
-	return send_response(left_bytes, request);
+	if (send_response(left_bytes, request)) {
+		return true;
+	} else {
+		managed_callback::getInstance().call_file_download_callback(requestID.c_str(), false);
+		return false;
+	}
 }
 
 bool DownloadManager::send_response(int left_bytes, download_struct request) {

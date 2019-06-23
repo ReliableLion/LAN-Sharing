@@ -110,6 +110,9 @@ bool TcpConnection::read_data(std::shared_ptr<SocketBuffer> buffer) {
 	int bytes_read = 0;
 	bytes_read = recv(sock_, buffer->write_to_buffer(), buffer->get_max_size(), 0);
 
+	if (bytes_read != 1460)
+		std::cout << "djaosdiaj";
+
 	if (bytes_read == SOCKET_ERROR) {
 		std::cout << WSAGetLastError() << endl;
 		throw SocketException(WSAGetLastError());
@@ -242,9 +245,9 @@ void TcpConnection::select_write_connection() {
 
 int TcpConnection::receive_file(size_t file_size, FileHandler &temporary_file, std::string requestID) {
 
-	int left_bytes = static_cast<int>(file_size);
-	int bytes_to_download = 0, total_downloaded_bytes = 0;
-	int threshold = 0, percentage_limit = 0, percentage = 0;
+	signed long long int left_bytes = file_size;
+	signed long long int bytes_to_download = 0, total_downloaded_bytes = 0, threshold = 0, percentage_limit = 0;
+	int percentage = 0;
 	bool connection_closed = false;
 
 	std::shared_ptr<SocketBuffer> buffer = std::make_shared<SocketBuffer>();

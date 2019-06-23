@@ -61,6 +61,9 @@ void Server::listen_new_connection() {
 
 	const auto accept_socket = accept(passive_socket_, reinterpret_cast<SOCKADDR *>(&client_address), &addrlen);
 
+	int timeout = RECV_TIMEOUT;
+	setsockopt(accept_socket, SOL_SOCKET, SO_RCVTIMEO, (const char*) &timeout, sizeof(struct timeval));
+
 	// if the server is in pause return to the caller
 	if (server_status_.load() == paused) {
 		return; 
