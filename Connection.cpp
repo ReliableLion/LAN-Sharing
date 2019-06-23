@@ -110,8 +110,10 @@ bool TcpConnection::read_data(std::shared_ptr<SocketBuffer> buffer) {
 	int bytes_read = 0;
 	bytes_read = recv(sock_, buffer->write_to_buffer(), buffer->get_max_size(), 0);
 
-	if (bytes_read == SOCKET_ERROR)
+	if (bytes_read == SOCKET_ERROR) {
+		std::cout << WSAGetLastError() << endl;
 		throw SocketException(WSAGetLastError());
+	}
 	else if (bytes_read == 0) {
 		alive_ = false;
 		return false;
@@ -301,8 +303,8 @@ int TcpConnection::receive_file(size_t file_size, FileHandler &temporary_file, s
 
 int TcpConnection::send_file(HANDLE file_handle, DWORD file_size, string requestID) {
 
-	int left_bytes = file_size, bytes_sent = 0, byte_to_read = 0, total_byte_sent = 0;
-	int percentage = 0, percentage_limit = 0, treshold = 0;
+	signed long long int left_bytes = file_size, bytes_sent = 0, byte_to_read = 0, total_byte_sent = 0, percentage_limit = 0, treshold = 0;
+	int percentage = 0;
 	DWORD bytes_read = 0;
 
 	select_write_connection();
@@ -314,7 +316,7 @@ int TcpConnection::send_file(HANDLE file_handle, DWORD file_size, string request
 	else
 		byte_to_read = static_cast<long>(CHUNK);
 
-	treshold = (left_bytes*10)/100;
+	treshold = left_bytes/10;
 	//total_byte_sent += treshold;
 
 	while(left_bytes > 0) {
