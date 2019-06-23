@@ -218,8 +218,11 @@ namespace LanSharing
         {
             if(alert.IsDisposed)
                 return;
-            if (alert.Visible)
+            if (alert.Visible) {
+                alert.BringToFront();
                 return;
+            }
+
             alert.Show();
         }
     }

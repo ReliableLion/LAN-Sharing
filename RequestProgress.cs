@@ -71,6 +71,7 @@ namespace LanSharing
                     }
 
                     progressForm.progressTerminated(id);
+                    progressBars.Remove(id);
                 }));
 
             };
