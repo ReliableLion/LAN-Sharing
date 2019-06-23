@@ -66,6 +66,7 @@ namespace LanSharing
 
         public void progressTerminated(string id) {
             if (progressList.ContainsKey(id)) {
+                progressList[id].terminated();
                 progressList[id].completed = true;
             }
 

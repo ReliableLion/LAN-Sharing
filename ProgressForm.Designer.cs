@@ -54,16 +54,16 @@
             this.progressPanel.Location = new System.Drawing.Point(12, 75);
             this.progressPanel.Name = "progressPanel";
             this.progressPanel.RowCount = 1;
-            this.progressPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 70F));
-            this.progressPanel.Size = new System.Drawing.Size(776, 70);
+            this.progressPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 100F));
+            this.progressPanel.Size = new System.Drawing.Size(776, 100);
             this.progressPanel.TabIndex = 1;
             // 
             // closeButton
             // 
             this.closeButton.Enabled = false;
-            this.closeButton.Location = new System.Drawing.Point(414, 181);
+            this.closeButton.Location = new System.Drawing.Point(415, 210);
             this.closeButton.Name = "closeButton";
-            this.closeButton.Size = new System.Drawing.Size(192, 26);
+            this.closeButton.Size = new System.Drawing.Size(190, 26);
             this.closeButton.TabIndex = 2;
             this.closeButton.Text = "Close";
             this.closeButton.UseVisualStyleBackColor = true;
@@ -72,9 +72,9 @@
             // cleanButton
             // 
             this.cleanButton.Enabled = false;
-            this.cleanButton.Location = new System.Drawing.Point(194, 181);
+            this.cleanButton.Location = new System.Drawing.Point(193, 210);
             this.cleanButton.Name = "cleanButton";
-            this.cleanButton.Size = new System.Drawing.Size(192, 26);
+            this.cleanButton.Size = new System.Drawing.Size(190, 26);
             this.cleanButton.TabIndex = 4;
             this.cleanButton.Text = "Clean";
             this.cleanButton.UseVisualStyleBackColor = true;
@@ -86,7 +86,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ClientSize = new System.Drawing.Size(800, 219);
+            this.ClientSize = new System.Drawing.Size(800, 250);
             this.Controls.Add(this.cleanButton);
             this.Controls.Add(this.closeButton);
             this.Controls.Add(this.progressPanel);

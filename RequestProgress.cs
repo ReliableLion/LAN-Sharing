@@ -33,7 +33,7 @@ namespace LanSharing
         public static extern void save_begin_download_callback(BeginDownloadDelegate callback);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void FileCompleteDelegate(string requestId, bool status);
+        public delegate void FileCompleteDelegate(string requestId, bool status, bool directory);
         
         [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
         public static extern void save_file_sent_callback(FileCompleteDelegate callback);
@@ -80,9 +80,8 @@ namespace LanSharing
                 }
             };
 
-            fileSentDelegate = (id, status) =>
+            fileSentDelegate = (id, status, directory) =>
             {
-
                 parent.BeginInvoke(new Action(delegate() 
                 {
                     if (status) {
@@ -104,8 +103,12 @@ namespace LanSharing
 
             };
 
-            fileDownloadedDelegate = (id, status) =>
+            fileDownloadedDelegate = (id, status, directory) =>
             {
+                if(directory)
+                    Console.Out.Write("DIRECTORYYYYYYYYYYYYYYYYYYYYYYYYY");
+                else
+                    Console.Out.Write("NONNNNNNNNNNNNNNNNNNNNNNNNN DIRECTORYYYYYYYYYYYYYYYYYYYYYYYYY");
 
                 parent.BeginInvoke(new Action(delegate ()
                 {
