@@ -117,7 +117,15 @@ namespace LanSharing
             {
                 if (directory) {
                     if (files.ContainsKey(id)) {
-                        ZipFile.ExtractToDirectory(files[id],Settings.Default[Constants.PATH].ToString());
+                        try
+                        {
+                            ZipFile.ExtractToDirectory(files[id],Settings.Default[Constants.PATH].ToString());
+                        }
+                        catch (IOException e)
+                        {
+                            MessageBox.Show("Folder already exist. Could not be unzipped. Look for " + files[id],
+                                "Error", MessageBoxButtons.OK);
+                        }
                     }
                 }
 
