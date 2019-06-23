@@ -45,6 +45,7 @@ namespace LanSharing
         private static FileCompleteDelegate fileSentDelegate;
         private static FileCompleteDelegate fileDownloadedDelegate;
         private static BeginDownloadDelegate beginDownloadDelegate;
+        private static SortedDictionary<string, DateTime> timeStamps = new SortedDictionary<string, DateTime>();
         private static SortedDictionary<string, CustomProgressBar> progressBars = new SortedDictionary<string, CustomProgressBar>();
         private MainForm parent;
 
@@ -61,8 +62,19 @@ namespace LanSharing
                     //progressBars[id].Value = progress;
                     parent.BeginInvoke(new Action(delegate() 
                     {
+                        TimeSpan timespent = DateTime.Now - timeStamps[id];
+                        int secondsremaining = (int)(timespent.TotalSeconds / progressBars[id].Value * (progressBars[id].Maximum - progressBars[id].Value));
+
+                        var remainingTime = "";
+                        if (secondsremaining > 60) {
+                            remainingTime = ((int) (secondsremaining / 60)).ToString() + "m and " +
+                                            (secondsremaining % 60).ToString() + "s remaining...";
+                        } else {
+                            remainingTime = secondsremaining.ToString() + "s remaining...";
+                        }
+
                         progressBars[id].Value = progress; // Do all the ui thread updates here
-                        progressBars[id].CustomText = progress.ToString() + "/100 %";
+                        progressBars[id].CustomText = progress.ToString() + "/100 % " + remainingTime;
                     }));
 
                 }
@@ -75,7 +87,8 @@ namespace LanSharing
                 {
                     if (status) {
                         progressBars[id].Value = 100;
-                        progressBars[id].CustomText = "Complete";
+                        TimeSpan timespent = DateTime.Now - timeStamps[id];
+                        progressBars[id].CustomText = "Completed in " + timespent.Seconds;
                     }
                     else
                     {
@@ -96,8 +109,17 @@ namespace LanSharing
 
                 parent.BeginInvoke(new Action(delegate ()
                 {
-                    if (status)
-                        progressBars[id].CustomText = "Complete";
+                    if (status) {
+                        TimeSpan timespent = DateTime.Now - timeStamps[id];
+                        var remainingTime = "";
+                        if (timespent.Seconds > 60) {
+                            remainingTime = ((int) (timespent.Seconds / 60)).ToString() + "m and " +
+                                            (timespent.Seconds % 60).ToString() + "s remaining...";
+                        } else {
+                            remainingTime = timespent.Seconds.ToString() + "s remaining...";
+                        }
+                        progressBars[id].CustomText = "Completed in " + remainingTime + "s";
+                    }
                     else
                     {
                         if (progressBars[id].Value < 100)
@@ -131,10 +153,12 @@ namespace LanSharing
 
             CustomProgressBar progressBar = new CustomProgressBar();
             progressBar.DisplayStyle = ProgressBarDisplayText.CustomText;
-            progressBar.CustomText = "";
+            progressBar.Value = 1;
+            progressBar.CustomText = "Calculating remaining time";
 
             downloadProgressForm.addDownloadProgressbar(progressBar, id, file_path);
             progressBars.Add(id, progressBar);
+            timeStamps.Add(id, DateTime.Now);
         }
 
         public void addUploadRequest(string id, string username, string file_path) {
@@ -148,11 +172,12 @@ namespace LanSharing
 
             CustomProgressBar progressBar = new CustomProgressBar();
             progressBar.DisplayStyle = ProgressBarDisplayText.CustomText;
-            progressBar.CustomText = "";
-            //progressBar.Text = "Sending " + Path.GetFileName(file_path) + " to " + username;
+            progressBar.Value = 1;
+            progressBar.CustomText = "Calculating remaining time";
             
             uploadProgressForm.addUploadProgressbar(progressBar, id, username, file_path);
             progressBars.Add(id, progressBar);
+            timeStamps.Add(id, DateTime.Now);
 
             //backgroundWorker.RunWorkerAsync();
         }
