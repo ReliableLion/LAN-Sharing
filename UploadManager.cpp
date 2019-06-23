@@ -13,7 +13,7 @@ bool UploadManager::upload_file(std::shared_ptr<FileRequest> file_request, Windo
 			if (packet.get_message_code() == protocol::err){
 				if(packet.get_error_code() == protocol::err_packet_format || packet.get_error_code() == protocol::err_timeout) {
 					retry = true;
-					packet_dispatcher.send_packet(file_handler);
+					packet_dispatcher.send_packet(file_handler, file_request->directory);
 					packet = packet_dispatcher.receive_packet();
 					packet.compute_packet_type();
 				} else if(packet.get_error_code() == protocol::err_file) {

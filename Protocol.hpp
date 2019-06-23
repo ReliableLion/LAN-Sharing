@@ -8,6 +8,7 @@ namespace protocol {
     // enumerator declaration
     enum message_code {
         send,                        // code used to send the request to the server
+		dir,
         ok,                            // code to responde affermatively to the request
         err,                        // code that specify a error
         undefined                    // message code not recognized

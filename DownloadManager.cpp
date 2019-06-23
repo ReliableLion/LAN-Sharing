@@ -182,7 +182,7 @@ void DownloadManager::process_file(download_struct file_req, int thread_id) {
 		ss << filename << " downloaded correctly";
 		ConcurrentStreamPrint::print_data(thread_id, class_name, ss.str());
 
-		managed_callback::getInstance().call_file_download_callback(rnd_filename.c_str(), true);
+		managed_callback::getInstance().call_file_download_callback(rnd_filename.c_str(), true, file_req.req.directory);
 
 	}
 	catch (SocketException &se) {
@@ -190,24 +190,24 @@ void DownloadManager::process_file(download_struct file_req, int thread_id) {
 		ConcurrentStreamPrint::print_data(thread_id, class_name, "Socket Exception");
 		file.close_file();
 		file.remove_file();
-		managed_callback::getInstance().call_file_download_callback(rnd_filename.c_str(), false);
+		managed_callback::getInstance().call_file_download_callback(rnd_filename.c_str(), false, file_req.req.directory);
 	}
 	catch (TimeoutException &te) {
 		UNREFERENCED_PARAMETER(te);
 		ConcurrentStreamPrint::print_data(thread_id, class_name, "Timeout Exception");
-		managed_callback::getInstance().call_file_download_callback(rnd_filename.c_str(), false);
+		managed_callback::getInstance().call_file_download_callback(rnd_filename.c_str(), false, file_req.req.directory);
 	}
 	catch (FileOpenException &fwe) {
 		UNREFERENCED_PARAMETER(fwe);
 		ConcurrentStreamPrint::print_data(thread_id, class_name, "File Open Exception");
-		managed_callback::getInstance().call_file_download_callback(rnd_filename.c_str(), false);
+		managed_callback::getInstance().call_file_download_callback(rnd_filename.c_str(), false, file_req.req.directory);
 	}
 	catch (FileWriteException & fe) {
 		UNREFERENCED_PARAMETER(fe);
 		ConcurrentStreamPrint::print_data(thread_id, class_name, "File Write Exception");
 		file.close_file();
 		file.remove_file();
-		managed_callback::getInstance().call_file_download_callback(rnd_filename.c_str(), false);
+		managed_callback::getInstance().call_file_download_callback(rnd_filename.c_str(), false, file_req.req.directory);
 	}
 }
 

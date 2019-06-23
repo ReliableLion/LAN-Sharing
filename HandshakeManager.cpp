@@ -123,7 +123,9 @@ void HandshakeManager::process_client_req(PacketDispatcher &packet_dispatcher, c
 			case protocol::ok: 
 				ConcurrentStreamPrint::print_data(thread_id, class_name, "received ok!");
 				break;
-			case protocol::send: {
+			case protocol::send: 
+			case protocol::dir: {
+
 				ConcurrentStreamPrint::print_data(thread_id, class_name, "received send!");
 				request_struct request = protocol_packet.get_message_request();
 

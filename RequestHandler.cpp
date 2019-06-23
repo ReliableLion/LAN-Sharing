@@ -2,7 +2,7 @@
 
 RequestHandler::RequestHandler() = default;
 
-bool RequestHandler::send_request(const user_request destination_user, char* requestIDBuff) {
+bool RequestHandler::send_request(const user_request destination_user, char* requestIDBuff, bool directory) {
 
 	const auto port2 = DEFAULT_LISTEN_PORT;
 	const auto file_path = destination_user.file_name;
@@ -31,6 +31,7 @@ bool RequestHandler::send_request(const user_request destination_user, char* req
 		file_request->destination_user = destination_user.destination_user;
 		file_request->file_size_ = file_handler.get_file_size();
 		file_request->connection_ = tcp_connection;
+		file_request->directory = directory;
 
 		std::cout << file_request->file_name_ << " DESTINAZIONE: " << file_request->destination_user.username << std::endl << "DIMENSIONE: " << file_request->file_size_ << std::endl;
 
@@ -38,10 +39,21 @@ bool RequestHandler::send_request(const user_request destination_user, char* req
 
 		std::cout << file_handler.format_file_time(write_time) << std::endl;
 
-		if (packet_dispatcher.send_packet(file_handler)) {
+		if (packet_dispatcher.send_packet(file_handler, directory)) {
 			std::cout << "Packet sent! Now upload" << std::endl;
 
-			requests_.insert(std::make_pair(destination_user, std::async(std::launch::async, &UploadManager::upload_file, file_request, std::move(file_handler), packet_dispatcher)));
+			fileRequests_.insert(std::make_pair(requestID, file_request));
+			requests_.insert(std::make_pair(requestID, std::async(std::launch::async, &UploadManager::upload_file, file_request, std::move(file_handler), packet_dispatcher)));
+
+			for (auto it = requests_.begin(); it != requests_.end(); ) {
+			   if (it->second.wait_for(std::chrono::steady_clock::duration::zero()) == std::future_status::ready) {
+				   auto save = it;
+			       ++save;
+			       requests_.erase(it);
+			       it = save;
+			   } else
+			       ++it;
+			}
 
 			return true;
 		}
@@ -56,20 +68,25 @@ bool RequestHandler::send_request(const user_request destination_user, char* req
 	}
 }
 
-
-bool RequestHandler::is_terminated(user_request destination_user) {
+void RequestHandler::cancel_request(string id) {
 	
-	const auto username = destination_user.destination_user.username;
-	const auto file_name = destination_user.file_name;
+	for(auto it = fileRequests_.begin(); it != fileRequests_.end(); ++it) {
+		if(it->first == id) {
+			it->second->connection_->close_connection();
+			break;
+		}
+	}
+}
 
+
+bool RequestHandler::is_terminated(string id) {
+	
 	auto result = requests_.end();
 
 	for(auto it = requests_.begin(); it != requests_.end(); ++it) {
-		if(it->first.destination_user.username == username) {
-			if(it->first.file_name == file_name) {
-				result = it;
-				break;
-			}
+		if(it->first == id) {
+			result = it;
+			break;
 		}
 	}
 
@@ -80,20 +97,15 @@ bool RequestHandler::is_terminated(user_request destination_user) {
 	return false;
 }
 
-bool RequestHandler::get_result(user_request destination_user) {
-
-	const auto username = destination_user.destination_user.username;
-	const auto file_name = destination_user.file_name;
+bool RequestHandler::get_result(string id) {
 
 	//auto it = std::find_if(requests_.begin(), requests_.end(), [username, file_name](const std::pair<user_request, std::future<bool>>& obj) {return obj.first.destination_user.username == username & obj.first.file_name == file_name;});
 	auto result = requests_.end();
 
 	for(auto it = requests_.begin(); it != requests_.end(); ++it) {
-		if(it->first.destination_user.username == username) {
-			if(it->first.file_name == file_name) {
-				result = it;
-				break;
-			}
+		if(it->first == id) {
+			result = it;
+			break;
 		}
 	}
 

@@ -139,10 +139,13 @@ std::string DiscoveryMessage::get_message_body() {
 /* 	PROTOCOL MESSAGE */
 /*********************/
 
-ProtocolMessage::ProtocolMessage(const __int64 file_size, const FILETIME file_timestamp, const std::string file_name):
+ProtocolMessage::ProtocolMessage(const __int64 file_size, const FILETIME file_timestamp, const std::string file_name, bool directory):
 	error_code_() {
 	// first append the type of the message
-	this->message_code_ = protocol::send;
+	if(directory)
+		this->message_code_ = protocol::dir;
+	else
+		this->message_code_ = protocol::send;
 
 	// insert the request information
 	this->request_body_.file_size_ = file_size;
@@ -197,6 +200,11 @@ bool ProtocolMessage::compute_send_request() {
 
 	// Get the filename
 	std::getline(stream_, this->request_body_.file_name_, '\r');
+
+	if(this->get_message_code() == protocol::dir)
+		this->request_body_.directory = true;
+	else
+		this->request_body_.directory = false;
 
     return this->request_body_.file_name_.size() <= 256;
 }
