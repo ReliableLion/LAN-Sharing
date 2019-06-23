@@ -8,6 +8,7 @@ typedef struct {
     __int64 file_size_;
     FILETIME file_timestamp_;
     std::string file_name_;
+	bool directory;
 } request_struct;
 
 class Message {
@@ -85,7 +86,7 @@ class ProtocolMessage : public Message {
 	void prepare_out_packet();
 
 public:
-    ProtocolMessage(__int64 file_size, FILETIME file_timestamp, std::string file_name);     // This is used to create a RequestMessage, which it's supposed will be sent
+    ProtocolMessage(__int64 file_size, FILETIME file_timestamp, std::string file_name, bool directory);     // This is used to create a RequestMessage, which it's supposed will be sent
 	
 	explicit ProtocolMessage(protocol::message_code message_code);
 

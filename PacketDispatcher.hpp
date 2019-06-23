@@ -19,7 +19,7 @@ public:
 
     ProtocolMessage receive_packet() const;
 
-    bool send_packet(WindowsFileHandler &file_handler) const;
+    bool send_packet(WindowsFileHandler &file_handler, bool directory) const;
 
 	bool send_packet(protocol::message_code msg_type);           // used to send an ok message
 

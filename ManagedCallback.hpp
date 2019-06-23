@@ -57,11 +57,11 @@ public:
 	}
 
 	void call_file_sent_callback(const char *id, bool finished) {
-		file_sent_callback(id, finished);
+		file_sent_callback(id, finished, false);
 	}
 
-	void call_file_download_callback(const char *id, bool finished) {
-		file_downloaded_callback(id, finished);
+	void call_file_download_callback(const char *id, bool finished, bool directory) {
+		file_downloaded_callback(id, finished, directory);
 	}
 
 	void call_begin_download_callback(const char *id, const char *file_path) {

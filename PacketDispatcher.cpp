@@ -73,7 +73,7 @@ ProtocolMessage PacketDispatcher::receive_packet() const {
 /*
  * SEND file_request
  */
-bool PacketDispatcher::send_packet(WindowsFileHandler &file_handler) const {
+bool PacketDispatcher::send_packet(WindowsFileHandler &file_handler, bool directory) const {
 
     std::shared_ptr<SocketBuffer> buffer(new SocketBuffer);
     ProtocolMessage req_packet;
@@ -86,7 +86,7 @@ bool PacketDispatcher::send_packet(WindowsFileHandler &file_handler) const {
         return false;
     }
 
-    ProtocolMessage request_message(file_handler.get_file_size(), ftWrite, file_handler.get_filename());
+    ProtocolMessage request_message(file_handler.get_file_size(), ftWrite, file_handler.get_filename(), directory);
 	send_buffer_->replace(reinterpret_cast<const char*>(request_message.get_packet_data().data()), request_message.get_packet_data().size());
 
     // Check correctness about protocol message to send

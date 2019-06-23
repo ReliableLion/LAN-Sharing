@@ -8,6 +8,7 @@ struct FileRequest {
     DWORD file_size_;
     size_t transferred_bytes_ = 0;
     std::shared_ptr<connection::TcpConnection> connection_;
+	bool directory;
 };
 
 class UploadManager;
@@ -20,7 +21,8 @@ private:
 
     // connection and download variable
     //std::list<FileRequest> requests_;
-	std::multimap<user_request, std::future<bool>> requests_;
+	std::map<string, std::future<bool>> requests_;
+	std::map<string, shared_ptr<FileRequest>> fileRequests_;
 
     // synchronization variable decalration
     std::atomic<bool> is_terminated_;
@@ -33,8 +35,9 @@ public:
 
     //~request_handler();
 
-	bool is_terminated(user_request destination_user);
-	bool get_result(user_request destination_user);
+	bool is_terminated(string id);
+	bool get_result(string id);
 
-    bool send_request(user_request destination_user, char* requestIDBuff);
+    bool send_request(user_request destination_user, char* requestIDBuff, bool directory);
+	void cancel_request(string id);
 };
