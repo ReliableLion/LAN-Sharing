@@ -12,7 +12,7 @@ namespace LanSharing
 {
     public partial class ProgressForm : Form
     {
-        private SortedDictionary<string, bool> progressList = new SortedDictionary<string, bool>();
+        private SortedDictionary<string, LanSharingRequest> progressList = new SortedDictionary<string, LanSharingRequest>();
 
         public ProgressForm()
         {
@@ -21,74 +21,87 @@ namespace LanSharing
             BringToFront();
             this.ControlBox = false;
             this.closeButton.Enabled = false;
+            this.cleanButton.Enabled = false;
         }
 
         public void addUploadProgressbar(CustomProgressBar progressBar, string id, string username, string file_path) {
 
             this.closeButton.Enabled = false;
-            progressList.Add(id, false);
-            
-            var flowLayoutPanel = new FlowLayoutPanel();
-            var label = new Label();
-            var title = "Sending file " + file_path + " to " + username;
-            label.Text = title;
-            label.Width = progressPanel.Width;
-            label.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cleanButton.Enabled = false;
 
-            flowLayoutPanel.Controls.Add(label);
-            flowLayoutPanel.Controls.Add(progressBar);
-            flowLayoutPanel.FlowDirection = FlowDirection.TopDown;
-            flowLayoutPanel.Width = progressPanel.Width;
-            flowLayoutPanel.Height = 70;
-            //flowLayoutPanel.BackColor = Color.Aqua;
+            var request = new LanSharingRequest(progressBar, id, username, file_path, progressPanel.Width);
+            progressList.Add(id, request);
 
-            progressBar.Width = progressPanel.Width;
-            progressPanel.Controls.Add(flowLayoutPanel);
+            progressPanel.Controls.Add(request);
 
             this.closeButton.Location = new Point(this.closeButton.Location.X, this.closeButton.Location.Y + progressPanel.GetRowHeights()[0]);
+            this.cleanButton.Location = new Point(this.cleanButton.Location.X, this.cleanButton.Location.Y + progressPanel.GetRowHeights()[0]);
         }
 
         public void addDownloadProgressbar(CustomProgressBar progressBar, string id, string file_path)
         {
 
             this.closeButton.Enabled = false;
-            progressList.Add(id, false);
+            this.cleanButton.Enabled = false;
 
-            var flowLayoutPanel = new FlowLayoutPanel();
-            var label = new Label();
-            var title = "Download file " + file_path;
-            label.Text = title;
-            label.Width = progressPanel.Width;
-            label.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            var request = new LanSharingRequest(progressBar, id, file_path, progressPanel.Width);
+            progressList.Add(id, request);
 
-            flowLayoutPanel.Controls.Add(label);
-            flowLayoutPanel.Controls.Add(progressBar);
-            flowLayoutPanel.FlowDirection = FlowDirection.TopDown;
-            flowLayoutPanel.Width = progressPanel.Width;
-            flowLayoutPanel.Height = 70;
-            //flowLayoutPanel.BackColor = Color.Aqua;
-
-            progressBar.Width = progressPanel.Width;
-            progressPanel.Controls.Add(flowLayoutPanel);
+            progressPanel.Controls.Add(request);
 
             this.closeButton.Location = new Point(this.closeButton.Location.X, this.closeButton.Location.Y + progressPanel.GetRowHeights()[0]);
+            this.cleanButton.Location = new Point(this.cleanButton.Location.X, this.cleanButton.Location.Y + progressPanel.GetRowHeights()[0]);
+
         }
 
         public void progressTerminated(string id) {
             if (progressList.ContainsKey(id)) {
-                progressList[id] = true;
+                progressList[id].completed = true;
             }
 
-            foreach (var progress in progressList) {
-                if (!progress.Value)
-                    return;
+            var closable = true;
+            var clean = false;
+            foreach (var progress in progressList)
+            {
+                if (!progress.Value.completed)
+                    closable = false;
+                else
+                    clean = true;
             }
 
-            this.closeButton.Enabled = true;
+            if (clean)
+                this.cleanButton.Enabled = true;
+
+            if(closable)
+                this.closeButton.Enabled = true;
         }
 
         private void CloseButton_Click(object sender, EventArgs e) {
             this.Close();
+        }
+
+        private void CleanButton_Click(object sender, EventArgs e) {
+
+            var keys = new List<string>();
+            foreach (var request in progressList) {
+                
+                if (!request.Value.completed) continue;
+
+                keys.Add(request.Key);
+                progressPanel.Controls.Remove(request.Value);
+                this.closeButton.Location = new Point(this.closeButton.Location.X, this.closeButton.Location.Y - progressPanel.GetRowHeights()[0]);
+                this.cleanButton.Location = new Point(this.cleanButton.Location.X, this.cleanButton.Location.Y - progressPanel.GetRowHeights()[0]);
+            }
+
+            foreach (var key in keys) {
+                if (!progressList[key].completed) continue;
+                progressList.Remove(key);
+            }
+
+            if(progressList.Count < 1)
+                this.closeButton.Enabled = true;
+
+            this.cleanButton.Enabled = false;
         }
     }
 }

@@ -31,6 +31,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.progressPanel = new System.Windows.Forms.TableLayoutPanel();
             this.closeButton = new System.Windows.Forms.Button();
+            this.cleanButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
@@ -59,20 +60,33 @@
             // closeButton
             // 
             this.closeButton.Enabled = false;
-            this.closeButton.Location = new System.Drawing.Point(237, 177);
+            this.closeButton.Location = new System.Drawing.Point(414, 181);
             this.closeButton.Name = "closeButton";
-            this.closeButton.Size = new System.Drawing.Size(326, 26);
+            this.closeButton.Size = new System.Drawing.Size(192, 26);
             this.closeButton.TabIndex = 2;
             this.closeButton.Text = "Close";
             this.closeButton.UseVisualStyleBackColor = true;
             this.closeButton.Click += new System.EventHandler(this.CloseButton_Click);
+            // 
+            // cleanButton
+            // 
+            this.cleanButton.Enabled = false;
+            this.cleanButton.Location = new System.Drawing.Point(194, 181);
+            this.cleanButton.Name = "cleanButton";
+            this.cleanButton.Size = new System.Drawing.Size(192, 26);
+            this.cleanButton.TabIndex = 4;
+            this.cleanButton.Text = "Clean";
+            this.cleanButton.UseVisualStyleBackColor = true;
+            this.cleanButton.Click += new System.EventHandler(this.CleanButton_Click);
             // 
             // ProgressForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
+            this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.ClientSize = new System.Drawing.Size(800, 219);
+            this.Controls.Add(this.cleanButton);
             this.Controls.Add(this.closeButton);
             this.Controls.Add(this.progressPanel);
             this.Controls.Add(this.label1);
@@ -89,5 +103,6 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TableLayoutPanel progressPanel;
         private System.Windows.Forms.Button closeButton;
+        private System.Windows.Forms.Button cleanButton;
     }
 }

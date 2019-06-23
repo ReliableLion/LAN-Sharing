@@ -60,9 +60,9 @@ namespace LanSharing
                 if (progressBars.ContainsKey(id)) {
                     //progressBars[id].Value = progress;
                     parent.BeginInvoke(new Action(delegate() 
-                    {       
+                    {
                         progressBars[id].Value = progress; // Do all the ui thread updates here
-                        progressBars[id].CustomText = progress.ToString() + "/100";
+                        progressBars[id].CustomText = progress.ToString() + "/100 %";
                     }));
 
                 }
@@ -79,10 +79,12 @@ namespace LanSharing
                     {
                         if(progressBars[id].Value < 100)
                             progressBars[id].Value += 1;
-                        progressBars[id].CustomText = "Failed";
+
+                        progressBars[id].CustomText = progressBars[id].Value == 100 ? "The receiver may have encountered some problems." : "Failed";
                     }
 
                     uploadProgressForm.progressTerminated(id);
+                    progressBars.Remove(id);
                 }));
 
             };
@@ -102,6 +104,7 @@ namespace LanSharing
                     }
 
                     downloadProgressForm.progressTerminated(id);
+                    progressBars.Remove(id);
                 }));
 
             };
@@ -118,9 +121,10 @@ namespace LanSharing
 
         public void addDownloadRequest(string id, string file_path)
         {
+            if(downloadProgressForm.IsDisposed)
+                downloadProgressForm = new ProgressForm();
             if (!downloadProgressForm.Visible)
                 downloadProgressForm.Show();
-
             downloadProgressForm.BringToFront();
 
             CustomProgressBar progressBar = new CustomProgressBar();
@@ -132,6 +136,10 @@ namespace LanSharing
         }
 
         public void addUploadRequest(string id, string username, string file_path) {
+            
+            if(uploadProgressForm.IsDisposed)
+                uploadProgressForm = new ProgressForm();
+
             if(!uploadProgressForm.Visible)
                 uploadProgressForm.Show();
             uploadProgressForm.BringToFront();

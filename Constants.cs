@@ -8,7 +8,7 @@ namespace LanSharing
 {
     public static class Constants
     {
-        public const string DLL_PATH = "C:\\Users\\utente pc\\Source\\Repos\\DLL\\LAN-Sharing\\Debug\\DLL1.dll";
+        public const string DLL_PATH = "LanSharing.dll";
         public const string USERNAME = "username";
         public const string AVATAR = "avatar";
         public const string PATH = "downloadPath";
