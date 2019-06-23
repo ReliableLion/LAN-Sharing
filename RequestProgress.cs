@@ -17,8 +17,8 @@ namespace LanSharing
     class RequestProgress {
 
         private static readonly RequestProgress instance = new RequestProgress();
-        private static ProgressForm uploadProgressForm = new ProgressForm();
-        private static ProgressForm downloadProgressForm = new ProgressForm();
+        private static ProgressForm uploadProgressForm = new ProgressForm("Uploading file");
+        private static ProgressForm downloadProgressForm = new ProgressForm("Downloading file");
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProgressBarDelegate(string requestId, int progress);
@@ -72,12 +72,14 @@ namespace LanSharing
             {
 
                 parent.BeginInvoke(new Action(delegate() 
-                {       
-                    if(status)
+                {
+                    if (status) {
+                        progressBars[id].Value = 100;
                         progressBars[id].CustomText = "Complete";
+                    }
                     else
                     {
-                        if(progressBars[id].Value < 100)
+                        if (progressBars[id].Value < 100)
                             progressBars[id].Value += 1;
 
                         progressBars[id].CustomText = progressBars[id].Value == 100 ? "The receiver may have encountered some problems." : "Failed";
@@ -122,7 +124,7 @@ namespace LanSharing
         public void addDownloadRequest(string id, string file_path)
         {
             if(downloadProgressForm.IsDisposed)
-                downloadProgressForm = new ProgressForm();
+                downloadProgressForm = new ProgressForm("Downloading file");
             if (!downloadProgressForm.Visible)
                 downloadProgressForm.Show();
             downloadProgressForm.BringToFront();
@@ -138,7 +140,7 @@ namespace LanSharing
         public void addUploadRequest(string id, string username, string file_path) {
             
             if(uploadProgressForm.IsDisposed)
-                uploadProgressForm = new ProgressForm();
+                uploadProgressForm = new ProgressForm("Uploading file");
 
             if(!uploadProgressForm.Visible)
                 uploadProgressForm.Show();

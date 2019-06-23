@@ -14,14 +14,24 @@ namespace LanSharing
     {
         private SortedDictionary<string, LanSharingRequest> progressList = new SortedDictionary<string, LanSharingRequest>();
 
-        public ProgressForm()
+        public ProgressForm(string title)
         {
             InitializeComponent();
             this.CenterToScreen();
             BringToFront();
-            this.ControlBox = false;
             this.closeButton.Enabled = false;
             this.cleanButton.Enabled = false;
+            this.Text = title;
+        }
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams parms = base.CreateParams;
+                parms.ClassStyle |= 0x200;  // CS_NOCLOSE
+                return parms;
+            }
         }
 
         public void addUploadProgressbar(CustomProgressBar progressBar, string id, string username, string file_path) {

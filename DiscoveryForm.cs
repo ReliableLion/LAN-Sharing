@@ -23,6 +23,7 @@ namespace LanSharing
             InitializeComponent();
             this.CenterToScreen();
             BringToFront();
+            TopMost = true;
             filePath = fileName;
             Text = @"Sending " + Path.GetFileName(fileName);
             
