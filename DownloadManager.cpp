@@ -216,7 +216,7 @@ bool DownloadManager::download_file(download_struct request,  FileHandler &file,
 	if (send_response(left_bytes, request)) {
 		return true;
 	} else {
-		managed_callback::getInstance().call_file_download_callback(requestID.c_str(), false);
+		managed_callback::getInstance().call_file_download_callback(requestID.c_str(), false, request.req.directory);
 		return false;
 	}
 }
