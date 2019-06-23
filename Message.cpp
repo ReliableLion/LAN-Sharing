@@ -235,8 +235,12 @@ void ProtocolMessage::compute_packet_type() {
 
 void ProtocolMessage::prepare_out_packet() {
     switch (message_code_) {
-        case protocol::send : {
-            prepare_send_message();
+        case protocol::send:
+		case protocol::dir:{
+			if(message_code_ == protocol::dir)
+				prepare_send_message(true);
+			else
+				prepare_send_message(false);
         }
             break;
         case protocol::ok : {
@@ -261,9 +265,13 @@ void ProtocolMessage::prepare_out_packet() {
 /*
  * construct a SEND request
  */
-void ProtocolMessage::prepare_send_message() {
-    // append the send
-    append(protocol::send);
+void ProtocolMessage::prepare_send_message(bool directory) {
+    
+	if(directory)
+		append(protocol::dir);
+	else
+		// append the send
+	    append(protocol::send);
 
 	stream_.str(std::string());
 

@@ -81,7 +81,7 @@ class ProtocolMessage : public Message {
     int const MIN_SIZE_REQUEST_ = (4 + (2 * sizeof(__int64)) + 1);
     int const MAX_SIZE_REQUEST_ = (4 + (2 * sizeof(__int64)) + MAX_FILENAME_LENGTH);
 
-    void prepare_send_message();
+    void prepare_send_message(bool directory);
 	// this method is used to send out a packet
 	void prepare_out_packet();
 
