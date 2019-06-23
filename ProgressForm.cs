@@ -23,7 +23,7 @@ namespace LanSharing
             this.closeButton.Enabled = false;
         }
 
-        public void addProgressbar(CustomProgressBar progressBar, string id, string username, string file_path) {
+        public void addUploadProgressbar(CustomProgressBar progressBar, string id, string username, string file_path) {
 
             this.closeButton.Enabled = false;
             progressList.Add(id, false);
@@ -31,6 +31,32 @@ namespace LanSharing
             var flowLayoutPanel = new FlowLayoutPanel();
             var label = new Label();
             var title = "Sending file " + file_path + " to " + username;
+            label.Text = title;
+            label.Width = progressPanel.Width;
+            label.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+
+            flowLayoutPanel.Controls.Add(label);
+            flowLayoutPanel.Controls.Add(progressBar);
+            flowLayoutPanel.FlowDirection = FlowDirection.TopDown;
+            flowLayoutPanel.Width = progressPanel.Width;
+            flowLayoutPanel.Height = 70;
+            //flowLayoutPanel.BackColor = Color.Aqua;
+
+            progressBar.Width = progressPanel.Width;
+            progressPanel.Controls.Add(flowLayoutPanel);
+
+            this.closeButton.Location = new Point(this.closeButton.Location.X, this.closeButton.Location.Y + progressPanel.GetRowHeights()[0]);
+        }
+
+        public void addDownloadProgressbar(CustomProgressBar progressBar, string id, string file_path)
+        {
+
+            this.closeButton.Enabled = false;
+            progressList.Add(id, false);
+
+            var flowLayoutPanel = new FlowLayoutPanel();
+            var label = new Label();
+            var title = "Download file " + file_path;
             label.Text = title;
             label.Width = progressPanel.Width;
             label.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
