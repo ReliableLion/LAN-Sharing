@@ -138,7 +138,6 @@ void HandshakeManager::process_client_req(PacketDispatcher &packet_dispatcher, c
 				}
 
 				append_in_download_queue(packet_dispatcher, request, connection);
-				packet_dispatcher.send_packet(protocol::err_1);
 			}
 				break;
 			case protocol::err: 
