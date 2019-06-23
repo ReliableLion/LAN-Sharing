@@ -36,7 +36,7 @@ namespace LanSharing
 
                 if (send_file(user.Key, user.Value, filePath, requestIDBuff)) {
                     requestID = System.Text.Encoding.UTF8.GetString(requestIDBuff);
-                    RequestProgress.Instance.addRequest(requestID, user.Value, filePath);
+                    RequestProgress.Instance.addUploadRequest(requestID, user.Value, filePath);
                 }
             }
         }

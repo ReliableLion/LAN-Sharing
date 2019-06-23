@@ -18,13 +18,20 @@ namespace LanSharing
     class RequestProgress {
 
         private static readonly RequestProgress instance = new RequestProgress();
-        private static ProgressForm progressForm = new ProgressForm();
+        private static ProgressForm uploadProgressForm = new ProgressForm();
+        private static ProgressForm downloadProgressForm = new ProgressForm();
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProgressBarDelegate(string requestId, int progress);
         
         [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
         public static extern void save_progress_bar_callback(ProgressBarDelegate callback);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void BeginDownloadDelegate(string requestId, string file_path);
+
+        [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void save_begin_download_callback(BeginDownloadDelegate callback);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void FileSentDelegate(string requestId, bool status);
@@ -34,6 +41,7 @@ namespace LanSharing
 
         private static ProgressBarDelegate progressBarDelegate;
         private static FileSentDelegate fileSentDelegate;
+        private static BeginDownloadDelegate beginDownloadDelegate;
         private static SortedDictionary<string, CustomProgressBar> progressBars = new SortedDictionary<string, CustomProgressBar>();
         private MainForm parent;
 
@@ -67,24 +75,47 @@ namespace LanSharing
                     else
                         progressBars[id].CustomText = "Failed";
 
-                    progressForm.progressTerminated(id);
+                    uploadProgressForm.progressTerminated(id);
                 }));
 
             };
 
+            beginDownloadDelegate = (id, file_path) =>
+            {
+                parent.BeginInvoke(new Action(delegate ()
+                {
+                    addDownloadRequest(id, file_path);
+                }));
+            };
+
         }
 
-        public void addRequest(string id, string username, string file_path) {
-            if(!progressForm.Visible)
-                progressForm.Show();
-            progressForm.BringToFront();
+        public void addDownloadRequest(string id, string file_path)
+        {
+            if (!downloadProgressForm.Visible)
+                downloadProgressForm.Show();
+
+            downloadProgressForm.BringToFront();
+
+            CustomProgressBar progressBar = new CustomProgressBar();
+            progressBar.DisplayStyle = ProgressBarDisplayText.CustomText;
+            progressBar.CustomText = "";
+
+            downloadProgressForm.addDownloadProgressbar(progressBar, id, file_path);
+            progressBars.Add(id, progressBar);
+        }
+
+        public void addUploadRequest(string id, string username, string file_path) {
+            if(!uploadProgressForm.Visible)
+                uploadProgressForm.Show();
+            uploadProgressForm.BringToFront();
 
             CustomProgressBar progressBar = new CustomProgressBar();
             progressBar.DisplayStyle = ProgressBarDisplayText.CustomText;
             progressBar.CustomText = "";
             //progressBar.Text = "Sending " + Path.GetFileName(file_path) + " to " + username;
             
-            progressForm.addProgressbar(progressBar, id, username, file_path);
+            uploadProgressForm.addUploadProgressbar(progressBar, id, username, file_path);
             progressBars.Add(id, progressBar);
 
             //backgroundWorker.RunWorkerAsync();
@@ -106,6 +137,7 @@ namespace LanSharing
         private void saveCallback() {
             save_progress_bar_callback(progressBarDelegate);
             save_file_sent_callback(fileSentDelegate);
+            save_begin_download_callback(beginDownloadDelegate);
         }
     }
 }
