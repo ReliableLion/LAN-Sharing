@@ -155,6 +155,7 @@ bool TcpConnection::read_line(std::shared_ptr<SocketBuffer> buffer) {
 
 	select_connection();
 
+	ZeroMemory(receive_buffer_, 0, CHUNK);
 	int read_bytes = readline_unbuffered(receive_buffer_, buffer->get_max_size());
 
 	if (read_bytes == 0) {

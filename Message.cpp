@@ -242,6 +242,7 @@ void ProtocolMessage::prepare_out_packet() {
             // append the error and the error code
             append(protocol::err);
             append(error_code_);
+			append(END_MESSAGE_);
         }
             break;
         default:
