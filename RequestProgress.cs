@@ -33,13 +33,17 @@ namespace LanSharing
         public static extern void save_begin_download_callback(BeginDownloadDelegate callback);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void FileSentDelegate(string requestId, bool status);
+        public delegate void FileCompleteDelegate(string requestId, bool status);
         
         [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void save_file_sent_callback(FileSentDelegate callback);
+        public static extern void save_file_sent_callback(FileCompleteDelegate callback);
+
+        [DllImport(Constants.DLL_PATH, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void save_file_downloaded_callback(FileCompleteDelegate callback);
 
         private static ProgressBarDelegate progressBarDelegate;
-        private static FileSentDelegate fileSentDelegate;
+        private static FileCompleteDelegate fileSentDelegate;
+        private static FileCompleteDelegate fileDownloadedDelegate;
         private static BeginDownloadDelegate beginDownloadDelegate;
         private static SortedDictionary<string, CustomProgressBar> progressBars = new SortedDictionary<string, CustomProgressBar>();
         private MainForm parent;
@@ -79,6 +83,25 @@ namespace LanSharing
                     }
 
                     uploadProgressForm.progressTerminated(id);
+                }));
+
+            };
+
+            fileDownloadedDelegate = (id, status) =>
+            {
+
+                parent.BeginInvoke(new Action(delegate ()
+                {
+                    if (status)
+                        progressBars[id].CustomText = "Complete";
+                    else
+                    {
+                        if (progressBars[id].Value < 100)
+                            progressBars[id].Value += 1;
+                        progressBars[id].CustomText = "Failed";
+                    }
+
+                    downloadProgressForm.progressTerminated(id);
                 }));
 
             };
@@ -141,6 +164,7 @@ namespace LanSharing
             save_progress_bar_callback(progressBarDelegate);
             save_file_sent_callback(fileSentDelegate);
             save_begin_download_callback(beginDownloadDelegate);
+            save_file_downloaded_callback(fileDownloadedDelegate);
         }
     }
 }
