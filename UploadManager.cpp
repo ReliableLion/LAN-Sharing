@@ -50,7 +50,10 @@ bool UploadManager::upload_file(std::shared_ptr<FileRequest> file_request, Windo
 			std::cout << "File sent!" << std::endl;
 			file_request->connection_->close_connection();
 
-			managed_callback::getInstance().call_file_sent_callback(file_request->requestID.c_str(), true);
+			if(packet2.get_message_code() == protocol::message_code::ok)
+				managed_callback::getInstance().call_file_sent_callback(file_request->requestID.c_str(), true);
+			else
+				managed_callback::getInstance().call_file_sent_callback(file_request->requestID.c_str(), false);
 
 			return true;
 
@@ -62,10 +65,12 @@ bool UploadManager::upload_file(std::shared_ptr<FileRequest> file_request, Windo
 
 	}catch(SocketException &e) {
 		std::cout << "Socket exception: " << e.get_error_code() << std::endl;
+		managed_callback::getInstance().call_file_sent_callback(file_request->requestID.c_str(), false);
 		return false;
 	} catch (std::exception &e) {
 		
 		std::cout << "ECCEZIONE NEL FUTURE: " << e.what() << "                 " << GetLastError() << std::endl;
+		managed_callback::getInstance().call_file_sent_callback(file_request->requestID.c_str(), false);
 		return false;
 	}
 }
