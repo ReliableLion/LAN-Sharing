@@ -16,6 +16,7 @@ public enum ProgressBarDisplayText
 }
 
 public class CustomProgressBar: ProgressBar {
+
     //Property to set to decide whether to print a % or Text
     public ProgressBarDisplayText DisplayStyle { get; set; }
 
@@ -26,7 +27,8 @@ public class CustomProgressBar: ProgressBar {
     {
         // Modify the ControlStyles flags
         //http://msdn.microsoft.com/en-us/library/system.windows.forms.controlstyles.aspx
-        SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint, true);
+        SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
+        //SetStyle( ControlStyles.OptimizedDoubleBuffer, true );
     }
 
     protected override void OnPaint(PaintEventArgs e)

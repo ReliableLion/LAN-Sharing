@@ -124,7 +124,7 @@ namespace LanSharing
                     destinationUsers[c.user_address] = c.username;
 
             } else {
-                if (!destinationUsers.ContainsKey(c.user_address))
+                if (destinationUsers.ContainsKey(c.user_address))
                     destinationUsers.Remove(c.user_address);
             }
 

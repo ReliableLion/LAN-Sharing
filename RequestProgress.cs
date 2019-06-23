@@ -11,7 +11,6 @@ using System.Windows.Forms;
 using System.Threading;
 using System.Windows.Threading;
 using System.Windows.Shell;
-using System.Windows;
 
 namespace LanSharing
 {
@@ -73,7 +72,11 @@ namespace LanSharing
                     if(status)
                         progressBars[id].CustomText = "Complete";
                     else
+                    {
+                        if(progressBars[id].Value < 100)
+                            progressBars[id].Value += 1;
                         progressBars[id].CustomText = "Failed";
+                    }
 
                     uploadProgressForm.progressTerminated(id);
                 }));
