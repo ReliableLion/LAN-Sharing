@@ -36,10 +36,12 @@ namespace LanSharing
                 byte[] requestIDBuff = new byte[31];
                 string requestID;
 
-                if (send_file(user.Key, user.Value, filePath, requestIDBuff, isADirectory)) {
-                    requestID = System.Text.Encoding.UTF8.GetString(requestIDBuff);
-                    RequestProgress.Instance.addUploadRequest(requestID, user.Value, filePath);
-                }
+                new Task(() => {
+                    if (send_file(user.Key, user.Value, filePath, requestIDBuff, isADirectory)) {
+                        requestID = System.Text.Encoding.UTF8.GetString(requestIDBuff);
+                        RequestProgress.Instance.addUploadRequest(requestID, user.Value, filePath);
+                    }
+                }).Start();
             }
         }
 
