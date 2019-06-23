@@ -237,11 +237,12 @@ void TcpConnection::select_write_connection() {
 		throw TimeoutException();
 }
 
-int TcpConnection::read_file(size_t file_size, FileHandler &temporary_file) {
+int TcpConnection::receive_file(size_t file_size, FileHandler &temporary_file, std::string requestID) {
 
-	auto left_bytes = static_cast<int>(file_size);
-	auto bytes_to_download = 0;
-	auto connection_closed = false;
+	int left_bytes = static_cast<int>(file_size);
+	int bytes_to_download = 0, total_downloaded_bytes = 0;
+	int threshold = 0, percentage_limit = 0, percentage = 0;
+	bool connection_closed = false;
 
 	std::shared_ptr<SocketBuffer> buffer = std::make_shared<SocketBuffer>();
 	const auto buffer_max_size = buffer->get_max_size();
@@ -250,9 +251,12 @@ int TcpConnection::read_file(size_t file_size, FileHandler &temporary_file) {
 
 	temporary_file.open_file(write);										// open the two files, if an exception is throw by the program then the file is closed by the destructor
 
-	auto start = high_resolution_clock::now();
+	// auto start = high_resolution_clock::now();
 
-	while (left_bytes != 0 && !connection_closed) {
+	// compute the threshold 
+	threshold = (left_bytes * 10) / 100;
+
+	while (left_bytes != 0 && alive_) {
 
 		if (left_bytes >= buffer_max_size) {								// if the remaining data are greater than the max size of the buffer then the bytes to download are max buff lengh
 			bytes_to_download = buffer_max_size;
@@ -264,18 +268,31 @@ int TcpConnection::read_file(size_t file_size, FileHandler &temporary_file) {
 		if (read_data(buffer)) {
 			left_bytes -= buffer->get_size();
 			temporary_file.write_data(buffer);
-		}
-		else {
-			connection_closed = get_connection_status();
+
+			total_downloaded_bytes += buffer->get_size();
+
+			if (total_downloaded_bytes > percentage_limit) {
+				if (percentage < 100) {
+					percentage += 10;
+					managed_callback::getInstance().call_progress_bar_callback(requestID.c_str(), percentage);
+					percentage_limit += threshold;
+				}
+			}
 		}
 	}
 
+	if (left_bytes == 0)
+		managed_callback::getInstance().call_progress_bar_callback(requestID.c_str(), 100);
+	else
+		managed_callback::getInstance().call_progress_bar_callback(requestID.c_str(), percentage);
+
+	/*
 	auto stop = high_resolution_clock::now();
 
 	auto duration = duration_cast<microseconds>(stop - start);
 
 	std::cout << "Time taken by function: "
-		<< duration.count() << " microseconds" << std::endl;
+		<< duration.count() << " microseconds" << std::endl; */
 
 	temporary_file.close_file();
 	return left_bytes;
@@ -297,7 +314,7 @@ int TcpConnection::send_file(HANDLE file_handle, DWORD file_size, string request
 		byte_to_read = static_cast<long>(CHUNK);
 
 	treshold = (left_bytes*10)/100;
-	total_byte_sent += treshold;
+	//total_byte_sent += treshold;
 
 	while(left_bytes > 0) {
 

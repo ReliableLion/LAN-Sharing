@@ -6,7 +6,9 @@ extern "C" __declspec(dllexport) VOID save_exception_callback(EXCEPTION_CALLBACK
 extern "C" __declspec(dllexport) VOID save_discovery_callback(DISCOVERY_MANAGED_CALLBACK callback);
 extern "C" __declspec(dllexport) VOID save_accept_callback(ACCEPT_CALLBACK callback);
 extern "C" __declspec(dllexport) VOID save_progress_bar_callback(PROGRESS_BAR_CALLBACK callback);
-extern "C" __declspec(dllexport) VOID save_file_sent_callback(FILE_SENT_CALLBACK callback);
+extern "C" __declspec(dllexport) VOID save_file_sent_callback(FILE_COMPLETE_CALLBACK callback);
+extern "C" __declspec(dllexport) VOID save_file_downloaded_callback(FILE_COMPLETE_CALLBACK callback);
+extern "C" __declspec(dllexport) VOID save_begin_download_callback(BEGIN_DOWNLOAD_CALLBACK callback);
 
 VOID save_exception_callback(EXCEPTION_CALLBACK callback) {
 	managed_callback::getInstance().save_exit(callback);
@@ -24,8 +26,16 @@ VOID save_progress_bar_callback(PROGRESS_BAR_CALLBACK callback) {
 	managed_callback::getInstance().save_progress_bar_handler(callback);
 }
 
-VOID save_file_sent_callback(FILE_SENT_CALLBACK callback) {
+VOID save_file_sent_callback(FILE_COMPLETE_CALLBACK callback) {
 	managed_callback::getInstance().save_file_sent_handler(callback);
+}
+
+VOID save_file_downloaded_callback(FILE_COMPLETE_CALLBACK callback) {
+	managed_callback::getInstance().save_file_downloaded_callback(callback);
+}
+
+VOID save_begin_download_callback(BEGIN_DOWNLOAD_CALLBACK callback) {
+	managed_callback::getInstance().save_begin_download_callback(callback);
 }
 
 BOOL APIENTRY DllMain( HMODULE hModule,

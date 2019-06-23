@@ -39,13 +39,9 @@ namespace connection {
 
 		bool read_n_data(std::shared_ptr<SocketBuffer> buffer, int n);
 
-		int read_file(size_t file_size, FileHandler &temporary_file);
+		int receive_file(size_t file_size, FileHandler &temporary_file, std::string requestID);
 
 		int send_file(HANDLE file_handle, DWORD file_size, std::string requestID);
-
-		// bool read_data2(int size);
-
-		// char* getReceiveBuffer();
 
         bool read_line(std::shared_ptr<SocketBuffer> buffer);
 

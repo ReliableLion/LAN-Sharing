@@ -110,5 +110,5 @@ bool PacketDispatcher::send_packet(const protocol::error_code error_type) {
     ProtocolMessage response_packet(error_type);
 
     send_buffer_->replace(reinterpret_cast<const char*>(response_packet.get_packet_data().data()), sizeof(response_packet.get_packet_data()));
-    return false;
+	return connection_->send_data(send_buffer_);
 }

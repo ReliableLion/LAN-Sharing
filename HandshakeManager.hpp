@@ -39,12 +39,6 @@ class HandshakeManager {
 	void append_in_download_queue(PacketDispatcher &packet_dispatcher, const request_struct request, connection::connection_ptr connection) const;
 
 	void requeue_connection(QueueConnectionElement element, int thread_id, std::string err_msg);
-
-	// bool validate_request(PacketDispatcher &packet_fwd, request_struct request);
-
-	// void decode_send_request();
-
-    // bool send_response(PacketManager& res_packet_manager, connection::conn_ptr connection);
 public:
 	explicit HandshakeManager(std::shared_ptr<DownloadManager> download_manager, bool accept);
 

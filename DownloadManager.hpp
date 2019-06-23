@@ -24,8 +24,6 @@ class DownloadManager {
 
 	const std::string class_name = "DownloadManager";
 
-	//std::string path_ = TEST_PATH;
-
 	std::string dest_folder_path_;
 
     void process_big_file(int thread_id);
@@ -34,9 +32,9 @@ class DownloadManager {
 
 	void process_file(download_struct req, int thread_id);
 
-	bool download_file(download_struct request, FileHandler &temporary_file);
+	bool download_file(download_struct request, FileHandler &temporary_file, std::string requestID);
 
-	void perform_rename_file(std::string new_filename, FileHandler &file);
+	void perform_file_rename(std::string new_filename, FileHandler &file);
 
 	bool rename_file(std::string new_filename, FileHandler &file);
 

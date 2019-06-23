@@ -11,7 +11,8 @@ typedef void (*EXCEPTION_CALLBACK)();
 typedef void (*DISCOVERY_MANAGED_CALLBACK)(const char* ipAddress,const char* username,const char* avatar);
 typedef bool (*ACCEPT_CALLBACK)(const char *filename);
 typedef void (*PROGRESS_BAR_CALLBACK)(const char *id, int progress);
-typedef void (*FILE_SENT_CALLBACK)(const char *id, bool finished);
+typedef void (*FILE_COMPLETE_CALLBACK)(const char *id, bool finished);
+typedef void (*BEGIN_DOWNLOAD_CALLBACK)(const char *id, const char *file_path);
 
 
 #include "ManagedCallback.hpp"

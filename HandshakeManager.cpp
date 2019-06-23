@@ -88,15 +88,11 @@ void HandshakeManager::extract_connections_from_queue(int id) {
 			process_client_req(packet_dispatcher, queue_element.connection, thread_id);
 		}
 		catch (TimeoutException &te) {
-			// send an error to the client
-			// std::cout << "[Thread id: " << id << "]: Timeout exception" << std::endl;
 			packet_dispatcher.send_packet(protocol::err_timeout);
 			ConcurrentStreamPrint::print_data(thread_id, class_name, "Timeout exception, try to send an error message");
 			requeue_connection(queue_element, thread_id, std::string("client doesn't respond"));
 		}
 		catch (PacketFormatException &pfe){
-			// send an error to the client
-			// std::cout << "[Thread id: " << id << "]: Packet exception" << std::endl;
 			packet_dispatcher.send_packet(protocol::err_packet_format);
 			ConcurrentStreamPrint::print_data(thread_id, class_name, "Packet exception, try to send and error message");
 			requeue_connection(queue_element, thread_id, std::string("client responds with a wrong packet format"));
@@ -119,20 +115,19 @@ void HandshakeManager::requeue_connection(QueueConnectionElement element, int th
 void HandshakeManager::process_client_req(PacketDispatcher &packet_dispatcher, const connection_ptr connection, int thread_id) const {
 
     try {
-		// std::cout << "[Thread id " << thread_id << "] try to receive the request" << std::endl;
+
 		ConcurrentStreamPrint::print_data(thread_id, class_name, "try to receive the request");
 		ProtocolMessage protocol_packet = packet_dispatcher.receive_packet();
 
 		switch (protocol_packet.get_message_code()) {
 			case protocol::ok: 
-				// std::cout << "[Thread id " << thread_id << "]: received ok!" << std::endl;
 				ConcurrentStreamPrint::print_data(thread_id, class_name, "received ok!");
 				break;
 			case protocol::send: {
-				// std::cout << "[Thread id " << thread_id <<  "]: received send!" << std::endl;
 				ConcurrentStreamPrint::print_data(thread_id, class_name, "received send!");
 				request_struct request = protocol_packet.get_message_request();
 
+				// check if the auto accept has been enabled
 				if (!auto_accept_.load()) {
 					bool accept = managed_callback::getInstance().call_accept_callback(request.file_name_);
 					if (!accept) {
@@ -147,10 +142,9 @@ void HandshakeManager::process_client_req(PacketDispatcher &packet_dispatcher, c
 			}
 				break;
 			case protocol::err: 
-				std::cout << "received error: "  <<  std::endl;
+				ConcurrentStreamPrint::print_data(thread_id, class_name, "received an error");				
 				break;
 			case protocol::undefined: 
-				// std::cerr << "[Thread id " << thread_id << "]: error, undefined packet type should be managed by an exception, bho" << std::endl;
 				ConcurrentStreamPrint::print_data(thread_id, class_name, "error, undefined packet type should be managed by an exception, bho");
 				break;
 			default:
@@ -158,44 +152,16 @@ void HandshakeManager::process_client_req(PacketDispatcher &packet_dispatcher, c
 		}
     } 
 	catch (SocketException &se) {
-		// UNREFERENCED_PARAMETER(se);
-		// std::cout << "[Thread id " << thread_id << "] " << class_name << ": Socket Exception, error code " << se.get_error_code() << std::endl;
+		UNREFERENCED_PARAMETER(se);
 		std::stringstream ss;
 		ss << "Socket Exception, error code " << se.get_error_code();
 		ConcurrentStreamPrint::print_data(thread_id, class_name, ss.str());
 	} 
 	catch (ConnectionCloseException &ce) {
 		UNREFERENCED_PARAMETER(ce);
-        // std::cout << "[Thread id " << thread_id << "] " << class_name << ": Connection close Exception" << std::endl;
 		ConcurrentStreamPrint::print_data(thread_id, class_name, "Connection close Exception");
     }
 }
-
-/*
-void HandshakeManager::decode_send_reqeust() {
-	if (validate_request(packet_manager, req)) {
-
-		std::cout << "sono qui " << std::endl;
-
-		if (forward_request(req, connection)) {
-			if (!packet_manager.send_packet(protocol::ok)) {
-				std::cout << "the packet is not sent" << std::endl;
-			}
-		}
-		else
-			packet_manager.send_error(protocol::err_1);
-
-	}
-}
-
-bool HandshakeManager::validate_request(PacketDispatcher &packet_fwd, request_struct request) {
-    //request_struct request = req_packet_manager.get_request();
-
-    // cambiare gli errori da inviare al client
-    
-
-	return true;
-} */
 
 void HandshakeManager::append_in_download_queue(PacketDispatcher &packet_dispatcher, const request_struct request, connection_ptr connection) const {
 

@@ -28,8 +28,16 @@ public:
 		this->progress_bar_callback = progress_bar_callback;
 	}
 
-	void save_file_sent_handler(FILE_SENT_CALLBACK file_sent_callback) {
+	void save_file_sent_handler(FILE_COMPLETE_CALLBACK file_sent_callback) {
 		this->file_sent_callback = file_sent_callback;
+	}
+
+	void save_file_downloaded_callback(FILE_COMPLETE_CALLBACK callback) {
+		this->file_downloaded_callback = callback;
+ 	}
+
+	void save_begin_download_callback(BEGIN_DOWNLOAD_CALLBACK begin_download_callback) {
+		this->begin_download_callback = begin_download_callback;
 	}
 
 	void call_exit() {
@@ -52,11 +60,21 @@ public:
 		file_sent_callback(id, finished);
 	}
 
+	void call_file_download_callback(const char *id, bool finished) {
+		file_downloaded_callback(id, finished);
+	}
+
+	void call_begin_download_callback(const char *id, const char *file_path) {
+		begin_download_callback(id, file_path);
+	}
+
 private:
 	managed_callback() = default;
 	EXCEPTION_CALLBACK exit_callback;
 	DISCOVERY_MANAGED_CALLBACK discovery_managed_callback;
 	ACCEPT_CALLBACK accept_callback;
 	PROGRESS_BAR_CALLBACK progress_bar_callback;
-	FILE_SENT_CALLBACK file_sent_callback;
+	FILE_COMPLETE_CALLBACK file_sent_callback;
+	FILE_COMPLETE_CALLBACK file_downloaded_callback;
+	BEGIN_DOWNLOAD_CALLBACK begin_download_callback;
 };

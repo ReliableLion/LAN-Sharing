@@ -155,55 +155,64 @@ void DownloadManager::process_file(download_struct file_req, int thread_id) {
 	std::string rnd_filename = generate_random_string(20, std::string(".tmp"));
 	std::string file_path = get_dest_path();
 
-	std::cout << "the path is " << file_path;
-
 	FileHandler file(rnd_filename, file_path);
 
+	std::stringstream ss;
+	ss << file_path << "\\" << file_req.req.file_name_;
+	std::string f = ss.str();
+
 	if (!file.check_write_permission()) {
-		std::cout << "impossible to write the file into the location specified" << std::endl;
+		ConcurrentStreamPrint::print_data(thread_id, class_name, "impossible to write the file into the location specified");
 		return;
 	}
 
-	try {
+	managed_callback::getInstance().call_begin_download_callback(rnd_filename.c_str(), f.c_str());
 
-		if (!download_file(file_req, file)) {
+	try {
+		if (!download_file(file_req, file, rnd_filename)) {
 			ConcurrentStreamPrint::print_data(thread_id, class_name, "impossible to complete the file download...");
 			return;
 		}
 
 		std::string filename = file_req.req.file_name_;
+		perform_file_rename(filename, file);
+
 
 		std::stringstream ss;
 		ss << filename << " downloaded correctly";
-
 		ConcurrentStreamPrint::print_data(thread_id, class_name, ss.str());
-		
-		perform_rename_file(filename, file);
+
+		managed_callback::getInstance().call_file_download_callback(rnd_filename.c_str(), true);
+
 	}
 	catch (SocketException &se) {
 		UNREFERENCED_PARAMETER(se);
 		ConcurrentStreamPrint::print_data(thread_id, class_name, "Socket Exception");
 		file.close_file();
 		file.remove_file();
+		managed_callback::getInstance().call_file_download_callback(rnd_filename.c_str(), false);
 	}
 	catch (TimeoutException &te) {
 		UNREFERENCED_PARAMETER(te);
 		ConcurrentStreamPrint::print_data(thread_id, class_name, "Timeout Exception");
+		managed_callback::getInstance().call_file_download_callback(rnd_filename.c_str(), false);
 	}
 	catch (FileOpenException &fwe) {
 		UNREFERENCED_PARAMETER(fwe);
 		ConcurrentStreamPrint::print_data(thread_id, class_name, "File Open Exception");
+		managed_callback::getInstance().call_file_download_callback(rnd_filename.c_str(), false);
 	}
 	catch (FileWriteException & fe) {
 		UNREFERENCED_PARAMETER(fe);
 		ConcurrentStreamPrint::print_data(thread_id, class_name, "File Write Exception");
 		file.close_file();
 		file.remove_file();
+		managed_callback::getInstance().call_file_download_callback(rnd_filename.c_str(), false);
 	}
 }
 
-bool DownloadManager::download_file(download_struct request,  FileHandler &file) {
-	int left_bytes = request.conn->read_file(request.req.file_size_, file);
+bool DownloadManager::download_file(download_struct request,  FileHandler &file, std::string requestID) {
+	int left_bytes = request.conn->receive_file(request.req.file_size_, file, requestID);
 	return send_response(left_bytes, request);
 }
 
@@ -221,7 +230,7 @@ bool DownloadManager::send_response(int left_bytes, download_struct request) {
 	return false;
 }
 
-void DownloadManager::perform_rename_file(std::string new_filename, FileHandler &file) {
+void DownloadManager::perform_file_rename(std::string new_filename, FileHandler &file) {
 	int i = 1;
 	std::string filename = new_filename;
 	std::stringstream ss;
@@ -248,14 +257,17 @@ bool DownloadManager::rename_file(std::string new_filename, FileHandler &file) {
 		file.rename_file(new_filename);
 		return true;
 	}
-
 }
 
+// this method change the destination path of the file to be downloaded
+// since more than one thread can change concurrenlty the path value, 
+// a mutex has been used in order to protect the access to the resource
 void DownloadManager::change_dest_path(std::string new_path) {
 	std::lock_guard<std::mutex> lk(path_write_mtx);
 	dest_folder_path_ = new_path;
 }
 
+// this method get the destination path of the file to be downloaded
 std::string DownloadManager::get_dest_path() {
 	std::lock_guard<std::mutex> lk(path_write_mtx);
 	return dest_folder_path_;
