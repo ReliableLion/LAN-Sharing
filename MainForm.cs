@@ -191,17 +191,20 @@ namespace LanSharing
 
             try
             {
+                var iconPath =
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) +
+                    "\\icon_lan_sharing.ico";
                 registryMenu = Registry.CurrentUser.CreateSubKey(MenuName);
                 registryMenu?.SetValue("","Share with");
-                registryMenu?.SetValue("Icon", "C:\\Users\\Asus\\Documents\\Malnati\\icon_lan_sharing.ico");
+                registryMenu?.SetValue("Icon", iconPath);
                 registryCmd = Registry.CurrentUser.CreateSubKey(Command);
-                registryCmd?.SetValue("", "C:\\Users\\Asus\\source\\repos\\LanSharing\\bin\\Debug\\LanSharing.exe %1");
+                registryCmd?.SetValue("", System.Reflection.Assembly.GetExecutingAssembly().Location + " \"%1\"");
 
                 registryMenuDir = Registry.CurrentUser.CreateSubKey(MenuNameDir);
                 registryMenuDir?.SetValue("","Share with");
-                registryMenuDir?.SetValue("Icon", "C:\\Users\\Asus\\Documents\\Malnati\\icon_lan_sharing.ico");
+                registryMenuDir?.SetValue("Icon", iconPath );
                 registryMenuDir = Registry.CurrentUser.CreateSubKey(CommandDir);
-                registryMenuDir?.SetValue("", "C:\\Users\\Asus\\source\\repos\\LanSharing\\bin\\Debug\\LanSharing.exe %1");
+                registryMenuDir?.SetValue("",  System.Reflection.Assembly.GetExecutingAssembly().Location + " \"%1\"");
             }
             catch(Exception ex)
             {

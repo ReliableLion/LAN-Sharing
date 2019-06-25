@@ -40,7 +40,10 @@ namespace LanSharing
 
         private void users_collected(Object myObject, EventArgs myEventArgs) {
             myTimer.Stop();
+
             Console.Out.WriteLine("USERS COLLECTED");
+
+            refreshBtn.Enabled = true;
             
             pictureBox1.Hide();
 
@@ -145,6 +148,21 @@ namespace LanSharing
             }
             FileSender fileSender = new FileSender(destinationUsers, filePath);
             fileSender.sendFile();
+        }
+
+        private void RefreshBtn_Click(object sender, EventArgs e)
+        {
+            flowLayoutPanel1.Hide();
+            notFoundLabel.Hide();
+            pictureBox1.Show();
+            sendButton.Enabled = false;
+
+            refreshBtn.Enabled = false;
+            search_users();
+
+            // Sets the timer interval to 5 seconds.
+            myTimer.Interval = 3000;
+            myTimer.Start();
         }
     }
 }

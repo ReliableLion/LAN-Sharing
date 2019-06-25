@@ -103,11 +103,19 @@ namespace LanSharing
                 // jump on top of all the other windows
                 if (args.Length <= 0)
                     return;
+                string fileToSend = "";
+                foreach (var arg in args)
+                {
+                    fileToSend += arg;
+                    fileToSend += " ";
+                }
+
+                fileToSend = fileToSend.Trim();
 
                 var result = 0;
                     var hWnd = NativeMethods.getWindowId(null, "PDS-LanSharing application");
                     //result = NativeMethods.sendWindowsMessage(hWnd, NativeMethods.WM_USER, 123, 456);
-                    result = NativeMethods.sendWindowsStringMessage(hWnd, 0, args[0]);
+                    result = NativeMethods.sendWindowsStringMessage(hWnd, 0, fileToSend);
 
                 if (result != 1) {
                     MessageBox.Show("Some error occurs. Restart Lan Sharing", "Receiveing file", MessageBoxButtons.OK, MessageBoxIcon.None, MessageBoxDefaultButton.Button1, (MessageBoxOptions)0x40000);
