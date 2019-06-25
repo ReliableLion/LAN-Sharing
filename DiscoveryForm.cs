@@ -65,6 +65,8 @@ namespace LanSharing
             flowLayoutPanel1.Show();
             flowLayoutPanel1.BackColor = Color.Transparent;
 
+            flowLayoutPanel1.Controls.Clear();
+
             foreach (var user in users) {
 
                 flws[i] = new UserPanel();

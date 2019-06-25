@@ -167,7 +167,7 @@ namespace LanSharing
 
         public void addDownloadRequest(string id, string file_path)
         {
-            if(downloadProgressForm.IsDisposed)
+            if (downloadProgressForm.IsDisposed)
                 downloadProgressForm = new ProgressForm("Downloading file");
             if (!downloadProgressForm.Visible)
                 downloadProgressForm.Show();
@@ -186,6 +186,8 @@ namespace LanSharing
 
         public void addUploadRequest(string id, string username, string file_path) {
             
+        parent.BeginInvoke(new Action(delegate()
+        {
             if(uploadProgressForm.IsDisposed)
                 uploadProgressForm = new ProgressForm("Uploading file");
 
@@ -202,7 +204,7 @@ namespace LanSharing
             progressBars.Add(id, progressBar);
             timeStamps.Add(id, DateTime.Now);
 
-            //backgroundWorker.RunWorkerAsync();
+        }));
         }
 
         public void initialize(MainForm mainForm)
