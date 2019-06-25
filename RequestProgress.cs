@@ -57,6 +57,17 @@ namespace LanSharing
         static RequestProgress() {
         }
 
+        public int getRunningUpload() {
+            var requests = uploadProgressForm.getUploadingRequest();
+
+            if (requests < 5)
+            {
+                parent.BeginInvoke(new Action(delegate() { uploadProgressForm.cleanUploadingRequest(); }));
+            }
+
+            return requests;
+        }
+
         private RequestProgress()
         {
             progressBarDelegate = (id, progress) => {

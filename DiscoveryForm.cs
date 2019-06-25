@@ -30,6 +30,7 @@ namespace LanSharing
             notFoundLabel.Hide();
             flowLayoutPanel1.Hide();
             sendButton.Enabled = false;
+            refreshBtn.Enabled = false;
 
             search_users();
         }
@@ -150,6 +151,7 @@ namespace LanSharing
             }
             FileSender fileSender = new FileSender(destinationUsers, filePath);
             fileSender.sendFile();
+            this.Close();
         }
 
         private void RefreshBtn_Click(object sender, EventArgs e)

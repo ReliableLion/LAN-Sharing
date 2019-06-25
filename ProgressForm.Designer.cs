@@ -39,9 +39,10 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(286, 19);
+            this.label1.Location = new System.Drawing.Point(381, 23);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(229, 25);
+            this.label1.Size = new System.Drawing.Size(283, 31);
             this.label1.TabIndex = 0;
             this.label1.Text = "Current files transfer";
             // 
@@ -50,20 +51,22 @@
             this.progressPanel.AutoSize = true;
             this.progressPanel.BackColor = System.Drawing.SystemColors.Control;
             this.progressPanel.ColumnCount = 1;
-            this.progressPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 776F));
-            this.progressPanel.Location = new System.Drawing.Point(12, 75);
+            this.progressPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 1035F));
+            this.progressPanel.Location = new System.Drawing.Point(16, 92);
+            this.progressPanel.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.progressPanel.Name = "progressPanel";
             this.progressPanel.RowCount = 1;
-            this.progressPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 100F));
-            this.progressPanel.Size = new System.Drawing.Size(776, 100);
+            this.progressPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 123F));
+            this.progressPanel.Size = new System.Drawing.Size(1035, 123);
             this.progressPanel.TabIndex = 1;
             // 
             // closeButton
             // 
             this.closeButton.Enabled = false;
-            this.closeButton.Location = new System.Drawing.Point(415, 210);
+            this.closeButton.Location = new System.Drawing.Point(553, 258);
+            this.closeButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.closeButton.Name = "closeButton";
-            this.closeButton.Size = new System.Drawing.Size(190, 26);
+            this.closeButton.Size = new System.Drawing.Size(253, 32);
             this.closeButton.TabIndex = 2;
             this.closeButton.Text = "Close";
             this.closeButton.UseVisualStyleBackColor = true;
@@ -72,9 +75,10 @@
             // cleanButton
             // 
             this.cleanButton.Enabled = false;
-            this.cleanButton.Location = new System.Drawing.Point(193, 210);
+            this.cleanButton.Location = new System.Drawing.Point(257, 258);
+            this.cleanButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.cleanButton.Name = "cleanButton";
-            this.cleanButton.Size = new System.Drawing.Size(190, 26);
+            this.cleanButton.Size = new System.Drawing.Size(253, 32);
             this.cleanButton.TabIndex = 4;
             this.cleanButton.Text = "Clean";
             this.cleanButton.UseVisualStyleBackColor = true;
@@ -82,17 +86,18 @@
             // 
             // ProgressForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ClientSize = new System.Drawing.Size(800, 250);
+            this.ClientSize = new System.Drawing.Size(1067, 308);
             this.Controls.Add(this.cleanButton);
             this.Controls.Add(this.closeButton);
             this.Controls.Add(this.progressPanel);
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.MaximizeBox = false;
             this.Name = "ProgressForm";
             this.Text = "ProgressForm";

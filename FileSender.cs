@@ -37,9 +37,16 @@ namespace LanSharing
                 string requestID;
 
                 new Task(() => {
-                    if (send_file(user.Key, user.Value, filePath, requestIDBuff, isADirectory)) {
-                        requestID = System.Text.Encoding.UTF8.GetString(requestIDBuff);
-                        RequestProgress.Instance.addUploadRequest(requestID, user.Value, filePath);
+                    if (RequestProgress.Instance.getRunningUpload() < 5) {
+                        if (send_file(user.Key, user.Value, filePath, requestIDBuff, isADirectory))
+                        {
+                            requestID = System.Text.Encoding.UTF8.GetString(requestIDBuff);
+                            RequestProgress.Instance.addUploadRequest(requestID, user.Value, filePath);
+                        }
+                    } else
+                    {
+                        MessageBox.Show("Too many request. Wait for some request to complete!", "Too many request",
+                            MessageBoxButtons.OK);
                     }
                 }).Start();
             }
