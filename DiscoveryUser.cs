@@ -69,6 +69,7 @@ namespace LanSharing
         }
 
         public void search_user() {
+            _users.Clear();
             start_collection();
         }
 
