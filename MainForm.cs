@@ -191,20 +191,21 @@ namespace LanSharing
 
             try
             {
-                var iconPath =
+                var appPath = "\"" + System.Reflection.Assembly.GetExecutingAssembly().Location + "\"";
+                var iconPath = "\"" +
                     System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) +
-                    "\\icon_lan_sharing.ico";
+                    "\\icon_lan_sharing.ico" + "\"";
                 registryMenu = Registry.CurrentUser.CreateSubKey(MenuName);
                 registryMenu?.SetValue("","Share with");
                 registryMenu?.SetValue("Icon", iconPath);
                 registryCmd = Registry.CurrentUser.CreateSubKey(Command);
-                registryCmd?.SetValue("", System.Reflection.Assembly.GetExecutingAssembly().Location + " \"%1\"");
+                registryCmd?.SetValue("", appPath + " \"%1\"");
 
                 registryMenuDir = Registry.CurrentUser.CreateSubKey(MenuNameDir);
                 registryMenuDir?.SetValue("","Share with");
                 registryMenuDir?.SetValue("Icon", iconPath );
                 registryMenuDir = Registry.CurrentUser.CreateSubKey(CommandDir);
-                registryMenuDir?.SetValue("",  System.Reflection.Assembly.GetExecutingAssembly().Location + " \"%1\"");
+                registryMenuDir?.SetValue("", appPath + " \"%1\"");
             }
             catch(Exception ex)
             {
