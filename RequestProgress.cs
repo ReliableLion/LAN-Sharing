@@ -120,6 +120,7 @@ namespace LanSharing
 
                     uploadProgressForm.progressTerminated(id);
                     progressBars.Remove(id);
+                    timeStamps.Remove(id);
                 }));
 
             };
@@ -131,6 +132,8 @@ namespace LanSharing
                         try
                         {
                             ZipFile.ExtractToDirectory(files[id],Settings.Default[Constants.PATH].ToString());
+                            File.Delete(files[id]);
+                            files.Remove(id);
                         }
                         catch (IOException e)
                         {
@@ -162,6 +165,7 @@ namespace LanSharing
 
                     downloadProgressForm.progressTerminated(id);
                     progressBars.Remove(id);
+                    timeStamps.Remove(id);
                 }));
 
             };

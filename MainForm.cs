@@ -41,6 +41,7 @@ namespace LanSharing
             profileControl1.BringToFront();
             notifyIcon1.Visible = true;
             Icon = notifyIcon1.Icon;
+            this.Text = @"Lan Sharing";
 
             this.contextMenu1 = new System.Windows.Forms.ContextMenu();
             this.menuItem1 = new System.Windows.Forms.MenuItem();
